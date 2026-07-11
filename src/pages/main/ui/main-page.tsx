@@ -106,9 +106,10 @@ export function MainPage() {
           <DialogHeader>
             <DialogTitle>Run shared custom code?</DialogTitle>
             <DialogDescription>
-              This link contains custom code that has not run yet. Running it
-              can access this browser page and make network requests. Continue
-              only if you trust the sender.
+              This link contains custom code that has not run yet. Running it in
+              an isolated worker prevents direct access to this page's DOM and
+              local or session storage, but other browser APIs may still be
+              available. Continue only if you trust the sender.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

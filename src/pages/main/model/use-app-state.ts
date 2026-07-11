@@ -172,12 +172,13 @@ export function useAppState() {
   const handleRunCode = useCallback(
     async (values: InputValues) => {
       if (!compilationResult?.code) return
-      await startExecution(
+      const executionResult = await startExecution(
         sourceCode,
         values,
         functionSignature?.name,
         activeLanguage
       )
+      if (!executionResult) return
       setMode('runtime')
     },
     [
@@ -235,12 +236,13 @@ export function useAppState() {
       signature.parameters,
       demoExample.defaultInputValues ?? {}
     )
-    await startExecutionAndPlayback(
+    const executionResult = await startExecutionAndPlayback(
       demoExample.sourceCode,
       inputs,
       signature.name,
       activeLanguage
     )
+    if (!executionResult) return
     setMode('runtime')
   }, [activeLanguage, compileSourceCode, startExecutionAndPlayback])
 
@@ -306,6 +308,7 @@ export function useAppState() {
       pendingSharedRuntime.entryFunctionName,
       activeLanguage
     )
+    if (!executionResult) return
     setShareRestoreError(null)
     setMode('runtime')
 
@@ -392,7 +395,7 @@ export function useAppState() {
             activeLanguage
           )
 
-          if (cancelled) return
+          if (cancelled || !executionResult) return
           setShareRestoreError(null)
           setMode('runtime')
 

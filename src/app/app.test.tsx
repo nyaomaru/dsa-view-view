@@ -19,6 +19,23 @@ vi.mock('@/features/code-editing/code-editor', () => {
   }
 })
 
+vi.mock(
+  '@/features/code-execution/worker/execution-worker-client',
+  async () => {
+    const { executeCode } = await vi.importActual<
+      typeof import('@/features/code-execution/lib/runner')
+    >('@/features/code-execution/lib/runner')
+
+    return {
+      executeCodeInWorker: async (
+        code: string,
+        inputs: Record<string, unknown>,
+        entryFunctionName?: string
+      ) => executeCode(code, inputs, entryFunctionName),
+    }
+  }
+)
+
 import App from './app'
 import { ALGORITHM_EXAMPLES } from '@/entities/algorithm-example'
 import { encodeShareState } from '@/features/shareable-url'

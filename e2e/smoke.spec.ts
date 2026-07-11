@@ -28,7 +28,11 @@ test('loads, compiles, runs a demo, and opens core dialogs', async ({
     ).toBeVisible()
   }
 
+  const executionWorkerStarted = page.waitForEvent('worker', {
+    predicate: (worker) => worker.url().includes('execution-worker'),
+  })
   await page.getByRole('button', { name: 'Run demo' }).click()
+  await executionWorkerStarted
   await expect(page.getByText('All execution steps')).toBeVisible()
 
   if (isMobile) {

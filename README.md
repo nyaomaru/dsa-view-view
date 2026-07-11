@@ -71,7 +71,8 @@ pnpm build
 DSA View View is a browser-only React + TypeScript app powered by Vite+,
 Monaco Editor, Babel, Tailwind CSS, Radix UI, and Framer Motion.
 
-User code runs locally in the browser. There is no server-side code execution.
+User code runs locally in a dedicated Web Worker. It cannot directly access the
+page DOM or local/session storage, and there is no server-side code execution.
 
 ## Current Scope
 

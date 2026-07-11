@@ -8,9 +8,33 @@ import {
 import { DEFAULT_LANGUAGE, type SupportedLanguage } from '@/entities/code'
 import type { ExecutionState } from '@/entities/execution'
 import type { InputValues } from '@/entities/execution'
+import { isError } from '@/shared/lib/guards'
 import { EXECUTION_CONSTANTS } from './constants'
+import { executeCodeInWorker } from '../worker/execution-worker-client'
 
 const { EXECUTION_INTERVAL_MS } = EXECUTION_CONSTANTS
+
+function createWorkerFailureState(error: unknown): ExecutionState {
+  const message = isError(error) ? error.message : 'Execution worker failed.'
+
+  return {
+    currentStep: 0,
+    totalSteps: 1,
+    steps: [
+      {
+        stepNumber: 0,
+        type: 'return',
+        line: 0,
+        description: `Error: ${message}`,
+        variables: {},
+        timestamp: Date.now(),
+        callStack: ['root'],
+      },
+    ],
+    isComplete: false,
+    error: message,
+  }
+}
 
 /**
  * Custom hook to manage algorithm execution logic
@@ -25,6 +49,7 @@ export function useAlgorithmExecution() {
     EXECUTION_INTERVAL_MS
   )
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const executionAbortRef = useRef<AbortController | null>(null)
 
   const stopPlayback = useCallback(() => {
     if (intervalRef.current) {
@@ -87,6 +112,34 @@ export function useAlgorithmExecution() {
     [startPlayback]
   )
 
+  const runExecution = useCallback(
+    async (
+      code: string,
+      inputs: InputValues,
+      entryPoint: string | undefined,
+      language: SupportedLanguage
+    ): Promise<ExecutionState | null> => {
+      executionAbortRef.current?.abort()
+      const controller = new AbortController()
+      executionAbortRef.current = controller
+
+      try {
+        return await executeCodeInWorker(code, inputs, entryPoint, language, {
+          signal: controller.signal,
+        })
+      } catch (error) {
+        return controller.signal.aborted
+          ? null
+          : createWorkerFailureState(error)
+      } finally {
+        if (executionAbortRef.current === controller) {
+          executionAbortRef.current = null
+        }
+      }
+    },
+    []
+  )
+
   const startExecutionAndPlayback = useCallback(
     async (
       code: string,
@@ -95,12 +148,12 @@ export function useAlgorithmExecution() {
       language: SupportedLanguage = DEFAULT_LANGUAGE
     ) => {
       stopPlayback()
-      const { executeCode } = await import('../lib/runner')
-      const state = executeCode(code, inputs, entryPoint, language)
+      const state = await runExecution(code, inputs, entryPoint, language)
+      if (!state) return null
       startExecutionPlayback(state)
       return state
     },
-    [startExecutionPlayback, stopPlayback]
+    [runExecution, startExecutionPlayback, stopPlayback]
   )
 
   const handlePause = useCallback(() => {
@@ -143,20 +196,28 @@ export function useAlgorithmExecution() {
       language: SupportedLanguage = DEFAULT_LANGUAGE
     ) => {
       stopPlayback()
-      const { executeCode } = await import('../lib/runner')
-      const state = executeCode(code, inputs, entryPoint, language)
+      const state = await runExecution(code, inputs, entryPoint, language)
+      if (!state) return null
       setExecutionState(state)
       return state
     },
-    [stopPlayback]
+    [runExecution, stopPlayback]
   )
 
   const clearExecution = useCallback(() => {
+    executionAbortRef.current?.abort()
+    executionAbortRef.current = null
     stopPlayback()
     setExecutionState(null)
   }, [stopPlayback])
 
-  useEffect(() => stopPlayback, [stopPlayback])
+  useEffect(
+    () => () => {
+      executionAbortRef.current?.abort()
+      stopPlayback()
+    },
+    [stopPlayback]
+  )
 
   return {
     executionState,
