@@ -1,0 +1,71 @@
+/* App-specific styles */
+
+.container {
+  max-width: 87.5rem;
+}
+
+/* Glassmorphism effects */
+.glass {
+  background: rgb(var(--glass-background) / 0.1);
+  backdrop-filter: blur(0.625rem);
+  border: 0.0625rem solid rgb(var(--glass-border) / 0.2);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.625rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes codeEditorWaitSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.code-editor-wait-spinner {
+  animation: codeEditorWaitSpin 2s linear infinite;
+  transform-origin: center;
+}
+
+/* Code editor enhancements */
+.monaco-editor {
+  border-radius: 0.5rem;
+}
+
+/* Highlighted line in Monaco Editor */
+.highlighted-line {
+  background-color: rgb(var(--editor-highlight) / 0.2) !important;
+  border-left: 0.1875rem solid rgb(var(--editor-highlight)) !important;
+}
+
+.highlighted-line-glyph {
+  background-color: rgb(var(--editor-highlight)) !important;
+  width: 0.3125rem !important;
+}
+
+/* removed global transition to prevent flickering */

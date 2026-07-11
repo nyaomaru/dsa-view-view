@@ -1,0 +1,68 @@
+DSA View View third-party notices
+=================================
+
+DSA View View includes open source software distributed under permissive
+licenses. The production dependency license inventory was checked with:
+
+  pnpm licenses list --prod
+
+Primary production licenses found:
+
+  - MIT
+  - Apache-2.0
+  - ISC
+  - 0BSD
+  - MPL-2.0 OR Apache-2.0
+
+Notable bundled dependencies:
+
+  - monaco-editor: MIT
+  - @monaco-editor/react: MIT
+  - @monaco-editor/loader: MIT
+  - @babel/* packages: MIT
+  - React and React DOM: MIT
+  - Radix UI packages: MIT
+  - Framer Motion packages: MIT
+  - Zod: MIT
+  - class-variance-authority: Apache-2.0
+  - lucide-react: ISC
+  - DOMPurify: MPL-2.0 OR Apache-2.0
+  - tslib: 0BSD
+
+MIT License text
+----------------
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of software and associated documentation files licensed under the MIT License
+to deal in the software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the software, and to permit persons to whom the software is
+furnished to do so, subject to the following conditions:
+
+The copyright notice and this permission notice shall be included in all
+copies or substantial portions of the software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Additional license details
+--------------------------
+
+Full license and notice files are distributed with the installed packages in
+node_modules, including:
+
+  - monaco-editor/LICENSE
+  - monaco-editor/ThirdPartyNotices.txt
+  - @monaco-editor/react/LICENSE
+  - lucide-react/LICENSE
+  - class-variance-authority/LICENSE
+  - dompurify/LICENSE
+  - dompurify/LICENSE-MPL
+
+This notice file is provided for production transparency and should be updated
+when production dependencies change.

@@ -1,0 +1,361 @@
+import type { ReactNode } from 'react'
+import type { ExecutionState } from '@/entities/execution'
+import { RETURN_VALUE_LABEL } from '@/entities/execution'
+import { isListNodeShape, isTreeNodeShape } from '@/entities/data-structure'
+import {
+  isArray,
+  isBooleanArray,
+  isGraphSource,
+  isMatrix,
+  isNull,
+  isNumericArray,
+  isUndefined,
+} from '@/shared/lib/guards'
+import {
+  getBinarySearchIndexState,
+  isBinarySearchArrayCandidate,
+} from '../lib/binary-search-view'
+import { getAreaVisualizationState } from '../lib/area-view'
+import { getSlidingWindowVisualizationState } from '../lib/sliding-window-view'
+import type { VisualizationType } from './visualization-modal'
+import { StackVisualizer } from './stack-visualizer'
+import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
+import { BarChartVisualizer } from './bar-chart-visualizer'
+import { AreaVisualizer } from './area-visualizer'
+import { BinarySearchVisualizer } from './binary-search-visualizer'
+import { SlidingWindowVisualizer } from './sliding-window-visualizer'
+import { BooleanArrayVisualizer } from './boolean-array-visualizer'
+import { GraphVisualizer } from './graph-visualizer'
+import { MatrixVisualizer } from './matrix-visualizer'
+import { TreeGraphVisualizer } from './tree-graph-visualizer'
+import { ListGraphVisualizer } from './list-graph-visualizer'
+
+type ExecutionStepSnapshot = ExecutionState['steps'][number]
+
+type VisualizationContentProps = {
+  /** Type of visualization content to render. */
+  type: VisualizationType
+  /** Variable name targeted by the selected visualization. */
+  targetVariable?: string
+  /** Step index to use when the target variable or pointers are not on the current step. */
+  targetStepIndex?: number
+  /** Full execution state used to search surrounding steps and read return values. */
+  executionState: ExecutionState
+  /** Currently selected execution step. */
+  currentStep: ExecutionStepSnapshot | undefined
+  /** Display name for tree graphs when visualizing the return value. */
+  treeGraphDisplayName?: string
+}
+
+function getStepSearchOrder({
+  executionState,
+  targetStepIndex,
+  preferPastSteps = false,
+}: {
+  /** Execution state whose steps should be searched. */
+  executionState: ExecutionState
+  /** Preferred step index to include near the front of the search order. */
+  targetStepIndex?: number
+  /** Whether past steps should be searched before future steps. */
+  preferPastSteps?: boolean
+}): number[] {
+  const currentStepIndex = executionState.currentStep
+  const futureStepIndexes = Array.from(
+    { length: executionState.steps.length - currentStepIndex - 1 },
+    (_, index) => currentStepIndex + index + 1
+  )
+  const pastStepIndexes = Array.from({ length: currentStepIndex }, (_, index) =>
+    Math.max(0, currentStepIndex - index - 1)
+  )
+  const surroundingStepIndexes = preferPastSteps
+    ? [...pastStepIndexes, ...futureStepIndexes]
+    : [...futureStepIndexes, ...pastStepIndexes]
+
+  return [currentStepIndex, targetStepIndex, ...surroundingStepIndexes].filter(
+    (index): index is number => !isUndefined(index)
+  )
+}
+
+function findNumericArrayStep({
+  executionState,
+  variableName,
+  targetStepIndex,
+}: {
+  /** Execution state whose steps should be searched. */
+  executionState: ExecutionState
+  /** Numeric array variable name to find. */
+  variableName: string
+  /** Preferred step index to check before surrounding steps. */
+  targetStepIndex?: number
+}): ExecutionStepSnapshot | undefined {
+  const orderedIndexes = getStepSearchOrder({
+    executionState,
+    targetStepIndex,
+  })
+
+  for (const index of new Set(orderedIndexes)) {
+    const step = executionState.steps[index]
+
+    if (step && isNumericArray(step.variables[variableName])) {
+      return step
+    }
+  }
+
+  return undefined
+}
+
+function findTreeNodeStep({
+  executionState,
+  variableName,
+}: {
+  /** Execution state whose steps should be searched. */
+  executionState: ExecutionState
+  /** Tree node variable name to find. */
+  variableName: string
+}): ExecutionStepSnapshot | undefined {
+  const orderedIndexes = getStepSearchOrder({
+    executionState,
+    preferPastSteps: true,
+  })
+
+  for (const index of new Set(orderedIndexes)) {
+    const step = executionState.steps[index]
+
+    if (step && isTreeNodeShape(step.variables[variableName])) {
+      return step
+    }
+  }
+
+  return undefined
+}
+
+function NumericArrayError({
+  targetVariable,
+  data,
+}: {
+  /** Variable name that failed numeric array validation. */
+  targetVariable: string
+  /** Runtime value that could not be rendered as a numeric array. */
+  data: unknown
+}) {
+  return (
+    <div className="p-4 text-sm text-destructive bg-destructive/10 rounded-md">
+      <p className="font-semibold">Unable to visualize "{targetVariable}"</p>
+      <p>Expected a numeric array, but got:</p>
+      <pre className="mt-2 text-xs bg-white/50 p-2 rounded">
+        {JSON.stringify(data, null, 2)}
+      </pre>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Type: {typeof data}, IsArray: {isArray(data) ? 'Yes' : 'No'}
+      </p>
+    </div>
+  )
+}
+
+export function VisualizationModalContent({
+  type,
+  targetVariable,
+  targetStepIndex,
+  executionState,
+  currentStep,
+  treeGraphDisplayName,
+}: VisualizationContentProps): ReactNode {
+  const getCurrentStepVariable = (name: string) => currentStep?.variables[name]
+
+  if (type === 'tree') {
+    return <RecursionTreeVisualizer state={executionState} />
+  }
+
+  if (!targetVariable) {
+    return null
+  }
+
+  switch (type) {
+    case 'stack': {
+      const data = getCurrentStepVariable(targetVariable)
+
+      return isArray(data) ? (
+        <StackVisualizer data={data} name={targetVariable} />
+      ) : (
+        <div>Variable is not an array</div>
+      )
+    }
+
+    case 'bar-chart': {
+      const data =
+        findNumericArrayStep({
+          executionState,
+          variableName: targetVariable,
+          targetStepIndex,
+        })?.variables[targetVariable] ?? getCurrentStepVariable(targetVariable)
+
+      if (!isNumericArray(data)) {
+        return <NumericArrayError targetVariable={targetVariable} data={data} />
+      }
+
+      return (
+        <BarChartVisualizer
+          data={data.map((value) => Number(value))}
+          name={targetVariable}
+        />
+      )
+    }
+
+    case 'area': {
+      const visualizationState = getAreaVisualizationState({
+        executionState,
+        variableName: targetVariable,
+        targetStepIndex,
+      })
+
+      return visualizationState ? (
+        <AreaVisualizer
+          data={visualizationState.data}
+          name={targetVariable}
+          areaState={visualizationState.areaState}
+        />
+      ) : (
+        <div>Area pointers are not available.</div>
+      )
+    }
+
+    case 'binary-search': {
+      const fallbackStep =
+        executionState.steps[targetStepIndex ?? executionState.currentStep]
+      const currentStepData = currentStep?.variables[targetVariable]
+      const binarySearchStep =
+        currentStep &&
+        isBinarySearchArrayCandidate(
+          targetVariable,
+          currentStepData,
+          currentStep.variables
+        )
+          ? currentStep
+          : fallbackStep
+      const data = binarySearchStep?.variables[targetVariable]
+      const indexState = getBinarySearchIndexState(
+        binarySearchStep?.variables ?? {}
+      )
+
+      return isNumericArray(data) && indexState ? (
+        <BinarySearchVisualizer
+          data={data.map((value) => Number(value))}
+          name={targetVariable}
+          indexState={indexState}
+        />
+      ) : (
+        <div>Binary search indexes are not available.</div>
+      )
+    }
+
+    case 'sliding-window': {
+      const visualizationState = getSlidingWindowVisualizationState({
+        executionState,
+        variableName: targetVariable,
+        targetStepIndex,
+      })
+
+      return visualizationState ? (
+        <SlidingWindowVisualizer
+          data={visualizationState.data}
+          name={targetVariable}
+          windowState={visualizationState.windowState}
+        />
+      ) : (
+        <div>Sliding window indexes are not available.</div>
+      )
+    }
+
+    case 'boolean-array': {
+      const data = getCurrentStepVariable(targetVariable)
+
+      return isBooleanArray(data) ? (
+        <BooleanArrayVisualizer data={data} name={targetVariable} />
+      ) : (
+        <div>Variable is not a boolean array</div>
+      )
+    }
+
+    case 'tree-graph': {
+      const shouldShowReturnTree =
+        targetVariable === RETURN_VALUE_LABEL &&
+        isTreeNodeShape(executionState.returnValue)
+      const data = shouldShowReturnTree
+        ? executionState.returnValue
+        : findTreeNodeStep({
+            executionState,
+            variableName: targetVariable,
+          })?.variables[targetVariable]
+      const treeName = treeGraphDisplayName ?? targetVariable
+
+      return isTreeNodeShape(data) ? (
+        <TreeGraphVisualizer
+          data={data}
+          name={treeName}
+          state={executionState}
+        />
+      ) : (
+        <div>Variable is not a binary tree node</div>
+      )
+    }
+
+    case 'list-graph': {
+      const data = getCurrentStepVariable(targetVariable)
+
+      return isNull(data) || isListNodeShape(data) ? (
+        <ListGraphVisualizer data={data} name={targetVariable} />
+      ) : (
+        <div>Variable is not a linked list node</div>
+      )
+    }
+
+    case 'graph': {
+      const data = getCurrentStepVariable(targetVariable)
+      const stateVarName = Object.keys(currentStep?.variables || {}).find(
+        (name) =>
+          name.toLowerCase() === 'state' || name.toLowerCase().includes('vis')
+      )
+      const nodeStates = stateVarName
+        ? currentStep?.variables[stateVarName]
+        : undefined
+
+      return isGraphSource(data) ? (
+        <GraphVisualizer
+          data={data}
+          name={targetVariable}
+          nodeStates={isArray(nodeStates) ? nodeStates : undefined}
+        />
+      ) : (
+        <div>Variable is not a graph structure</div>
+      )
+    }
+
+    case 'matrix': {
+      const currentStepData =
+        executionState.steps[executionState.currentStep]?.variables[
+          targetVariable
+        ]
+      const matrixStepIndex = isMatrix(currentStepData)
+        ? executionState.currentStep
+        : (targetStepIndex ?? executionState.currentStep)
+      const matrixStep = executionState.steps[matrixStepIndex]
+      const data = matrixStep?.variables[targetVariable]
+      const previousStep =
+        matrixStepIndex > 0 ? executionState.steps[matrixStepIndex - 1] : null
+      const previousData = previousStep?.variables[targetVariable]
+
+      return isMatrix(data) ? (
+        <MatrixVisualizer
+          data={data}
+          previousData={previousData}
+          name={targetVariable}
+        />
+      ) : (
+        <div>Variable is not a matrix (2D array)</div>
+      )
+    }
+
+    default:
+      return null
+  }
+}
