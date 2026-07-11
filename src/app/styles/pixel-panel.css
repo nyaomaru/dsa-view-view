@@ -1,0 +1,113 @@
+.pixel-panel {
+  --pixel-shell-color: rgb(var(--border));
+  position: relative;
+  isolation: isolate;
+  border: 0 !important;
+}
+
+.pixel-panel::before,
+.pixel-panel::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.pixel-panel::before {
+  inset: 0;
+  z-index: 0;
+  background: var(--pixel-shell-color);
+  clip-path: polygon(
+    var(--pixel-step-4) 0,
+    calc(100% - var(--pixel-step-4)) 0,
+    calc(100% - var(--pixel-step-4)) var(--pixel-step-1),
+    calc(100% - var(--pixel-step-3)) var(--pixel-step-1),
+    calc(100% - var(--pixel-step-3)) var(--pixel-step-2),
+    calc(100% - var(--pixel-step-2)) var(--pixel-step-2),
+    calc(100% - var(--pixel-step-2)) var(--pixel-step-3),
+    calc(100% - var(--pixel-step-1)) var(--pixel-step-3),
+    calc(100% - var(--pixel-step-1)) calc(100% - var(--pixel-step-3)),
+    calc(100% - var(--pixel-step-2)) calc(100% - var(--pixel-step-3)),
+    calc(100% - var(--pixel-step-2)) calc(100% - var(--pixel-step-2)),
+    calc(100% - var(--pixel-step-3)) calc(100% - var(--pixel-step-2)),
+    calc(100% - var(--pixel-step-3)) calc(100% - var(--pixel-step-1)),
+    calc(100% - var(--pixel-step-4)) calc(100% - var(--pixel-step-1)),
+    calc(100% - var(--pixel-step-4)) 100%,
+    var(--pixel-step-4) 100%,
+    var(--pixel-step-4) calc(100% - var(--pixel-step-1)),
+    var(--pixel-step-3) calc(100% - var(--pixel-step-1)),
+    var(--pixel-step-3) calc(100% - var(--pixel-step-2)),
+    var(--pixel-step-2) calc(100% - var(--pixel-step-2)),
+    var(--pixel-step-2) calc(100% - var(--pixel-step-3)),
+    var(--pixel-step-1) calc(100% - var(--pixel-step-3)),
+    var(--pixel-step-1) var(--pixel-step-3),
+    var(--pixel-step-2) var(--pixel-step-3),
+    var(--pixel-step-2) var(--pixel-step-2),
+    var(--pixel-step-3) var(--pixel-step-2),
+    var(--pixel-step-3) var(--pixel-step-1),
+    var(--pixel-step-4) var(--pixel-step-1)
+  );
+}
+
+.pixel-panel::after {
+  inset: var(--pixel-step-1);
+  z-index: 1;
+  background: inherit;
+  clip-path: polygon(
+    var(--pixel-step-3) 0,
+    calc(100% - var(--pixel-step-3)) 0,
+    calc(100% - var(--pixel-step-3)) var(--pixel-step-1),
+    calc(100% - var(--pixel-step-2)) var(--pixel-step-1),
+    calc(100% - var(--pixel-step-2)) var(--pixel-step-2),
+    calc(100% - var(--pixel-step-1)) var(--pixel-step-2),
+    calc(100% - var(--pixel-step-1)) calc(100% - var(--pixel-step-2)),
+    calc(100% - var(--pixel-step-2)) calc(100% - var(--pixel-step-2)),
+    calc(100% - var(--pixel-step-2)) calc(100% - var(--pixel-step-1)),
+    calc(100% - var(--pixel-step-3)) calc(100% - var(--pixel-step-1)),
+    calc(100% - var(--pixel-step-3)) 100%,
+    var(--pixel-step-3) 100%,
+    var(--pixel-step-3) calc(100% - var(--pixel-step-1)),
+    var(--pixel-step-2) calc(100% - var(--pixel-step-1)),
+    var(--pixel-step-2) calc(100% - var(--pixel-step-2)),
+    var(--pixel-step-1) calc(100% - var(--pixel-step-2)),
+    var(--pixel-step-1) var(--pixel-step-2),
+    var(--pixel-step-2) var(--pixel-step-2),
+    var(--pixel-step-2) var(--pixel-step-1),
+    var(--pixel-step-3) var(--pixel-step-1)
+  );
+}
+
+.pixel-panel > * {
+  position: relative;
+  z-index: 2;
+}
+
+.pixel-dialog-content {
+  position: fixed;
+}
+
+.pixel-dialog-close {
+  position: absolute;
+  --pixel-button-color: rgb(var(--primary));
+  --pixel-button-fill: rgb(var(--background));
+  color: rgb(var(--primary));
+}
+
+.pixel-panel.border-primary {
+  --pixel-shell-color: rgb(var(--primary));
+}
+
+.pixel-panel.border-input {
+  --pixel-shell-color: rgb(var(--input));
+}
+
+.pixel-panel.border-destructive {
+  --pixel-shell-color: rgb(var(--destructive));
+}
+
+.pixel-panel.border-destructive\/50 {
+  --pixel-shell-color: rgb(var(--destructive) / 0.5);
+}
+
+.pixel-panel.border-primary\/20 {
+  --pixel-shell-color: rgb(var(--primary) / 0.2);
+}

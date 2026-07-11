@@ -1,0 +1,95 @@
+.pixel-tab-list {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+}
+
+.pixel-tab-list::after {
+  content: '';
+  position: absolute;
+  left: var(--pixel-tab-list-line-inset, 0);
+  right: var(--pixel-tab-list-line-inset, 0);
+  bottom: 0;
+  background: rgb(var(--primary));
+}
+
+.pixel-tab-trigger {
+  --pixel-tab-shell: rgb(var(--primary));
+  --pixel-tab-fill: rgb(var(--background));
+  position: relative;
+  border: 0 !important;
+  background: transparent !important;
+  color: rgb(var(--primary));
+}
+
+.pixel-tab-trigger:first-child {
+  margin-left: 0;
+}
+
+.pixel-tab-trigger::before,
+.pixel-tab-trigger::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.pixel-tab-trigger::before {
+  inset: 0;
+  z-index: 0;
+  background: var(--pixel-tab-shell);
+  clip-path: polygon(
+    var(--pixel-step-4) 0,
+    100% 0,
+    100% 100%,
+    0 100%,
+    0 var(--pixel-step-4),
+    var(--pixel-step-1) var(--pixel-step-4),
+    var(--pixel-step-1) var(--pixel-step-3),
+    var(--pixel-step-2) var(--pixel-step-3),
+    var(--pixel-step-2) var(--pixel-step-2),
+    var(--pixel-step-3) var(--pixel-step-2),
+    var(--pixel-step-3) var(--pixel-step-1),
+    var(--pixel-step-4) var(--pixel-step-1)
+  );
+}
+
+.pixel-tab-trigger::after {
+  inset: 0.0625rem;
+  z-index: 1;
+  background: var(--pixel-tab-fill);
+  clip-path: polygon(
+    calc(var(--pixel-step-4) - 0.0625rem) 0,
+    100% 0,
+    100% 100%,
+    0 100%,
+    0 calc(var(--pixel-step-4) - 0.0625rem),
+    var(--pixel-step-1) calc(var(--pixel-step-4) - 0.0625rem),
+    var(--pixel-step-1) calc(var(--pixel-step-3) - 0.0625rem),
+    var(--pixel-step-2) calc(var(--pixel-step-3) - 0.0625rem),
+    var(--pixel-step-2) calc(var(--pixel-step-2) - 0.0625rem),
+    var(--pixel-step-3) calc(var(--pixel-step-2) - 0.0625rem),
+    var(--pixel-step-3) calc(var(--pixel-step-1) - 0.0625rem),
+    calc(var(--pixel-step-4) - 0.0625rem) calc(var(--pixel-step-1) - 0.0625rem)
+  );
+}
+
+.pixel-tab-trigger__label {
+  position: relative;
+  z-index: 2;
+}
+
+.pixel-tab-trigger[data-state='active'] {
+  --pixel-tab-fill: rgb(var(--primary));
+  color: rgb(var(--background));
+  margin-bottom: 0;
+}
+
+.pixel-tab-trigger[data-state='active']::after {
+  inset: 0.0625rem 0.0625rem 0 0.0625rem;
+}
+
+.pixel-tab-trigger:hover:not([data-state='active']) {
+  --pixel-tab-fill: rgb(var(--accent));
+  color: rgb(var(--accent-foreground));
+}

@@ -1,0 +1,47 @@
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  /* Keep vertical scrollbar space reserved to avoid header/content shift */
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+/* Selection state uses primary color */
+::selection {
+  background-color: rgb(var(--primary));
+  color: rgb(var(--background));
+}
+
+/* Avoid layout shift when scrollbars appear/disappear */
+html {
+  scrollbar-gutter: stable both-edges;
+}
+
+.container {
+  width: 100%;
+}
+
+/* Global border default to primary */
+*,
+*::before,
+*::after {
+  border-color: rgb(var(--primary));
+}
+
+/* Link hover: keep color; use underline animation via .link-underline */
+a:hover {
+  color: inherit;
+}
+.group:hover .group-hover\:text-primary {
+  color: inherit !important;
+}

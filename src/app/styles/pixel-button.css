@@ -1,0 +1,141 @@
+.pixel-button,
+.pixel-panel,
+.pixel-field,
+.pixel-chip {
+  border-radius: 0;
+}
+
+.pixel-button {
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  --pixel-button-tile-pixel: 0.1875rem;
+  --pixel-button-step-1: var(--pixel-button-tile-pixel);
+  --pixel-button-step-2: calc(var(--pixel-button-step-1) * 2);
+  --pixel-button-step-3: calc(var(--pixel-button-step-1) * 3);
+  --pixel-button-step-4: calc(var(--pixel-button-step-1) * 4);
+  --pixel-button-step-6: calc(var(--pixel-button-step-1) * 6);
+  --pixel-button-color: rgb(var(--border));
+  --pixel-button-fill: rgb(var(--background));
+  --pixel-button-layer-shell: -2;
+  --pixel-button-layer-fill: -1;
+  --pixel-button-layer-content: 1;
+  --pixel-button-shell-shape: polygon(
+    var(--pixel-button-step-3) 0,
+    calc(100% - var(--pixel-button-step-3)) 0,
+    calc(100% - var(--pixel-button-step-3)) var(--pixel-button-step-1),
+    calc(100% - var(--pixel-button-step-2)) var(--pixel-button-step-1),
+    calc(100% - var(--pixel-button-step-2)) var(--pixel-button-step-2),
+    calc(100% - var(--pixel-button-step-1)) var(--pixel-button-step-2),
+    calc(100% - var(--pixel-button-step-1))
+      calc(100% - var(--pixel-button-step-2)),
+    calc(100% - var(--pixel-button-step-2))
+      calc(100% - var(--pixel-button-step-2)),
+    calc(100% - var(--pixel-button-step-2))
+      calc(100% - var(--pixel-button-step-1)),
+    calc(100% - var(--pixel-button-step-3))
+      calc(100% - var(--pixel-button-step-1)),
+    calc(100% - var(--pixel-button-step-3)) 100%,
+    var(--pixel-button-step-3) 100%,
+    var(--pixel-button-step-3) calc(100% - var(--pixel-button-step-1)),
+    var(--pixel-button-step-2) calc(100% - var(--pixel-button-step-1)),
+    var(--pixel-button-step-2) calc(100% - var(--pixel-button-step-2)),
+    var(--pixel-button-step-1) calc(100% - var(--pixel-button-step-2)),
+    var(--pixel-button-step-1) var(--pixel-button-step-2),
+    var(--pixel-button-step-2) var(--pixel-button-step-2),
+    var(--pixel-button-step-2) var(--pixel-button-step-1),
+    var(--pixel-button-step-3) var(--pixel-button-step-1)
+  );
+  --pixel-button-fill-shape: polygon(
+    var(--pixel-button-step-2) 0,
+    calc(100% - var(--pixel-button-step-2)) 0,
+    calc(100% - var(--pixel-button-step-2)) var(--pixel-button-step-1),
+    calc(100% - var(--pixel-button-step-1)) var(--pixel-button-step-1),
+    calc(100% - var(--pixel-button-step-1))
+      calc(100% - var(--pixel-button-step-1)),
+    calc(100% - var(--pixel-button-step-2))
+      calc(100% - var(--pixel-button-step-1)),
+    calc(100% - var(--pixel-button-step-2)) 100%,
+    var(--pixel-button-step-2) 100%,
+    var(--pixel-button-step-2) calc(100% - var(--pixel-button-step-1)),
+    var(--pixel-button-step-1) calc(100% - var(--pixel-button-step-1)),
+    var(--pixel-button-step-1) var(--pixel-button-step-1),
+    var(--pixel-button-step-2) var(--pixel-button-step-1)
+  );
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  border: 0 !important;
+  background: transparent !important;
+  color: rgb(var(--foreground));
+  white-space: nowrap;
+  transition:
+    color 0.15s ease,
+    filter 0.15s ease,
+    background-color 0.15s ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.pixel-button--default {
+  --pixel-button-color: rgb(var(--primary));
+  --pixel-button-fill: rgb(var(--primary));
+  color: rgb(var(--background));
+}
+
+.pixel-button--secondary {
+  --pixel-button-color: rgb(var(--secondary) / var(--secondary-alpha));
+  --pixel-button-fill: rgb(var(--secondary) / var(--secondary-alpha));
+}
+
+.pixel-button--outline {
+  --pixel-button-color: rgb(var(--primary));
+  --pixel-button-fill: rgb(var(--background));
+}
+
+.pixel-button--ghost {
+  --pixel-button-color: rgb(var(--input));
+  --pixel-button-fill: rgb(var(--background));
+}
+
+.pixel-button--link {
+  --pixel-button-color: transparent;
+  --pixel-button-fill: transparent;
+}
+
+.pixel-button--destructive {
+  --pixel-button-color: rgb(var(--destructive));
+  --pixel-button-fill: rgb(var(--destructive));
+}
+
+.pixel-button::before,
+.pixel-button::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.pixel-button::before {
+  inset: 0;
+  z-index: var(--pixel-button-layer-shell);
+  background-color: var(--pixel-button-color);
+  clip-path: var(--pixel-button-shell-shape);
+}
+
+.pixel-button::after {
+  inset: var(--pixel-button-step-1);
+  z-index: var(--pixel-button-layer-fill);
+  background-color: var(--pixel-button-fill);
+  clip-path: var(--pixel-button-fill-shape);
+}
+
+.pixel-button__content {
+  position: relative;
+  z-index: var(--pixel-button-layer-content);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

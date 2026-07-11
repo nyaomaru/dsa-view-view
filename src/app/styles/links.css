@@ -1,0 +1,27 @@
+/* Animated underline utility */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -0.125rem;
+  height: 0.0625rem;
+  width: 0;
+  background-color: rgb(var(--primary));
+  transition: width 0.5s ease;
+}
+.link-underline:hover::after {
+  width: 100%;
+}
+.link-underline:focus-visible::after {
+  width: 100%;
+}
+/* Trigger underline when hovering the parent link area (wider hit target) */
+.group:hover .link-underline::after {
+  width: 100%;
+}
+.group:focus-visible .link-underline::after {
+  width: 100%;
+}
