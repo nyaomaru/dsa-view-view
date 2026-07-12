@@ -2,14 +2,16 @@
 
 # DSA View View
 
-Watch your algorithm think. ✨
-
 DSA View View turns TypeScript algorithm functions into step-by-step visual
-stories. Write code, run it with structured inputs, and see the arrays, matrices,
+stories. 👀👀
+
+Write code, run it with structured inputs, and see the arrays, matrices,
 trees, lists, stacks, pointers, and return values move as the function executes.
 
 It is built for those moments when reading the code is not enough and you want
 to _see_ why the answer changes.
+
+[![DSA View View demo](./public/demo/dsa-view-view-demo.gif)](https://dsa-view-view.vercel.app/)
 
 ## Why Try It?
 
@@ -68,22 +70,18 @@ pnpm build
 
 ## Tech
 
-DSA View View is a browser-only React + TypeScript app powered by Vite+,
-Monaco Editor, Babel, Tailwind CSS, Radix UI, and Framer Motion.
+DSA View View is a browser-only `React` + `TypeScript` app powered by `Vite+`, `Monaco Editor`, `Babel`, `Tailwind CSS`, `Radix UI`, and `Framer Motion`.
 
-User code runs locally in a dedicated Web Worker. It cannot directly access the
-page DOM or local/session storage, and there is no server-side code execution.
+User code runs locally in a dedicated Web Worker.
+It cannot directly access the page DOM or local/session storage, and there is no server-side code execution.
 
 ## Current Scope
 
-The current release focuses on synchronous TypeScript DSA functions: arrays,
-matrices, strings, numbers, objects, recursion, trees, linked lists, graphs, and
-common class-style interview inputs.
+The current release focuses on synchronous TypeScript DSA functions: arrays, matrices, strings, numbers, objects, recursion, trees, linked lists, graphs, and common class-style interview inputs.
 
-It does not try to be a full IDE. Async code, arbitrary package imports,
-accounts, cloud saving, and multi-language execution are intentionally outside
-the first release scope.
+It does not try to be a full IDE.
+Async code, arbitrary package imports, accounts, cloud saving, and multi-language execution are intentionally outside the first release scope.
 
 ---
 
-If the algorithm is hard to picture, make it visible. 👀
+If the algorithm is hard to picture, let's make it visible. 👀👀
