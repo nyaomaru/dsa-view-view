@@ -64,8 +64,9 @@ test('loads, compiles, runs a demo, and opens core dialogs', async ({
   }
 })
 
-test('executes worker traces containing variable declarations', async ({
+test('visualizes Product Except Self answer growth', async ({
   page,
+  isMobile,
 }) => {
   await page.goto('/')
 
@@ -87,6 +88,16 @@ test('executes worker traces containing variable declarations', async ({
   await expect(
     page.getByText('Worker returned an invalid response.')
   ).toHaveCount(0)
+
+  await page.getByTitle('Skip to End').first().click()
+  if (isMobile) {
+    const answerRow = page.getByText('answer', { exact: true }).locator('../..')
+    await answerRow.getByTitle('Visualize as stack').click()
+  }
+
+  await expect(
+    page.getByRole('heading', { name: 'Stack Visualization: answer' })
+  ).toBeVisible()
 })
 
 test('executes Two Sum with Map snapshots in the worker', async ({ page }) => {

@@ -5,7 +5,11 @@ import type { InitialVariableContext, VariableEntries } from './types'
 
 export const RESULT_VARIABLE_NAME = 'result'
 const WORKING_PATH_VARIABLE_NAMES = new Set(['path'])
-const isResultLikeNormalizedName = oneOfValues('res', RESULT_VARIABLE_NAME)
+const isResultLikeNormalizedName = oneOfValues(
+  'answer',
+  'res',
+  RESULT_VARIABLE_NAME
+)
 const isReturnValueName = equals(RETURN_VALUE_LABEL)
 export const isResultVariableName = equals(RESULT_VARIABLE_NAME)
 const TRAVERSAL_WORKLIST_NAMES = new Set([

@@ -102,6 +102,21 @@ describe('detectVisualizationState', () => {
     expect(detectVisualizationState(state).primaryStackName).toBeUndefined()
   })
 
+  it('selects a mutated answer array as the primary stack', () => {
+    const state = createExecutionState([
+      createStep(0, 'Filled prefix products', {
+        nums: [1, 2, 3, 4],
+        answer: [1, 1, 2, 6],
+      }),
+      createStep(1, 'Applied suffix products', {
+        nums: [1, 2, 3, 4],
+        answer: [24, 12, 8, 6],
+      }),
+    ])
+
+    expect(detectVisualizationState(state).primaryStackName).toBe('answer')
+  })
+
   it('handles cyclic list nodes while selecting list candidates', () => {
     const head: Record<string, unknown> = { val: 1, next: null }
     head.next = head
