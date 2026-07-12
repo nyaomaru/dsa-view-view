@@ -98,6 +98,7 @@ export function Visualizer({
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalType, setModalType] = useState<ModalType>(null)
+  const [isFollowingPrimaryList, setIsFollowingPrimaryList] = useState(false)
   const [targetVariable, setTargetVariable] = useState<string | undefined>(
     undefined
   )
@@ -113,8 +114,10 @@ export function Visualizer({
   const openModal = (
     type: Exclude<ModalType, null>,
     variableName?: string,
-    stepIndex?: number
+    stepIndex?: number,
+    followPrimaryList = false
   ) => {
+    setIsFollowingPrimaryList(type === 'list-graph' && followPrimaryList)
     setTargetVariable(variableName)
     setTargetStepIndex(stepIndex)
     setModalType(type)
@@ -245,7 +248,7 @@ export function Visualizer({
     }
 
     if (primaryListNodeName) {
-      openModal('list-graph', primaryListNodeName)
+      openModal('list-graph', primaryListNodeName, undefined, true)
       autoOpenedStepsRef.current = executionState.steps
     }
   }, [
@@ -267,6 +270,17 @@ export function Visualizer({
     primaryMatrixStepIndex,
     primaryTreeNodeName,
   ])
+
+  useEffect(() => {
+    if (
+      isModalOpen &&
+      modalType === 'list-graph' &&
+      isFollowingPrimaryList &&
+      primaryListNodeName
+    ) {
+      setTargetVariable(primaryListNodeName)
+    }
+  }, [isFollowingPrimaryList, isModalOpen, modalType, primaryListNodeName])
 
   return (
     <Stack spacing="md">
@@ -323,8 +337,8 @@ export function Visualizer({
         onOpenTreeGraph={(variableName) =>
           openModal('tree-graph', variableName)
         }
-        onOpenListGraph={(variableName) =>
-          openModal('list-graph', variableName)
+        onOpenListGraph={(variableName, followPrimary) =>
+          openModal('list-graph', variableName, undefined, followPrimary)
         }
         onOpenTree={() => openModal('tree')}
       />

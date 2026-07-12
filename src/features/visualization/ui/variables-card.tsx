@@ -76,7 +76,7 @@ type VariablesCardProps = {
   /** Opens tree graph visualization for a variable. */
   onOpenTreeGraph: (variableName: string) => void
   /** Opens list graph visualization for a variable. */
-  onOpenListGraph: (variableName: string) => void
+  onOpenListGraph: (variableName: string, followPrimary?: boolean) => void
   /** Opens recursion tree visualization. */
   onOpenTree: () => void
 }
@@ -241,7 +241,7 @@ export function VariablesCard({
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => onOpenListGraph(primaryListNodeName)}
+              onClick={() => onOpenListGraph(primaryListNodeName, true)}
             >
               <GitGraph className="w-4 h-4" />
               List Graph

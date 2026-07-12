@@ -1555,6 +1555,89 @@ describe('Visualizer return value display', () => {
     expect(screen.getByText('prev List Graph')).toBeInTheDocument()
   })
 
+  it('follows the primary linked-list variable as reversal advances', async () => {
+    const steps: ExecutionState['steps'] = [
+      {
+        stepNumber: 0,
+        type: 'function-entry',
+        line: 1,
+        description: 'Entering function: reverseList',
+        variables: {
+          head: {
+            val: 1,
+            next: { val: 2, next: { val: 3, next: null } },
+          },
+          prev: null,
+        },
+        timestamp: Date.now(),
+        callStack: ['root', 'reverseList'],
+      },
+      {
+        stepNumber: 1,
+        type: 'return',
+        line: 13,
+        description: 'return from reverseList line 13: prev',
+        variables: {
+          head: { val: 1, next: null },
+          prev: {
+            val: 3,
+            next: { val: 2, next: { val: 1, next: null } },
+          },
+        },
+        timestamp: Date.now(),
+        callStack: ['root'],
+      },
+    ]
+    const initialState: ExecutionState = {
+      currentStep: 0,
+      totalSteps: steps.length,
+      steps,
+      isComplete: false,
+    }
+    const { rerender } = render(
+      <Visualizer
+        executionState={initialState}
+        isRunning={true}
+        autoOpenPrimaryVisualization
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('List Graph: head')).toBeInTheDocument()
+    })
+
+    rerender(
+      <Visualizer
+        executionState={{
+          ...initialState,
+          currentStep: 1,
+          isComplete: true,
+        }}
+        isRunning={false}
+        autoOpenPrimaryVisualization
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('List Graph: prev')).toBeInTheDocument()
+    })
+    expect(screen.getByText('prev List Graph')).toBeInTheDocument()
+  })
+
   it('keeps List Graph available for a pointer variable after it becomes null', () => {
     const steps: ExecutionState['steps'] = [
       {

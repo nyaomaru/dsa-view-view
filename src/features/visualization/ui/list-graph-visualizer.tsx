@@ -116,6 +116,10 @@ function buildListGraphLayout(head: ListNodeValue | null): ListGraphLayout {
     current = current.next
   }
 
+  if (nodes.length === 1) {
+    nodes[0].x += NODE_GAP / 2
+  }
+
   return {
     nodes,
     cycleEdge,
