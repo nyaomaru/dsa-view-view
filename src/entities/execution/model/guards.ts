@@ -12,16 +12,9 @@ import {
   type Guard,
 } from '@/shared/lib/guards'
 import type { ExecutionState, ExecutionStep } from './types'
+import { STEP_TYPES } from './constants'
 
-const isExecutionStepType = oneOfValues(
-  'assignment',
-  'function-call',
-  'return',
-  'condition',
-  'loop-iteration',
-  'function-entry',
-  'array-mutation'
-)
+const isExecutionStepType = oneOfValues(Object.values(STEP_TYPES))
 const hasExecutionStepKeys = hasKeys(
   'stepNumber',
   'type',

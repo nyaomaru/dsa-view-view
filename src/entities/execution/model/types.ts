@@ -1,3 +1,5 @@
+import type { ExecutionStepType } from './constants'
+
 /** Map of user-provided values for function parameters. */
 export type InputValues = Record<string, unknown>
 
@@ -6,14 +8,7 @@ export type ExecutionStep = {
   /** Sequential step number. */
   stepNumber: number
   /** Step type. */
-  type:
-    | 'assignment'
-    | 'function-call'
-    | 'return'
-    | 'condition'
-    | 'loop-iteration'
-    | 'function-entry'
-    | 'array-mutation'
+  type: ExecutionStepType
   /** Source line number for this step. */
   line: number
   /** Optional source column number for this step. */

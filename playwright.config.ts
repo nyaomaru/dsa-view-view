@@ -33,7 +33,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `pnpm dev --host ${APP_HOST} --port ${APP_PORT}`,
+    command: `pnpm preview --host ${APP_HOST} --port ${APP_PORT}`,
     url: APP_URL,
     reuseExistingServer: !process.env.CI,
   },

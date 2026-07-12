@@ -14,7 +14,7 @@
     "prepare": "lefthook install",
     "test": "vp test run",
     "test:ui": "vp test --ui",
-    "test:e2e": "playwright test"
+    "test:e2e": "vp build && playwright test"
   },
   "dependencies": {
     "@babel/generator": "^8.0.0",

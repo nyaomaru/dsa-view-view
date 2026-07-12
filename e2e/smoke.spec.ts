@@ -59,3 +59,28 @@ test('loads, compiles, runs a demo, and opens core dialogs', async ({
     await expect(shareDialog.getByLabel('Share URL')).toHaveValue(/#s=/)
   }
 })
+
+test('executes worker traces containing variable declarations', async ({
+  page,
+}) => {
+  await page.goto('/')
+
+  await page.getByRole('combobox', { name: 'Example' }).click()
+  await page.getByLabel('Search examples').fill('product except self')
+  await page
+    .getByRole('option', { name: 'Product Except Self', exact: true })
+    .click()
+
+  await expect(page.getByText('Input Parameters')).toBeVisible()
+  const executionWorkerStarted = page.waitForEvent('worker', {
+    predicate: (worker) => worker.url().includes('execution-worker'),
+  })
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+  await executionWorkerStarted
+
+  await expect(page.getByText('All execution steps')).toBeVisible()
+  await expect(page.getByText('[24,12,8,6]')).toBeVisible()
+  await expect(
+    page.getByText('Worker returned an invalid response.')
+  ).toHaveCount(0)
+})
