@@ -5,6 +5,8 @@
 DSA View View turns TypeScript algorithm functions into step-by-step visual
 stories. 👀👀
 
+[![DSA View View TV](./public/demo/dsa-view-view-tv.gif)](https://dsa-view-view.vercel.app/)
+
 Write code, run it with structured inputs, and see the arrays, matrices,
 trees, lists, stacks, pointers, and return values move as the function executes.
 
@@ -19,8 +21,7 @@ to _see_ why the answer changes.
   Paste or edit a function, validate it, then run the exact code in the browser.
 
 - 🧩 **Views that match the data**<br />
-  Arrays become bars, matrices become grids, trees become node graphs, linked
-  lists become chains, and two-pointer area problems get their own visual view.
+  Arrays become bars, matrices become grids, trees become node graphs, linked lists become chains, and two-pointer area problems get their own visual view.
 
 - 🌳 **DSA-friendly inputs out of the box**<br />
   `TreeNode`, `ListNode`, nested arrays, matrices, strings, numbers, and class
@@ -32,8 +33,7 @@ to _see_ why the answer changes.
   more.
 
 - 🔗 **Share the exact moment**<br />
-  Create a tokenized share URL for the current example, code, input, mode, and
-  runtime step.
+  Create a tokenized share URL for the current example, code, input, mode, and runtime step.
 
 - 📺 **A tiny monitor friend**<br />
   ViewView reacts while you validate, wait, run, and finish algorithms.
@@ -48,8 +48,7 @@ to _see_ why the answer changes.
 
 ## Built-In Example Categories
 
-Hash Map, Binary Search, Array, Sorting, Stack, Two Pointers, Dynamic
-Programming, Backtracking, Matrix, Graph, Binary Tree, and Linked List.
+Hash Map, Binary Search, Array, Sorting, Stack, Two Pointers, Dynamic Programming, Backtracking, Matrix, Graph, Binary Tree, and Linked List and so on.
 
 ## Local Setup
 
