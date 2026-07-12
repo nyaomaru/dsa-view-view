@@ -15,10 +15,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           package-manager-cache: false
@@ -39,10 +39,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           package-manager-cache: false
@@ -63,10 +63,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           package-manager-cache: false
@@ -87,10 +87,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: 24
           package-manager-cache: false
