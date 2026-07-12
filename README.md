@@ -84,3 +84,7 @@ Async code, arbitrary package imports, accounts, cloud saving, and multi-languag
 ---
 
 If the algorithm is hard to picture, let's make it visible. 👀👀
+
+If you like DSA View View, please give it star ⭐
+
+[![DSA View View TV See You](./public/demo/dsa-view-view-tv-see-you.gif)](https://dsa-view-view.vercel.app/)
