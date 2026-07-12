@@ -177,6 +177,26 @@ test('visualizes array and rolling DP examples', async ({ page, isMobile }) => {
 
     await expect(dpDialog).toBeVisible()
     await expect(dpDialog.getByText(example.table)).toBeVisible()
+
+    if (isMobile) {
+      const scrollContainer = dpDialog.locator('[data-tree-scroll-container]')
+      const layout = await scrollContainer.evaluate((element) => {
+        const containerTop = element.getBoundingClientRect().top
+        const firstChildTop =
+          element.firstElementChild?.getBoundingClientRect().top
+
+        return {
+          containerTop,
+          firstChildTop,
+          scrollTop: element.scrollTop,
+        }
+      })
+
+      expect(layout.scrollTop).toBe(0)
+      expect(layout.firstChildTop).toBeGreaterThanOrEqual(
+        layout.containerTop - 1
+      )
+    }
   }
 })
 
