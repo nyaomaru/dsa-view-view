@@ -1,0 +1,14 @@
+packages:
+  - .
+
+overrides:
+  dompurify: 3.4.11
+
+allowBuilds:
+  lefthook: true
+
+peerDependencyRules:
+  allowAny:
+    - vite
+  allowedVersions:
+    tailwindcss: '4'

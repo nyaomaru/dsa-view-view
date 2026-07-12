@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+@import './theme.css';
+@import './base.css';
+@import './links.css';
+@import './pixel-button.css';
+@import './pixel-slider.css';
+@import './pixel-panel.css';
+@import './sidebar-tabs.css';
+@import './pixel-field.css';
+@import './pixel-tabs.css';
+@import './pixel-editor.css';
+@import './pixel-chip.css';
+@import './scrollbars.css';
+@config "../../../tailwind.config.js";

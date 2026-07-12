@@ -1,0 +1,29 @@
+.pixel-field {
+  --pixel-field-shell: rgb(var(--border));
+  --pixel-field-fill: transparent;
+  border: 0.0625rem solid var(--pixel-field-shell) !important;
+  background: var(--pixel-field-fill) !important;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.pixel-field:focus-visible,
+.pixel-field[data-state='open'] {
+  --pixel-field-shell: rgb(var(--primary));
+  border-color: var(--pixel-field-shell) !important;
+  box-shadow: 0 0 0 0.0625rem rgb(var(--primary) / 0.35);
+}
+
+.pixel-field.border-input {
+  --pixel-field-shell: rgb(var(--input));
+}
+
+.pixel-field.border-primary {
+  --pixel-field-shell: rgb(var(--primary));
+}
+
+.pixel-field.border-destructive {
+  --pixel-field-shell: rgb(var(--destructive));
+}

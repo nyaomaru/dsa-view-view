@@ -1,0 +1,28 @@
+/* ==============================
+   Scrollbar styling (primary)
+   ============================== */
+/* Firefox */
+* {
+  /* Use thin scrollbar to reduce perceived width */
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--primary)) transparent;
+}
+
+/* WebKit-based (Chrome, Edge, Safari) */
+*::-webkit-scrollbar {
+  /* Match thin scrollbar profile for WebKit browsers */
+  width: 0.5rem;
+  height: 0.5rem;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--primary) / 0.5);
+  border-radius: 624.9375rem;
+  border: 0.125rem solid transparent; /* preserve inner thumb space with thinner width */
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(var(--primary));
+}

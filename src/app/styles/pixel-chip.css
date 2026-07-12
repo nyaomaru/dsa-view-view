@@ -1,0 +1,44 @@
+.pixel-chip {
+  --pixel-chip-shell: rgb(var(--primary));
+  --pixel-chip-fill: rgb(var(--background));
+  position: relative;
+  isolation: isolate;
+  border: var(--pixel-step-1) solid var(--pixel-chip-shell) !important;
+  background: var(--pixel-chip-fill) !important;
+  border-radius: 0;
+  clip-path: polygon(
+    var(--pixel-step-1) 0,
+    calc(100% - var(--pixel-step-1)) 0,
+    100% var(--pixel-step-1),
+    100% calc(100% - var(--pixel-step-1)),
+    calc(100% - var(--pixel-step-1)) 100%,
+    var(--pixel-step-1) 100%,
+    0 calc(100% - var(--pixel-step-1)),
+    0 var(--pixel-step-1)
+  );
+}
+
+.pixel-chip--default {
+  --pixel-chip-shell: rgb(var(--primary));
+  --pixel-chip-fill: rgb(var(--primary));
+}
+
+.pixel-chip--secondary {
+  --pixel-chip-shell: rgb(var(--secondary) / var(--secondary-alpha));
+  --pixel-chip-fill: rgb(var(--secondary) / var(--secondary-alpha));
+}
+
+.pixel-chip--destructive {
+  --pixel-chip-shell: rgb(var(--destructive));
+  --pixel-chip-fill: rgb(var(--destructive));
+}
+
+.pixel-chip--outline {
+  --pixel-chip-shell: rgb(var(--primary));
+  --pixel-chip-fill: rgb(var(--background));
+}
+
+.timeline-step-badge--current {
+  --pixel-chip-shell: rgb(var(--timeline-current-foreground));
+  --pixel-chip-fill: rgb(var(--primary));
+}

@@ -1,0 +1,106 @@
+.pixel-editor-frame {
+  --pixel-shell-color: rgb(var(--primary));
+  position: relative;
+  isolation: isolate;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.pixel-editor-frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--pixel-shell-color);
+  clip-path: polygon(
+    var(--pixel-step-4) 0,
+    calc(100% - var(--pixel-step-4)) 0,
+    calc(100% - var(--pixel-step-4)) var(--pixel-step-1),
+    calc(100% - var(--pixel-step-3)) var(--pixel-step-1),
+    calc(100% - var(--pixel-step-3)) var(--pixel-step-2),
+    calc(100% - var(--pixel-step-2)) var(--pixel-step-2),
+    calc(100% - var(--pixel-step-2)) var(--pixel-step-3),
+    calc(100% - var(--pixel-step-1)) var(--pixel-step-3),
+    calc(100% - var(--pixel-step-1)) calc(100% - var(--pixel-step-2)),
+    calc(100% - var(--pixel-step-2)) calc(100% - var(--pixel-step-2)),
+    calc(100% - var(--pixel-step-2)) calc(100% - var(--pixel-step-3)),
+    calc(100% - var(--pixel-step-3)) calc(100% - var(--pixel-step-3)),
+    calc(100% - var(--pixel-step-3)) calc(100% - var(--pixel-step-1)),
+    calc(100% - var(--pixel-step-4)) calc(100% - var(--pixel-step-1)),
+    calc(100% - var(--pixel-step-4)) 100%,
+    var(--pixel-step-4) 100%,
+    var(--pixel-step-4) calc(100% - var(--pixel-step-1)),
+    var(--pixel-step-3) calc(100% - var(--pixel-step-1)),
+    var(--pixel-step-3) calc(100% - var(--pixel-step-2)),
+    var(--pixel-step-2) calc(100% - var(--pixel-step-2)),
+    var(--pixel-step-2) calc(100% - var(--pixel-step-3)),
+    var(--pixel-step-1) calc(100% - var(--pixel-step-3)),
+    var(--pixel-step-1) var(--pixel-step-3),
+    var(--pixel-step-2) var(--pixel-step-3),
+    var(--pixel-step-2) var(--pixel-step-2),
+    var(--pixel-step-3) var(--pixel-step-2),
+    var(--pixel-step-3) var(--pixel-step-1),
+    var(--pixel-step-4) var(--pixel-step-1)
+  );
+}
+
+.pixel-editor-frame::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  width: var(--pixel-step-4);
+  height: var(--pixel-step-4);
+  pointer-events: none;
+  background:
+    linear-gradient(var(--pixel-shell-color) 0 0) var(--pixel-step-1)
+      var(--pixel-step-2) / var(--pixel-step-1) var(--pixel-step-1) no-repeat,
+    linear-gradient(var(--pixel-shell-color) 0 0) var(--pixel-step-2)
+      var(--pixel-step-1) / var(--pixel-step-1) var(--pixel-step-1) no-repeat;
+}
+
+.pixel-editor-frame > * {
+  position: relative;
+  z-index: 1;
+}
+
+.pixel-editor-viewport {
+  height: 100%;
+  overflow: hidden;
+  background: rgb(var(--card));
+  clip-path: polygon(
+    var(--pixel-step-3) 0,
+    calc(100% - var(--pixel-step-3)) 0,
+    calc(100% - var(--pixel-step-3)) var(--pixel-step-1),
+    calc(100% - var(--pixel-step-2)) var(--pixel-step-1),
+    calc(100% - var(--pixel-step-2)) var(--pixel-step-2),
+    calc(100% - var(--pixel-step-1)) var(--pixel-step-2),
+    calc(100% - var(--pixel-step-1)) calc(100% - var(--pixel-step-2)),
+    calc(100% - var(--pixel-step-2)) calc(100% - var(--pixel-step-2)),
+    calc(100% - var(--pixel-step-2)) calc(100% - var(--pixel-step-1)),
+    calc(100% - var(--pixel-step-3)) calc(100% - var(--pixel-step-1)),
+    calc(100% - var(--pixel-step-3)) 100%,
+    var(--pixel-step-3) 100%,
+    var(--pixel-step-3) calc(100% - var(--pixel-step-1)),
+    var(--pixel-step-2) calc(100% - var(--pixel-step-1)),
+    var(--pixel-step-2) calc(100% - var(--pixel-step-2)),
+    var(--pixel-step-1) calc(100% - var(--pixel-step-2)),
+    var(--pixel-step-1) var(--pixel-step-2),
+    var(--pixel-step-2) var(--pixel-step-2),
+    var(--pixel-step-2) var(--pixel-step-1),
+    var(--pixel-step-3) var(--pixel-step-1)
+  );
+}
+
+@media (max-width: 1023.98px) {
+  .pixel-editor-viewport .monaco-scrollable-element,
+  .pixel-editor-viewport .monaco-editor .overflow-guard,
+  .pixel-editor-viewport .monaco-editor .view-lines {
+    touch-action: pan-x pan-y;
+  }
+
+  .pixel-editor-viewport .monaco-scrollable-element {
+    overscroll-behavior-x: contain;
+  }
+}
