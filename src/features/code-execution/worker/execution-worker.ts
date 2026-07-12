@@ -4,6 +4,7 @@ import {
   type ExecutionWorkerResponse,
 } from './execution-worker-protocol'
 import { isError } from '@/shared/lib/guards'
+import { createWorkerTransferValue } from './worker-transfer'
 
 type WorkerScope = {
   addEventListener: (
@@ -20,11 +21,15 @@ function sendResponse(response: ExecutionWorkerResponse): void {
   try {
     postMessageToHost(response)
   } catch {
-    postMessageToHost({
-      type: 'failure',
-      requestId: response.requestId,
-      message: 'Execution produced a value that cannot leave the worker.',
-    })
+    try {
+      postMessageToHost(createWorkerTransferValue(response))
+    } catch {
+      postMessageToHost({
+        type: 'failure',
+        requestId: response.requestId,
+        message: 'Execution produced a value that cannot leave the worker.',
+      })
+    }
   }
 }
 

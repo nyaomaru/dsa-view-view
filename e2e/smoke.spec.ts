@@ -84,3 +84,26 @@ test('executes worker traces containing variable declarations', async ({
     page.getByText('Worker returned an invalid response.')
   ).toHaveCount(0)
 })
+
+test('returns cyclic clone graphs across the worker boundary', async ({
+  page,
+}) => {
+  await page.goto('/')
+
+  await page.getByRole('combobox', { name: 'Example' }).click()
+  await page.getByLabel('Search examples').fill('clone graph')
+  await page.getByRole('option', { name: 'Clone Graph', exact: true }).click()
+
+  await expect(page.getByText('Input Parameters')).toBeVisible()
+  const executionWorkerStarted = page.waitForEvent('worker', {
+    predicate: (worker) => worker.url().includes('execution-worker'),
+  })
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+  await executionWorkerStarted
+
+  await expect(page.getByText('All execution steps')).toBeVisible()
+  await expect(page.getByText('Execution Error')).toHaveCount(0)
+  await expect(
+    page.getByText('Execution produced a value that cannot leave the worker.')
+  ).toHaveCount(0)
+})
