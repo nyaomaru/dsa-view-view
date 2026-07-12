@@ -184,19 +184,19 @@ export function VisualizationModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="top-4 h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] translate-y-0 flex flex-col bg-background sm:top-[50%] sm:h-[min(80vh,calc(100dvh-2rem))] sm:max-w-3xl sm:translate-y-[-50%]">
-        <DialogHeader>
+        <DialogHeader className="shrink-0">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <div
           className={cn(
-            'py-4 flex-1 min-h-0 overflow-y-auto',
+            'py-4 flex-1 min-h-0 overflow-y-auto overscroll-contain',
             (type === 'matrix' ||
               type === 'list-graph' ||
               type === 'dp' ||
               type === 'map') &&
-              'flex items-center justify-center'
+              'flex items-start justify-center sm:items-center'
           )}
           data-tree-scroll-container
         >
@@ -205,12 +205,14 @@ export function VisualizationModal({
 
         {executionState.isComplete &&
           !isUndefined(executionState.returnValue) && (
-            <ReturnValueCard
-              returnValue={executionState.returnValue}
-              isExpanded={isReturnValueExpanded}
-              returnValueRef={returnValueRef}
-              onExpandedChange={setIsReturnValueExpanded}
-            />
+            <div className="shrink-0">
+              <ReturnValueCard
+                returnValue={executionState.returnValue}
+                isExpanded={isReturnValueExpanded}
+                returnValueRef={returnValueRef}
+                onExpandedChange={setIsReturnValueExpanded}
+              />
+            </div>
           )}
 
         <PlaybackControls
@@ -222,7 +224,7 @@ export function VisualizationModal({
           onStepForward={onStepForward}
           onStepBackward={onStepBackward}
           onSkipToEnd={onSkipToEnd}
-          className="justify-center gap-2 pt-4 border-t mt-auto"
+          className="shrink-0 justify-center gap-2 pt-4 border-t mt-auto"
         />
       </DialogContent>
     </Dialog>
