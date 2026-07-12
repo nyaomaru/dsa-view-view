@@ -81,6 +81,13 @@ The current release focuses on synchronous TypeScript DSA functions: arrays, mat
 It does not try to be a full IDE.
 Async code, arbitrary package imports, accounts, cloud saving, and multi-language execution are intentionally outside the first release scope.
 
+## Community
+
+Contributions are welcome. See the [contributing guide](./CONTRIBUTING.md),
+[Code of Conduct](./CODE_OF_CONDUCT.md), and [security policy](./SECURITY.md)
+before getting involved. Release history is tracked in the
+[changelog](./CHANGELOG.md).
+
 ---
 
 If the algorithm is hard to picture, let's make it visible. 👀👀
