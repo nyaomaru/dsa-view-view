@@ -1,6 +1,6 @@
 import type { ExecutionState } from '@/entities/execution'
 import { RETURN_VALUE_LABEL } from '@/entities/execution'
-import { isTreeNodeShape } from '@/entities/data-structure'
+import { isGraphNodeShape, isTreeNodeShape } from '@/entities/data-structure'
 import { isNumericArray, isUndefined } from '@/shared/lib/guards'
 import {
   getPrimaryArrayName,
@@ -95,10 +95,9 @@ export function detectVisualizationState(
     initialVariableNames,
     metadata.mutatedBooleanArrayNames
   )
-  const primaryGraphName = getPrimaryGraphName(
-    variableEntries,
-    initialVariableNames
-  )
+  const primaryGraphName = isGraphNodeShape(executionState.returnValue)
+    ? RETURN_VALUE_LABEL
+    : getPrimaryGraphName(variableEntries, initialVariableNames)
   const primaryMatrixName = getPrimaryMatrixName(
     executionState,
     metadata,

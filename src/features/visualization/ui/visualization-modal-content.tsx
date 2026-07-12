@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react'
 import type { ExecutionState } from '@/entities/execution'
 import { RETURN_VALUE_LABEL } from '@/entities/execution'
-import { isListNodeShape, isTreeNodeShape } from '@/entities/data-structure'
+import {
+  isGraphNodeShape,
+  isListNodeShape,
+  isTreeNodeShape,
+} from '@/entities/data-structure'
 import {
   isArray,
   isBooleanArray,
@@ -17,6 +21,7 @@ import {
 } from '../lib/binary-search-view'
 import { getAreaVisualizationState } from '../lib/area-view'
 import { getSlidingWindowVisualizationState } from '../lib/sliding-window-view'
+import { getGraphNodeAdjacencyRecord } from '../lib/graph-view'
 import type { VisualizationType } from './visualization-modal'
 import { StackVisualizer } from './stack-visualizer'
 import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
@@ -310,7 +315,13 @@ export function VisualizationModalContent({
     }
 
     case 'graph': {
-      const data = getCurrentStepVariable(targetVariable)
+      const rawData =
+        targetVariable === RETURN_VALUE_LABEL
+          ? executionState.returnValue
+          : getCurrentStepVariable(targetVariable)
+      const data = isGraphNodeShape(rawData)
+        ? getGraphNodeAdjacencyRecord(rawData)
+        : rawData
       const stateVarName = Object.keys(currentStep?.variables || {}).find(
         (name) =>
           name.toLowerCase() === 'state' || name.toLowerCase().includes('vis')

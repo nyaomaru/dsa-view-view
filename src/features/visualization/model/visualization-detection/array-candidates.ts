@@ -1,4 +1,4 @@
-import { isTreeNodeShape } from '@/entities/data-structure'
+import { isGraphNodeShape, isTreeNodeShape } from '@/entities/data-structure'
 import {
   equals,
   isArray,
@@ -92,6 +92,11 @@ export function getPrimaryGraphName(
   variableEntries: VariableEntries,
   initialVariableNames: Set<string>
 ): string | undefined {
+  const graphNodeName = variableEntries.find(
+    ([name, value]) => !isResultVariableName(name) && isGraphNodeShape(value)
+  )?.[0]
+  if (graphNodeName) return graphNodeName
+
   return variableEntries
     .filter(
       ([name, value]) =>

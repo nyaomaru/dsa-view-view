@@ -84,6 +84,20 @@ describe('detectVisualizationState', () => {
     expect(detection.visualizableListNodeNames).toEqual(['head'])
   })
 
+  it('selects cyclic graph-node return values for Graph View', () => {
+    const one = { val: 1, neighbors: [] as unknown[] }
+    const two = { val: 2, neighbors: [one] }
+    one.neighbors.push(two)
+    const state = createExecutionState(
+      [createStep(0, 'Returned graph clone', { node: one })],
+      one
+    )
+
+    expect(detectVisualizationState(state).primaryGraphName).toBe(
+      'return value'
+    )
+  })
+
   it('classifies class-design and recursive call-stack traces', () => {
     const state = createExecutionState([
       createStep(

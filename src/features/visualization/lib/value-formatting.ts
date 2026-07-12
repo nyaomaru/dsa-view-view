@@ -1,14 +1,15 @@
-import { isTreeNodeShape } from '@/entities/data-structure'
 import {
-  define,
-  hasKeys,
+  isGraphNodeShape,
+  isTreeNodeShape,
+  type GraphNodeValue,
+} from '@/entities/data-structure'
+import {
   isMatrix,
   isNull,
   isNestedArray,
   isNumericArray,
   isArray,
   isNumber,
-  isObject,
   isPlainObject,
   isPrimitive,
   isString,
@@ -19,20 +20,6 @@ import { safeStringify } from '@/shared/lib/safe-stringify'
 
 /** Maximum serialized length displayed inline before collapsing a value. */
 export const VALUE_PREVIEW_LIMIT = 96
-
-type GraphNodeValue = {
-  /** Graph node display value. */
-  val: unknown
-  /** Neighbor node references. */
-  neighbors: readonly unknown[]
-}
-
-const hasGraphNodeKeys = hasKeys('val', 'neighbors')
-
-const isGraphNodeValue = define<GraphNodeValue>(
-  (value) =>
-    isObject(value) && hasGraphNodeKeys(value) && isArray(value.neighbors)
-)
 
 function compareGraphNodes(
   left: GraphNodeValue,
@@ -46,7 +33,7 @@ function compareGraphNodes(
 }
 
 function getGraphAdjacencyList(value: unknown): unknown[][] | null {
-  if (!isGraphNodeValue(value)) return null
+  if (!isGraphNodeShape(value)) return null
 
   const seen = new WeakSet<object>()
   const nodes: GraphNodeValue[] = []
@@ -61,7 +48,7 @@ function getGraphAdjacencyList(value: unknown): unknown[][] | null {
     seen.add(node)
     nodes.push(node)
     node.neighbors.forEach((neighbor) => {
-      if (isGraphNodeValue(neighbor)) {
+      if (isGraphNodeShape(neighbor)) {
         queue.push(neighbor)
       }
     })
@@ -69,7 +56,7 @@ function getGraphAdjacencyList(value: unknown): unknown[][] | null {
 
   return nodes.sort(compareGraphNodes).map((node) => {
     return node.neighbors
-      .filter(isGraphNodeValue)
+      .filter(isGraphNodeShape)
       .map((neighbor) => neighbor.val)
   })
 }

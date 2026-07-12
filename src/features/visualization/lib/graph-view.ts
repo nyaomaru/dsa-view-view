@@ -2,8 +2,13 @@ import {
   isAdjacencyList,
   isInteger,
   isMatrix,
+  isNumber,
   oneOfValues,
 } from '@/shared/lib/guards'
+import {
+  isGraphNodeShape,
+  type GraphNodeValue,
+} from '@/entities/data-structure'
 
 const GRAPH_VARIABLE_NAMES = new Set(['adj', 'adjacency', 'graph'])
 const isBinaryCell = oneOfValues(0, 1, '0', '1')
@@ -37,4 +42,36 @@ export function isAdjacencyListCandidate(
         isInteger(neighbor) && neighbor >= 0 && neighbor < value.length
     )
   )
+}
+
+/** Converts a cyclic graph-node structure into the record consumed by Graph View. */
+export function getGraphNodeAdjacencyRecord(
+  value: unknown
+): Record<number, number[]> | null {
+  if (!isGraphNodeShape(value)) return null
+
+  const seen = new WeakSet<object>()
+  const queue: GraphNodeValue[] = [value]
+  const adjacency: Record<number, number[]> = {}
+
+  while (queue.length > 0) {
+    const node = queue.shift()
+    if (!node || seen.has(node)) continue
+    if (!isNumber(node.val) || !Number.isFinite(node.val)) return null
+    if (node.val in adjacency) return null
+
+    seen.add(node)
+    const neighbors: number[] = []
+    for (const neighbor of node.neighbors) {
+      if (!isNumber(neighbor.val) || !Number.isFinite(neighbor.val)) {
+        return null
+      }
+
+      neighbors.push(neighbor.val)
+      queue.push(neighbor)
+    }
+    adjacency[node.val] = neighbors
+  }
+
+  return adjacency
 }

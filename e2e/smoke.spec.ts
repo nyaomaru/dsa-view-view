@@ -87,6 +87,7 @@ test('executes worker traces containing variable declarations', async ({
 
 test('returns cyclic clone graphs across the worker boundary', async ({
   page,
+  isMobile,
 }) => {
   await page.goto('/')
 
@@ -106,4 +107,12 @@ test('returns cyclic clone graphs across the worker boundary', async ({
   await expect(
     page.getByText('Execution produced a value that cannot leave the worker.')
   ).toHaveCount(0)
+
+  if (isMobile) {
+    await page.getByRole('button', { name: 'Graph View' }).click()
+  }
+
+  await expect(
+    page.getByRole('heading', { name: 'Graph: return value' })
+  ).toBeVisible()
 })

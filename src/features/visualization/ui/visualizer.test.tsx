@@ -246,6 +246,11 @@ describe('Visualizer return value display', () => {
     expect(
       within(returnCard as HTMLElement).queryByText('Show details')
     ).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('Graph View'))
+
+    expect(screen.getByText('Graph: return value')).toBeInTheDocument()
+    expect(screen.getByText('return value (Graph)')).toBeInTheDocument()
   })
 
   it('shows compact array return values without requiring expansion', () => {

@@ -7,7 +7,11 @@ import {
   Grid3X3,
   Layers,
 } from 'lucide-react'
-import { isListNodeShape, isTreeNodeShape } from '@/entities/data-structure'
+import {
+  isGraphNodeShape,
+  isListNodeShape,
+  isTreeNodeShape,
+} from '@/entities/data-structure'
 import {
   isArray,
   isBooleanArray,
@@ -103,6 +107,8 @@ type InlineVisualizationAvailability = {
   treeNode: boolean
   /** Whether linked-list graph visualization can be shown. */
   listNode: boolean
+  /** Whether graph-node visualization can be shown. */
+  graphNode: boolean
   /** Whether the variable is not a result-only value. */
   dataStructure: boolean
 }
@@ -135,6 +141,7 @@ function getInlineVisualizationAvailability({
       dataStructure &&
       (isListNodeShape(value) ||
         (isNull(value) && visualizableListNodeNames.includes(name))),
+    graphNode: dataStructure && isGraphNodeShape(value),
     dataStructure,
   }
 }
@@ -183,7 +190,12 @@ function InlineVisualizationActions({
   onOpenTreeGraph,
   onOpenListGraph,
 }: InlineVisualizationActionsProps) {
-  if (!availability.array && !availability.treeNode && !availability.listNode) {
+  if (
+    !availability.array &&
+    !availability.treeNode &&
+    !availability.listNode &&
+    !availability.graphNode
+  ) {
     return null
   }
 
@@ -207,6 +219,17 @@ function InlineVisualizationActions({
           className={INLINE_VISUALIZATION_BUTTON_CLASS}
           title="Visualize as list graph"
           onClick={() => onOpenListGraph(name)}
+        >
+          <GitGraph className={INLINE_VISUALIZATION_ICON_CLASS} />
+        </Button>
+      )}
+      {availability.graphNode && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className={INLINE_VISUALIZATION_BUTTON_CLASS}
+          title="Visualize as graph"
+          onClick={() => onOpenGraph(name)}
         >
           <GitGraph className={INLINE_VISUALIZATION_ICON_CLASS} />
         </Button>
