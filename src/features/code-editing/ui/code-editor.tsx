@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react'
 import Editor from '@monaco-editor/react'
 import type { OnMount } from '@monaco-editor/react'
 import type { CompilationError } from '@/entities/code'
-import { configureMonaco } from '../lib/configure-monaco'
+import { configureMonaco, prepareMonaco } from '../lib/configure-monaco'
 import {
   clearHighlightedLineDecorations,
   DEFAULT_EDITOR_OPTIONS,
@@ -22,6 +22,9 @@ import { CodeEditorFrame } from './code-editor-frame'
 import { CodeEditorSpinner } from './code-editor-spinner'
 
 configureMonaco()
+
+/** Preloads Monaco so mounting the rich editor does not start from cold. */
+export const prepareCodeEditor = prepareMonaco
 
 /**
  * Props for CodeEditor component

@@ -1,11 +1,16 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vite-plus/test'
 
 import { EditorPanel } from './editor-panel'
 import { AppHeader } from '@/widgets/header'
 
+const { prepareCodeEditor } = vi.hoisted(() => ({
+  prepareCodeEditor: vi.fn().mockResolvedValue(undefined),
+}))
+
 vi.mock('@/features/code-editing/code-editor', () => {
   return {
+    prepareCodeEditor,
     CodeEditor: () => <textarea aria-label="Code Editor" />,
   }
 })
@@ -43,5 +48,6 @@ describe('EditorPanel', () => {
     expect(runDemoButton).toHaveClass('flex-1', 'lg:flex-none')
     expect(mobileShareButton).toHaveClass('h-11', 'w-[8.5rem]', 'lg:hidden')
     expect(desktopShareButton).toHaveClass('h-20', 'max-w-[18rem]')
+    await waitFor(() => expect(prepareCodeEditor).toHaveBeenCalledOnce())
   })
 })

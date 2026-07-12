@@ -12,10 +12,17 @@ const bundledMonaco = {
   typescript: monacoTypeScript,
 }
 
+let isMonacoConfigured = false
+let monacoInitialization: ReturnType<typeof loader.init> | undefined
+
 /**
  * Configures Monaco to load from bundled Vite assets instead of the default CDN loader.
  */
 export function configureMonaco() {
+  if (isMonacoConfigured) {
+    return
+  }
+
   self.MonacoEnvironment = {
     getWorker(_workerId: string, label: string) {
       if (label === 'typescript' || label === 'javascript') {
@@ -27,4 +34,18 @@ export function configureMonaco() {
   }
 
   loader.config({ monaco: bundledMonaco as unknown as Monaco })
+  isMonacoConfigured = true
+}
+
+/**
+ * Prepares Monaco before the React editor is mounted.
+ *
+ * The loader caches its initialization, so the editor can reuse this work when
+ * it replaces the lightweight textarea.
+ */
+export function prepareMonaco() {
+  configureMonaco()
+  monacoInitialization ??= loader.init()
+
+  return monacoInitialization
 }

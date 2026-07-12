@@ -4,13 +4,26 @@ import type { CompilationError } from '@/entities/code'
 import { CodeEditorFrame } from '@/features/code-editing'
 import { ShareButton } from '@/features/shareable-url'
 
+type CodeEditorModule = typeof import('@/features/code-editing/code-editor')
+
+let codeEditorModulePreparation: Promise<CodeEditorModule> | undefined
+
+function prepareCodeEditorModule() {
+  codeEditorModulePreparation ??=
+    import('@/features/code-editing/code-editor').then(async (module) => {
+      await module.prepareCodeEditor()
+      return module
+    })
+
+  return codeEditorModulePreparation
+}
+
 const CodeEditor = lazy(() =>
-  import('@/features/code-editing/code-editor').then((module) => ({
-    default: module.CodeEditor,
-  }))
+  prepareCodeEditorModule().then((module) => ({ default: module.CodeEditor }))
 )
 
-const RICH_EDITOR_IDLE_LOAD_DELAY_MS = 2_000
+const RICH_EDITOR_PRELOAD_DELAY_MS = 250
+const RICH_EDITOR_PRELOAD_TIMEOUT_MS = 1_000
 
 /**
  * Props for EditorPanel component.
@@ -80,17 +93,27 @@ export function EditorPanel({
     }
 
     let idleId: number | null = null
-    const loadRichEditor = () => setShouldLoadRichEditor(true)
+    let isActive = true
+    const prepareRichEditor = () => {
+      void prepareCodeEditorModule().then(() => {
+        if (isActive) {
+          setShouldLoadRichEditor(true)
+        }
+      })
+    }
     const timerId = window.setTimeout(() => {
       if ('requestIdleCallback' in window) {
-        idleId = window.requestIdleCallback(loadRichEditor, { timeout: 1_500 })
+        idleId = window.requestIdleCallback(prepareRichEditor, {
+          timeout: RICH_EDITOR_PRELOAD_TIMEOUT_MS,
+        })
         return
       }
 
-      loadRichEditor()
-    }, RICH_EDITOR_IDLE_LOAD_DELAY_MS)
+      prepareRichEditor()
+    }, RICH_EDITOR_PRELOAD_DELAY_MS)
 
     return () => {
+      isActive = false
       window.clearTimeout(timerId)
 
       if (idleId !== null && 'cancelIdleCallback' in window) {

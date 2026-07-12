@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vite-plus/test'
 
 vi.mock('@/features/code-editing/code-editor', () => {
   return {
+    prepareCodeEditor: vi.fn().mockResolvedValue(undefined),
     CodeEditor: ({
       value,
       onChange,
