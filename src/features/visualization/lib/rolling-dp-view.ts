@@ -1,4 +1,6 @@
-import { isNull, isNumber, isNumericArray } from '@/shared/lib/guards'
+import { equals, isNull, isNumber, isNumericArray } from '@/shared/lib/guards'
+
+const isNumsVariableName = equals('nums')
 
 /** Display values for an O(1)-space rolling DP state. */
 export type RollingDpState = {
@@ -30,7 +32,7 @@ export function isRollingDpCandidate(
   variables: Record<string, unknown>
 ): boolean {
   return (
-    variableName.toLowerCase() === 'nums' &&
+    isNumsVariableName(variableName.toLowerCase()) &&
     isNumericArray(value) &&
     value.length > 1 &&
     !isNull(getRollingDpState(variables))

@@ -32,18 +32,7 @@ describe('VariablesCard', () => {
         primaryTreeNodeName="root"
         visualizableTreeNodeNames={['root']}
         onToggleVariable={vi.fn()}
-        onOpenStack={vi.fn()}
-        onOpenBarChart={vi.fn()}
-        onOpenArea={vi.fn()}
-        onOpenBinarySearch={vi.fn()}
-        onOpenSlidingWindow={vi.fn()}
-        onOpenBooleanArray={vi.fn()}
-        onOpenMap={vi.fn()}
-        onOpenGraph={vi.fn()}
-        onOpenMatrix={vi.fn()}
-        onOpenTreeGraph={vi.fn()}
-        onOpenListGraph={vi.fn()}
-        onOpenTree={vi.fn()}
+        onOpenVisualization={vi.fn()}
       />
     )
 
@@ -59,7 +48,7 @@ describe('VariablesCard', () => {
   })
 
   it('shows a list graph button for nullable pointer variables that were ListNodes before', () => {
-    const openListGraph = vi.fn()
+    const openVisualization = vi.fn()
 
     render(
       <VariablesCard
@@ -74,23 +63,12 @@ describe('VariablesCard', () => {
         hasRecursion={false}
         visualizableListNodeNames={['fast']}
         onToggleVariable={vi.fn()}
-        onOpenStack={vi.fn()}
-        onOpenBarChart={vi.fn()}
-        onOpenArea={vi.fn()}
-        onOpenBinarySearch={vi.fn()}
-        onOpenSlidingWindow={vi.fn()}
-        onOpenBooleanArray={vi.fn()}
-        onOpenMap={vi.fn()}
-        onOpenGraph={vi.fn()}
-        onOpenMatrix={vi.fn()}
-        onOpenTreeGraph={vi.fn()}
-        onOpenListGraph={openListGraph}
-        onOpenTree={vi.fn()}
+        onOpenVisualization={openVisualization}
       />
     )
 
     screen.getByTitle('Visualize as list graph').click()
 
-    expect(openListGraph).toHaveBeenCalledWith('fast')
+    expect(openVisualization).toHaveBeenCalledWith('list-graph', 'fast')
   })
 })

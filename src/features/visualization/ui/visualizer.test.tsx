@@ -1244,7 +1244,9 @@ describe('Visualizer return value display', () => {
       await screen.findByRole('heading', { name: 'DP View: nums' })
     ).toBeInTheDocument()
     const dialog = screen.getByRole('dialog')
-    expect(within(dialog).getByText('nums: rolling DP state')).toBeInTheDocument()
+    expect(
+      within(dialog).getByText('nums: rolling DP state')
+    ).toBeInTheDocument()
     expect(within(dialog).getByText('prev2')).toBeInTheDocument()
     expect(within(dialog).getByText('prev1')).toBeInTheDocument()
     expect(within(dialog).getByText('current')).toBeInTheDocument()
@@ -1290,7 +1292,9 @@ describe('Visualizer return value display', () => {
     const dialog = screen.getByRole('dialog')
     expect(within(dialog).getByText('seen: lookup table')).toBeInTheDocument()
     expect(within(dialog).getByText('complement=2')).toBeInTheDocument()
-    expect(within(dialog).getByText('match → result [0, 1]')).toBeInTheDocument()
+    expect(
+      within(dialog).getByText('match → result [0, 1]')
+    ).toBeInTheDocument()
   })
 
   it('shows Anagram character counts in Map View', async () => {

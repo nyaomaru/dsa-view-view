@@ -8,6 +8,7 @@ import {
   isResultVariableName,
 } from './variables'
 import type { VisualizationMutationMetadata } from './types'
+import type { IndexedVariableCandidate } from './candidate-search'
 
 function shouldTrackMatrixName(
   name: string,
@@ -66,13 +67,13 @@ function scoreMatrixCandidate({
   )
 }
 
-export function getPrimaryMatrixName(
+export function getPrimaryMatrixCandidate(
   executionState: ExecutionState,
   metadata: VisualizationMutationMetadata,
   initialVariableStepNumber: number,
   initialVariableNames: Set<string>
-): string | undefined {
-  return collectMatrixCandidateNames(
+): IndexedVariableCandidate | undefined {
+  const name = collectMatrixCandidateNames(
     executionState,
     metadata.mutatedMatrixNames,
     initialVariableNames
@@ -86,17 +87,11 @@ export function getPrimaryMatrixName(
       }),
     }))
     .sort((left, right) => right.score - left.score)[0]?.name
-}
+  if (isUndefined(name)) return undefined
 
-export function getPrimaryMatrixStepIndex(
-  executionState: ExecutionState,
-  primaryMatrixName: string | undefined
-): number | undefined {
-  if (isUndefined(primaryMatrixName)) return undefined
-
-  const primaryMatrixStepIndex = executionState.steps.findIndex((step) =>
-    isMatrix(step.variables[primaryMatrixName])
+  const stepIndex = executionState.steps.findIndex((step) =>
+    isMatrix(step.variables[name])
   )
 
-  return primaryMatrixStepIndex >= 0 ? primaryMatrixStepIndex : undefined
+  return stepIndex >= 0 ? { name, stepIndex } : undefined
 }

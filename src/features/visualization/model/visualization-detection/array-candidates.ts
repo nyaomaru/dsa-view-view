@@ -1,12 +1,12 @@
 import { isGraphNodeShape, isTreeNodeShape } from '@/entities/data-structure'
 import {
-  equals,
   isArray,
   isBooleanArray,
   isNumericArray,
   oneOfValues,
 } from '@/shared/lib/guards'
 import { isAdjacencyListCandidate } from '../../lib/graph-view'
+import { isDpVariableName } from '../../lib/dp-view'
 import {
   isResultLikeName,
   isResultVariableName,
@@ -14,7 +14,6 @@ import {
 } from './variables'
 import type { VariableEntries } from './types'
 
-const isDpName = equals('dp')
 const isGraphLikeName = oneOfValues('graph', 'adj', 'adjacency')
 
 export function getPrimaryArrayName(
@@ -69,31 +68,19 @@ export function hasInitialTreeNodeVariable(
   )
 }
 
-export function getPrimaryBooleanArrayName(
+export function getPrimaryDpArrayName(
   variableEntries: VariableEntries,
-  initialVariableNames: Set<string>,
   mutatedBooleanArrayNames: Set<string>,
   mutatedNumericArrayNames: Set<string>
 ): string | undefined {
-  return variableEntries
-    .filter(
-      ([name, value]) =>
-        !isResultVariableName(name) &&
-        (isBooleanArray(value) || isNumericArray(value)) &&
-        value.length > 0 &&
-        isDpName(name.toLowerCase()) &&
-        (mutatedBooleanArrayNames.has(name) ||
-          mutatedNumericArrayNames.has(name))
-    )
-    .sort(([leftName], [rightName]) => {
-      if (isDpName(leftName.toLowerCase())) return -1
-      if (isDpName(rightName.toLowerCase())) return 1
-
-      const leftIsDerived = initialVariableNames.has(leftName) ? 1 : 0
-      const rightIsDerived = initialVariableNames.has(rightName) ? 1 : 0
-
-      return leftIsDerived - rightIsDerived
-    })[0]?.[0]
+  return variableEntries.find(
+    ([name, value]) =>
+      !isResultVariableName(name) &&
+      (isBooleanArray(value) || isNumericArray(value)) &&
+      value.length > 0 &&
+      isDpVariableName(name.toLowerCase()) &&
+      (mutatedBooleanArrayNames.has(name) || mutatedNumericArrayNames.has(name))
+  )?.[0]
 }
 
 export function getPrimaryGraphName(

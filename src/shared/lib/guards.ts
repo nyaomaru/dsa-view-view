@@ -88,3 +88,13 @@ export const isAdjacencyList = define<MatrixValue>((value) => {
 export const isGraphSource = or(isArray, isObject)
 
 export const isMap = isInstanceOf(Map)
+
+export const isSet = isInstanceOf(
+  Set as unknown as abstract new (...args: unknown[]) => Set<unknown>
+)
+
+export const isDate = isInstanceOf(Date)
+
+export const isRegExp = isInstanceOf(
+  RegExp as unknown as abstract new (...args: unknown[]) => RegExp
+)

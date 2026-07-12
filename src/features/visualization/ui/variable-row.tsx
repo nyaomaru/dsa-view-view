@@ -15,6 +15,7 @@ import {
 import {
   isArray,
   isBooleanArray,
+  equals,
   isMatrix,
   isNestedArray,
   isNull,
@@ -28,10 +29,12 @@ import {
   VALUE_PREVIEW_LIMIT,
 } from '../lib/value-formatting'
 import { isAdjacencyListCandidate } from '../lib/graph-view'
+import { isDpVariableName } from '../lib/dp-view'
+import type { OpenVisualization } from '../model/types'
 
 const INLINE_VISUALIZATION_BUTTON_CLASS = 'h-8 w-8 shrink-0'
 const INLINE_VISUALIZATION_ICON_CLASS = 'h-3.5 w-3.5'
-const RESULT_VARIABLE_NAME = 'result'
+const isResultVariableName = equals('result')
 
 type VariableValuePreviewProps = {
   /** Raw runtime value to preview. */
@@ -53,20 +56,8 @@ type InlineVisualizationActionsProps = {
   value: unknown
   /** Computed availability flags for inline visualizations. */
   availability: InlineVisualizationAvailability
-  /** Opens stack visualization for the variable. */
-  onOpenStack: (variableName: string) => void
-  /** Opens bar chart visualization for the variable. */
-  onOpenBarChart: (variableName: string) => void
-  /** Opens boolean array DP visualization for the variable. */
-  onOpenBooleanArray: (variableName: string) => void
-  /** Opens graph visualization for the variable. */
-  onOpenGraph: (variableName: string) => void
-  /** Opens matrix visualization for the variable. */
-  onOpenMatrix: (variableName: string) => void
-  /** Opens tree graph visualization for the variable. */
-  onOpenTreeGraph: (variableName: string) => void
-  /** Opens linked-list graph visualization for the variable. */
-  onOpenListGraph: (variableName: string) => void
+  /** Opens an inline visualization for the variable. */
+  onOpenVisualization: OpenVisualization
 }
 
 type VariableRowProps = {
@@ -82,27 +73,15 @@ type VariableRowProps = {
   visualizableListNodeNames?: string[]
   /** Toggles the variable detail preview. */
   onToggleVariable: (variableName: string) => void
-  /** Opens stack visualization for the variable. */
-  onOpenStack: (variableName: string) => void
-  /** Opens bar chart visualization for the variable. */
-  onOpenBarChart: (variableName: string) => void
-  /** Opens boolean array DP visualization for the variable. */
-  onOpenBooleanArray: (variableName: string) => void
-  /** Opens graph visualization for the variable. */
-  onOpenGraph: (variableName: string) => void
-  /** Opens matrix visualization for the variable. */
-  onOpenMatrix: (variableName: string) => void
-  /** Opens tree graph visualization for the variable. */
-  onOpenTreeGraph: (variableName: string) => void
-  /** Opens linked-list graph visualization for the variable. */
-  onOpenListGraph: (variableName: string) => void
+  /** Opens an inline visualization for the variable. */
+  onOpenVisualization: OpenVisualization
 }
 
 type InlineVisualizationAvailability = {
   /** Whether stack visualization can be shown. */
   array: boolean
-  /** Whether boolean array DP visualization can be shown. */
-  booleanArray: boolean
+  /** Whether DP visualization can be shown. */
+  dpArray: boolean
   /** Whether tree graph visualization can be shown. */
   treeNode: boolean
   /** Whether linked-list graph visualization can be shown. */
@@ -128,14 +107,14 @@ function getInlineVisualizationAvailability({
   /** Linked-list variable names that remain visualizable when currently null. */
   visualizableListNodeNames: string[]
 }): InlineVisualizationAvailability {
-  const dataStructure = name !== RESULT_VARIABLE_NAME
+  const dataStructure = !isResultVariableName(name)
 
   return {
     array: isArray(value),
-    booleanArray:
+    dpArray:
       dataStructure &&
       (isBooleanArray(value) ||
-        (name.toLowerCase() === 'dp' && isNumericArray(value))) &&
+        (isDpVariableName(name.toLowerCase()) && isNumericArray(value))) &&
       value.length > 0,
     treeNode:
       dataStructure &&
@@ -186,13 +165,7 @@ function InlineVisualizationActions({
   name,
   value,
   availability,
-  onOpenStack,
-  onOpenBarChart,
-  onOpenBooleanArray,
-  onOpenGraph,
-  onOpenMatrix,
-  onOpenTreeGraph,
-  onOpenListGraph,
+  onOpenVisualization,
 }: InlineVisualizationActionsProps) {
   if (
     !availability.array &&
@@ -211,7 +184,7 @@ function InlineVisualizationActions({
           size="icon"
           className={INLINE_VISUALIZATION_BUTTON_CLASS}
           title="Visualize as tree graph"
-          onClick={() => onOpenTreeGraph(name)}
+          onClick={() => onOpenVisualization('tree-graph', name)}
         >
           <GitGraph className={INLINE_VISUALIZATION_ICON_CLASS} />
         </Button>
@@ -222,7 +195,7 @@ function InlineVisualizationActions({
           size="icon"
           className={INLINE_VISUALIZATION_BUTTON_CLASS}
           title="Visualize as list graph"
-          onClick={() => onOpenListGraph(name)}
+          onClick={() => onOpenVisualization('list-graph', name)}
         >
           <GitGraph className={INLINE_VISUALIZATION_ICON_CLASS} />
         </Button>
@@ -233,7 +206,7 @@ function InlineVisualizationActions({
           size="icon"
           className={INLINE_VISUALIZATION_BUTTON_CLASS}
           title="Visualize as graph"
-          onClick={() => onOpenGraph(name)}
+          onClick={() => onOpenVisualization('graph', name)}
         >
           <GitGraph className={INLINE_VISUALIZATION_ICON_CLASS} />
         </Button>
@@ -245,7 +218,7 @@ function InlineVisualizationActions({
             size="icon"
             className={INLINE_VISUALIZATION_BUTTON_CLASS}
             title="Visualize as stack"
-            onClick={() => onOpenStack(name)}
+            onClick={() => onOpenVisualization('stack', name)}
           >
             <Layers className={INLINE_VISUALIZATION_ICON_CLASS} />
           </Button>
@@ -257,18 +230,18 @@ function InlineVisualizationActions({
                 size="icon"
                 className={INLINE_VISUALIZATION_BUTTON_CLASS}
                 title="Visualize as bar chart"
-                onClick={() => onOpenBarChart(name)}
+                onClick={() => onOpenVisualization('bar-chart', name)}
               >
                 <BarChart2 className={INLINE_VISUALIZATION_ICON_CLASS} />
               </Button>
             )}
-          {availability.booleanArray && (
+          {availability.dpArray && (
             <Button
               variant="ghost"
               size="icon"
               className={INLINE_VISUALIZATION_BUTTON_CLASS}
               title="Visualize as DP table"
-              onClick={() => onOpenBooleanArray(name)}
+              onClick={() => onOpenVisualization('dp', name)}
             >
               <CheckSquare className={INLINE_VISUALIZATION_ICON_CLASS} />
             </Button>
@@ -280,7 +253,7 @@ function InlineVisualizationActions({
                 size="icon"
                 className={INLINE_VISUALIZATION_BUTTON_CLASS}
                 title="Visualize as graph"
-                onClick={() => onOpenGraph(name)}
+                onClick={() => onOpenVisualization('graph', name)}
               >
                 <GitGraph className={INLINE_VISUALIZATION_ICON_CLASS} />
               </Button>
@@ -293,7 +266,7 @@ function InlineVisualizationActions({
                 size="icon"
                 className={INLINE_VISUALIZATION_BUTTON_CLASS}
                 title="Visualize as grid matrix"
-                onClick={() => onOpenMatrix(name)}
+                onClick={() => onOpenVisualization('matrix', name)}
               >
                 <Grid3X3 className={INLINE_VISUALIZATION_ICON_CLASS} />
               </Button>
@@ -311,13 +284,7 @@ export function VariableRow({
   visualizableTreeNodeNames = [],
   visualizableListNodeNames = [],
   onToggleVariable,
-  onOpenStack,
-  onOpenBarChart,
-  onOpenBooleanArray,
-  onOpenGraph,
-  onOpenMatrix,
-  onOpenTreeGraph,
-  onOpenListGraph,
+  onOpenVisualization,
 }: VariableRowProps) {
   const serializedValue = stringifyValue(value)
   const shouldHideByDefault = isPlainObject(value) || isNestedArray(value)
@@ -363,13 +330,7 @@ export function VariableRow({
           name={name}
           value={value}
           availability={visualizationAvailability}
-          onOpenStack={onOpenStack}
-          onOpenBarChart={onOpenBarChart}
-          onOpenBooleanArray={onOpenBooleanArray}
-          onOpenGraph={onOpenGraph}
-          onOpenMatrix={onOpenMatrix}
-          onOpenTreeGraph={onOpenTreeGraph}
-          onOpenListGraph={onOpenListGraph}
+          onOpenVisualization={onOpenVisualization}
         />
       </div>
     </div>

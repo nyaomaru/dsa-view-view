@@ -1,10 +1,15 @@
 import {
+  equals,
   isInteger,
   isMap,
+  isNull,
   isNumber,
   isNumericArray,
   isString,
 } from '@/shared/lib/guards'
+
+const isSeenMapName = equals('seen')
+const isCountsMapName = equals('counts')
 
 type MapEntry = {
   key: string | number
@@ -49,7 +54,7 @@ function getLookupMapState(
   value: Map<unknown, unknown>,
   variables: Record<string, unknown>
 ): LookupMapState | null {
-  if (mapName !== 'seen') return null
+  if (!isSeenMapName(mapName)) return null
 
   const nums = variables.nums
   const currentIndex = variables.i
@@ -66,7 +71,7 @@ function getLookupMapState(
     !isInteger(currentIndex) ||
     !isNumber(target) ||
     !isNumber(complement) ||
-    !entries ||
+    isNull(entries) ||
     currentIndex < 0 ||
     currentIndex >= nums.length
   ) {
@@ -92,14 +97,14 @@ function getFrequencyMapState(
   value: Map<unknown, unknown>,
   variables: Record<string, unknown>
 ): FrequencyMapState | null {
-  if (mapName !== 'counts') return null
+  if (!isCountsMapName(mapName)) return null
 
   const source = variables.s
   const comparison = variables.t
   const currentChar = variables.char
   const entries = getNumericMapEntries(value)
 
-  if (!isString(source) || !isString(comparison) || !entries) return null
+  if (!isString(source) || !isString(comparison) || isNull(entries)) return null
 
   return {
     mode: 'frequency',

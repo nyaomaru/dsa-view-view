@@ -22,7 +22,10 @@ type AreaVisualizerProps = {
   areaState: AreaViewPointerState
 }
 
-function getMarkerLabel(index: number, areaState: AreaViewPointerState): string {
+function getMarkerLabel(
+  index: number,
+  areaState: AreaViewPointerState
+): string {
   if (index === areaState.leftIndex) return 'L'
   if (index === areaState.rightIndex) return 'R'
 

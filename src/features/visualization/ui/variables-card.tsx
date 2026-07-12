@@ -10,6 +10,7 @@ import {
 } from '@/shared/ui'
 import type { ExecutionStep } from '@/entities/execution'
 import { VariableRow } from './variable-row'
+import type { OpenVisualization } from '../model/types'
 
 /**
  * Props for VariablesCard component.
@@ -39,8 +40,8 @@ type VariablesCardProps = {
   primarySlidingWindowStringName?: string
   /** Step index where sliding-window indexes are available. */
   primarySlidingWindowStepIndex?: number
-  /** Primary boolean array variable detected for DP visualization. */
-  primaryBooleanArrayName?: string
+  /** Primary state source detected for DP visualization. */
+  primaryDpName?: string
   /** Primary semantic Map variable detected for Map View. */
   primaryMapName?: string
   /** Step index where Map View context is first available. */
@@ -61,30 +62,8 @@ type VariablesCardProps = {
   visualizableListNodeNames?: string[]
   /** Toggles detail expansion for a variable. */
   onToggleVariable: (variableName: string) => void
-  /** Opens stack visualization for a variable. */
-  onOpenStack: (variableName: string) => void
-  /** Opens bar chart visualization for a variable. */
-  onOpenBarChart: (variableName: string) => void
-  /** Opens container-area visualization for a variable. */
-  onOpenArea: (variableName: string, stepIndex?: number) => void
-  /** Opens binary-search index visualization for a variable. */
-  onOpenBinarySearch: (variableName: string, stepIndex?: number) => void
-  /** Opens sliding-window visualization for a variable. */
-  onOpenSlidingWindow: (variableName: string, stepIndex?: number) => void
-  /** Opens boolean array DP visualization for a variable. */
-  onOpenBooleanArray: (variableName: string) => void
-  /** Opens semantic Map visualization for a variable. */
-  onOpenMap: (variableName: string, stepIndex?: number) => void
-  /** Opens graph visualization for a variable. */
-  onOpenGraph: (variableName: string) => void
-  /** Opens matrix visualization for a variable. */
-  onOpenMatrix: (variableName: string, stepIndex?: number) => void
-  /** Opens tree graph visualization for a variable. */
-  onOpenTreeGraph: (variableName: string) => void
-  /** Opens list graph visualization for a variable. */
-  onOpenListGraph: (variableName: string, followPrimary?: boolean) => void
-  /** Opens recursion tree visualization. */
-  onOpenTree: () => void
+  /** Opens a primary or inline visualization. */
+  onOpenVisualization: OpenVisualization
 }
 
 export function VariablesCard({
@@ -100,7 +79,7 @@ export function VariablesCard({
   primaryBinarySearchStepIndex,
   primarySlidingWindowStringName,
   primarySlidingWindowStepIndex,
-  primaryBooleanArrayName,
+  primaryDpName,
   primaryMapName,
   primaryMapStepIndex,
   primaryGraphName,
@@ -111,18 +90,7 @@ export function VariablesCard({
   primaryListNodeName,
   visualizableListNodeNames = [],
   onToggleVariable,
-  onOpenStack,
-  onOpenBarChart,
-  onOpenArea,
-  onOpenBinarySearch,
-  onOpenSlidingWindow,
-  onOpenBooleanArray,
-  onOpenMap,
-  onOpenGraph,
-  onOpenMatrix,
-  onOpenTreeGraph,
-  onOpenListGraph,
-  onOpenTree,
+  onOpenVisualization,
 }: VariablesCardProps) {
   return (
     <Card>
@@ -137,7 +105,7 @@ export function VariablesCard({
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => onOpenBarChart(primaryArrayName)}
+              onClick={() => onOpenVisualization('bar-chart', primaryArrayName)}
             >
               <BarChart2 className="w-4 h-4" />
               Sort Graph
@@ -149,7 +117,11 @@ export function VariablesCard({
               size="sm"
               className="gap-2"
               onClick={() =>
-                onOpenArea(primaryAreaArrayName, primaryAreaStepIndex)
+                onOpenVisualization(
+                  'area',
+                  primaryAreaArrayName,
+                  primaryAreaStepIndex
+                )
               }
             >
               <BarChart2 className="w-4 h-4" />
@@ -162,7 +134,8 @@ export function VariablesCard({
               size="sm"
               className="gap-2"
               onClick={() =>
-                onOpenBinarySearch(
+                onOpenVisualization(
+                  'binary-search',
                   primaryBinarySearchArrayName,
                   primaryBinarySearchStepIndex
                 )
@@ -178,7 +151,8 @@ export function VariablesCard({
               size="sm"
               className="gap-2"
               onClick={() =>
-                onOpenSlidingWindow(
+                onOpenVisualization(
+                  'sliding-window',
                   primarySlidingWindowStringName,
                   primarySlidingWindowStepIndex
                 )
@@ -188,12 +162,12 @@ export function VariablesCard({
               Sliding Window View
             </Button>
           )}
-          {primaryBooleanArrayName && (
+          {primaryDpName && (
             <Button
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => onOpenBooleanArray(primaryBooleanArrayName)}
+              onClick={() => onOpenVisualization('dp', primaryDpName)}
             >
               <CheckSquare className="w-4 h-4" />
               DP View
@@ -204,7 +178,9 @@ export function VariablesCard({
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => onOpenMap(primaryMapName, primaryMapStepIndex)}
+              onClick={() =>
+                onOpenVisualization('map', primaryMapName, primaryMapStepIndex)
+              }
             >
               <Search className="w-4 h-4" />
               Map View
@@ -215,7 +191,7 @@ export function VariablesCard({
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => onOpenGraph(primaryGraphName)}
+              onClick={() => onOpenVisualization('graph', primaryGraphName)}
             >
               <GitGraph className="w-4 h-4" />
               Graph View
@@ -226,7 +202,7 @@ export function VariablesCard({
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={onOpenTree}
+              onClick={() => onOpenVisualization('tree')}
             >
               <GitGraph className="w-4 h-4" />
               {isClassDesignTrace ? 'Call Stack View' : 'Tree View'}
@@ -238,7 +214,11 @@ export function VariablesCard({
               size="sm"
               className="gap-2"
               onClick={() =>
-                onOpenMatrix(primaryMatrixName, primaryMatrixStepIndex)
+                onOpenVisualization(
+                  'matrix',
+                  primaryMatrixName,
+                  primaryMatrixStepIndex
+                )
               }
             >
               <Grid3X3 className="w-4 h-4" />
@@ -250,7 +230,9 @@ export function VariablesCard({
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => onOpenTreeGraph(primaryTreeNodeName)}
+              onClick={() =>
+                onOpenVisualization('tree-graph', primaryTreeNodeName)
+              }
             >
               <GitGraph className="w-4 h-4" />
               Tree Graph
@@ -261,7 +243,14 @@ export function VariablesCard({
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => onOpenListGraph(primaryListNodeName, true)}
+              onClick={() =>
+                onOpenVisualization(
+                  'list-graph',
+                  primaryListNodeName,
+                  undefined,
+                  true
+                )
+              }
             >
               <GitGraph className="w-4 h-4" />
               List Graph
@@ -281,13 +270,7 @@ export function VariablesCard({
                 visualizableTreeNodeNames={visualizableTreeNodeNames}
                 visualizableListNodeNames={visualizableListNodeNames}
                 onToggleVariable={onToggleVariable}
-                onOpenStack={onOpenStack}
-                onOpenBarChart={onOpenBarChart}
-                onOpenBooleanArray={onOpenBooleanArray}
-                onOpenGraph={onOpenGraph}
-                onOpenMatrix={onOpenMatrix}
-                onOpenTreeGraph={onOpenTreeGraph}
-                onOpenListGraph={onOpenListGraph}
+                onOpenVisualization={onOpenVisualization}
               />
             ))}
           </Stack>

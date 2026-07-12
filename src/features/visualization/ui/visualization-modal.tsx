@@ -16,6 +16,7 @@ import { VisualizationModalContent } from './visualization-modal-content'
 import { Grid3X3 } from 'lucide-react'
 import { PlaybackControls } from './playback-controls'
 import { ReturnValueCard } from './return-value-card'
+import type { VisualizationType } from '../model/types'
 
 /**
  * Props for VisualizationModal component
@@ -26,20 +27,7 @@ type VisualizationModalProps = {
   /** Callback to close the modal */
   onClose: () => void
   /** Type of visualization to display */
-  type:
-    | 'stack'
-    | 'tree'
-    | 'tree-graph'
-    | 'list-graph'
-    | 'boolean-array'
-    | 'map'
-    | 'area'
-    | 'binary-search'
-    | 'sliding-window'
-    | 'bar-chart'
-    | 'graph'
-    | 'matrix'
-    | null
+  type: VisualizationType
   /** Name of the variable to visualize (if applicable) */
   targetVariable?: string
   /** Step index to use when the target variable is not available on the current step. */
@@ -64,9 +52,6 @@ type VisualizationModalProps = {
   onSkipToEnd: () => void
 }
 
-/** Visualization modal content type selected from primary or inline controls. */
-export type VisualizationType = VisualizationModalProps['type']
-
 function getVisualizationTitle({
   type,
   targetVariable,
@@ -83,13 +68,15 @@ function getVisualizationTitle({
   isClassDesignTrace: boolean
 }): ReactNode {
   switch (type) {
+    case 'stack':
+      return `Stack Visualization: ${targetVariable}`
     case 'tree':
       return isClassDesignTrace ? 'Call Stack View' : 'Recursion Tree'
     case 'tree-graph':
       return `Tree Graph: ${treeGraphDisplayName}`
     case 'list-graph':
       return `List Graph: ${targetVariable}`
-    case 'boolean-array':
+    case 'dp':
       return `DP View: ${targetVariable}`
     case 'map':
       return `Map View: ${targetVariable}`
@@ -110,8 +97,8 @@ function getVisualizationTitle({
           Matrix: {targetVariable}
         </>
       )
-    default:
-      return `Stack Visualization: ${targetVariable}`
+    case null:
+      return ''
   }
 }
 
@@ -120,6 +107,8 @@ function getVisualizationDescription(
   isClassDesignTrace: boolean
 ): string {
   switch (type) {
+    case 'stack':
+      return 'Visualize array as a vertical stack.'
     case 'tree':
       return isClassDesignTrace
         ? 'Visualize class operation calls as a tree.'
@@ -128,10 +117,10 @@ function getVisualizationDescription(
       return 'Visualize binary tree node structure as a graph.'
     case 'list-graph':
       return 'Visualize linked list next pointers and cycle edges.'
-    case 'boolean-array':
-      return 'Visualize a DP array as an index-to-value table.'
+    case 'dp':
+      return 'Visualize dynamic-programming values or rolling state.'
     case 'map':
-      return 'Visualize Map updates and the current lookup context.'
+      return 'Visualize Map entries and the current algorithm context.'
     case 'bar-chart':
       return 'Visualize numeric array as a bar chart.'
     case 'area':
@@ -144,8 +133,8 @@ function getVisualizationDescription(
       return 'Visualize adjacency list as a directed graph.'
     case 'matrix':
       return 'Visualize 2D array as a grid.'
-    default:
-      return 'Visualize array as a vertical stack.'
+    case null:
+      return ''
   }
 }
 
@@ -205,7 +194,7 @@ export function VisualizationModal({
             'py-4 flex-1 min-h-0 overflow-y-auto',
             (type === 'matrix' ||
               type === 'list-graph' ||
-              type === 'boolean-array' ||
+              type === 'dp' ||
               type === 'map') &&
               'flex items-center justify-center'
           )}

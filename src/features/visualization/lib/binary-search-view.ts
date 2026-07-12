@@ -1,7 +1,8 @@
 import type { ExecutionStep } from '@/entities/execution'
-import { isInteger, isNull, isNumericArray } from '@/shared/lib/guards'
+import { equals, isInteger, isNull, isNumericArray } from '@/shared/lib/guards'
 
 const BINARY_SEARCH_INDEX_NAMES = ['left', 'right', 'mid'] as const
+const isResultVariableName = equals('result')
 
 /** Valid binary-search pointer indexes captured from an execution step. */
 export type BinarySearchIndexState = {
@@ -63,7 +64,7 @@ export function isBinarySearchArrayCandidate(
   variables: ExecutionStep['variables']
 ): boolean {
   return (
-    name !== 'result' &&
+    !isResultVariableName(name) &&
     isNumericArray(value) &&
     value.length > 0 &&
     hasBinarySearchIndexVariables(variables) &&

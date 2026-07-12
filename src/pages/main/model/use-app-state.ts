@@ -16,6 +16,7 @@ import type { ExecutionState, InputValues } from '@/entities/execution'
 import {
   ALGORITHM_EXAMPLES,
   getRandomExample,
+  type AlgorithmExample,
 } from '@/entities/algorithm-example'
 import {
   createShareUrl,
@@ -23,18 +24,24 @@ import {
   readShareStateFromUrl,
 } from '@/features/shareable-url'
 import type { ShareStateDecodeErrorReason } from '@/entities/share-state'
-import { isArray, isNull, isObject, isUndefined } from '@/shared/lib/guards'
+import {
+  isArray,
+  isNull,
+  isNumber,
+  isObject,
+  isUndefined,
+} from '@/shared/lib/guards'
 
 function getRuntimeHighlightedLine(
   mode: AppMode,
   executionState: ExecutionState | null
 ): number | undefined {
-  if (mode !== 'runtime' || !executionState) {
+  if (mode !== 'runtime' || isNull(executionState)) {
     return undefined
   }
 
   const line = executionState.steps[executionState.currentStep]?.line
-  return line && line > 0 ? line : undefined
+  return isNumber(line) && line > 0 ? line : undefined
 }
 
 function getInitialExample() {
@@ -135,8 +142,18 @@ export function useAppState() {
   const resetDerivedState = useCallback(() => {
     setCompilationResult(null)
     setFunctionSignature(null)
+    setLintErrors([])
     clearExecution()
   }, [clearExecution])
+
+  const applyExample = useCallback((example: AlgorithmExample) => {
+    const defaultInputValues = example.defaultInputValues ?? {}
+
+    setSelectedExampleId(example.id)
+    setSourceCode(example.sourceCode)
+    setVerificationInputValues(defaultInputValues)
+    setVerificationDefaultInputValues(defaultInputValues)
+  }, [])
 
   const compileSourceCode = useCallback(
     async (nextSourceCode: string) => {
@@ -209,23 +226,17 @@ export function useAppState() {
       const example = ALGORITHM_EXAMPLES.find((item) => item.id === exampleId)
       if (!example) return
 
-      setSelectedExampleId(example.id)
-      setSourceCode(example.sourceCode)
-      setVerificationInputValues(example.defaultInputValues ?? {})
-      setVerificationDefaultInputValues(example.defaultInputValues ?? {})
+      applyExample(example)
       await compileSourceCode(example.sourceCode)
     },
-    [compileSourceCode]
+    [applyExample, compileSourceCode]
   )
 
   const handleRunDemo = useCallback(async () => {
     const demoExample = getRandomExample()
     if (!demoExample) return
 
-    setSelectedExampleId(demoExample.id)
-    setSourceCode(demoExample.sourceCode)
-    setVerificationInputValues(demoExample.defaultInputValues ?? {})
-    setVerificationDefaultInputValues(demoExample.defaultInputValues ?? {})
+    applyExample(demoExample)
 
     const { result, signature } = await compileSourceCode(
       demoExample.sourceCode
@@ -244,7 +255,12 @@ export function useAppState() {
     )
     if (!executionResult) return
     setMode('runtime')
-  }, [activeLanguage, compileSourceCode, startExecutionAndPlayback])
+  }, [
+    activeLanguage,
+    applyExample,
+    compileSourceCode,
+    startExecutionAndPlayback,
+  ])
 
   const createCurrentShareUrl = useCallback(async () => {
     if (typeof window === 'undefined') {

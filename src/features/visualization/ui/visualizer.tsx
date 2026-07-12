@@ -10,6 +10,8 @@ import { ExecutionErrorCard } from './execution-error-card'
 import { ReturnValueCard } from './return-value-card'
 import { useVisualizationDetection } from '../model/use-visualization-detection'
 import { isUndefined } from '@/shared/lib/guards'
+import type { VisualizationType } from '../model/types'
+import { getPrimaryVisualization } from '../model/primary-visualization'
 
 /**
  * Props for Visualizer component.
@@ -40,20 +42,7 @@ type VisualizerProps = {
 /**
  * Visualization modal type selected from the variables panel.
  */
-type ModalType =
-  | 'stack'
-  | 'tree'
-  | 'tree-graph'
-  | 'list-graph'
-  | 'boolean-array'
-  | 'map'
-  | 'area'
-  | 'binary-search'
-  | 'sliding-window'
-  | 'bar-chart'
-  | 'graph'
-  | 'matrix'
-  | null
+type ModalType = VisualizationType
 
 const { DEFAULT_SCROLL_DELAY_MS: SCROLL_DELAY_MS } = VISUALIZATION_CONSTANTS
 
@@ -74,12 +63,12 @@ export function Visualizer({
   const returnValueRef = useRef<HTMLDivElement>(null)
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const autoOpenedStepsRef = useRef<ExecutionState['steps'] | null>(null)
+  const detection = useVisualizationDetection(executionState)
   const {
     currentStep,
     variableEntries,
     hasRecursion,
     isClassDesignTrace,
-    primaryStackName,
     primaryArrayName,
     primaryAreaArrayName,
     primaryAreaStepIndex,
@@ -87,7 +76,7 @@ export function Visualizer({
     primaryBinarySearchStepIndex,
     primarySlidingWindowStringName,
     primarySlidingWindowStepIndex,
-    primaryBooleanArrayName,
+    primaryDpName,
     primaryMapName,
     primaryMapStepIndex,
     primaryGraphName,
@@ -97,7 +86,7 @@ export function Visualizer({
     visualizableTreeNodeNames,
     primaryListNodeName,
     visualizableListNodeNames,
-  } = useVisualizationDetection(executionState)
+  } = detection
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalType, setModalType] = useState<ModalType>(null)
@@ -188,98 +177,21 @@ export function Visualizer({
     if (autoOpenedStepsRef.current === executionState.steps) return
     if (isModalOpen) return
 
-    if (primaryAreaArrayName) {
-      openModal('area', primaryAreaArrayName, primaryAreaStepIndex)
-      autoOpenedStepsRef.current = executionState.steps
-      return
-    }
+    const primaryVisualization = getPrimaryVisualization(detection)
+    if (!primaryVisualization) return
 
-    if (primaryBinarySearchArrayName) {
-      openModal(
-        'binary-search',
-        primaryBinarySearchArrayName,
-        primaryBinarySearchStepIndex
-      )
-      autoOpenedStepsRef.current = executionState.steps
-      return
-    }
-
-    if (primarySlidingWindowStringName) {
-      openModal(
-        'sliding-window',
-        primarySlidingWindowStringName,
-        primarySlidingWindowStepIndex
-      )
-      autoOpenedStepsRef.current = executionState.steps
-      return
-    }
-
-    if (primaryStackName) {
-      openModal('stack', primaryStackName)
-      autoOpenedStepsRef.current = executionState.steps
-      return
-    }
-
-    if (primaryArrayName) {
-      openModal('bar-chart', primaryArrayName)
-      autoOpenedStepsRef.current = executionState.steps
-      return
-    }
-
-    if (primaryBooleanArrayName) {
-      openModal('boolean-array', primaryBooleanArrayName)
-      autoOpenedStepsRef.current = executionState.steps
-      return
-    }
-
-    if (primaryMapName) {
-      openModal('map', primaryMapName, primaryMapStepIndex)
-      autoOpenedStepsRef.current = executionState.steps
-      return
-    }
-
-    if (primaryGraphName) {
-      openModal('graph', primaryGraphName)
-      autoOpenedStepsRef.current = executionState.steps
-      return
-    }
-
-    if (primaryMatrixName) {
-      openModal('matrix', primaryMatrixName, primaryMatrixStepIndex)
-      autoOpenedStepsRef.current = executionState.steps
-      return
-    }
-
-    if (primaryTreeNodeName) {
-      openModal('tree-graph', primaryTreeNodeName)
-      autoOpenedStepsRef.current = executionState.steps
-      return
-    }
-
-    if (primaryListNodeName) {
-      openModal('list-graph', primaryListNodeName, undefined, true)
-      autoOpenedStepsRef.current = executionState.steps
-    }
+    openModal(
+      primaryVisualization.type,
+      primaryVisualization.targetVariable,
+      primaryVisualization.targetStepIndex,
+      primaryVisualization.followPrimaryList
+    )
+    autoOpenedStepsRef.current = executionState.steps
   }, [
     autoOpenPrimaryVisualization,
+    detection,
     executionState.steps,
     isModalOpen,
-    primaryStackName,
-    primaryArrayName,
-    primaryAreaArrayName,
-    primaryAreaStepIndex,
-    primaryBinarySearchArrayName,
-    primaryBinarySearchStepIndex,
-    primarySlidingWindowStringName,
-    primarySlidingWindowStepIndex,
-    primaryBooleanArrayName,
-    primaryMapName,
-    primaryMapStepIndex,
-    primaryGraphName,
-    primaryListNodeName,
-    primaryMatrixName,
-    primaryMatrixStepIndex,
-    primaryTreeNodeName,
   ])
 
   useEffect(() => {
@@ -318,7 +230,7 @@ export function Visualizer({
         primaryBinarySearchStepIndex={primaryBinarySearchStepIndex}
         primarySlidingWindowStringName={primarySlidingWindowStringName}
         primarySlidingWindowStepIndex={primarySlidingWindowStepIndex}
-        primaryBooleanArrayName={primaryBooleanArrayName}
+        primaryDpName={primaryDpName}
         primaryMapName={primaryMapName}
         primaryMapStepIndex={primaryMapStepIndex}
         primaryGraphName={primaryGraphName}
@@ -329,34 +241,7 @@ export function Visualizer({
         primaryListNodeName={primaryListNodeName}
         visualizableListNodeNames={visualizableListNodeNames}
         onToggleVariable={toggleVariableDetails}
-        onOpenStack={(variableName) => openModal('stack', variableName)}
-        onOpenBarChart={(variableName) => openModal('bar-chart', variableName)}
-        onOpenArea={(variableName, stepIndex) =>
-          openModal('area', variableName, stepIndex)
-        }
-        onOpenBinarySearch={(variableName, stepIndex) =>
-          openModal('binary-search', variableName, stepIndex)
-        }
-        onOpenSlidingWindow={(variableName, stepIndex) =>
-          openModal('sliding-window', variableName, stepIndex)
-        }
-        onOpenBooleanArray={(variableName) =>
-          openModal('boolean-array', variableName)
-        }
-        onOpenMap={(variableName, stepIndex) =>
-          openModal('map', variableName, stepIndex)
-        }
-        onOpenGraph={(variableName) => openModal('graph', variableName)}
-        onOpenMatrix={(variableName, stepIndex) =>
-          openModal('matrix', variableName, stepIndex)
-        }
-        onOpenTreeGraph={(variableName) =>
-          openModal('tree-graph', variableName)
-        }
-        onOpenListGraph={(variableName, followPrimary) =>
-          openModal('list-graph', variableName, undefined, followPrimary)
-        }
-        onOpenTree={() => openModal('tree')}
+        onOpenVisualization={openModal}
       />
       <ExecutionTimelineCard
         executionState={executionState}

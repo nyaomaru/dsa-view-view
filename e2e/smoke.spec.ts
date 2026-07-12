@@ -44,11 +44,12 @@ test('loads, compiles, runs a demo, and opens core dialogs', async ({
   const visualizationDialog = page
     .getByRole('dialog')
     .filter({ has: page.getByRole('heading', { name: 'Bar Chart: nums' }) })
-  if (isMobile) {
-    await page.getByTitle('Visualize as bar chart').click()
-  } else if (!(await visualizationDialog.isVisible())) {
-    await page.getByTitle('Visualize as bar chart').click({ force: true })
+  const openDialog = page.getByRole('dialog')
+  if (await openDialog.isVisible()) {
+    await openDialog.getByRole('button', { name: 'Close' }).click()
+    await expect(openDialog).toBeHidden()
   }
+  await page.getByTitle('Visualize as bar chart').click()
   await expect(visualizationDialog).toBeVisible()
   await visualizationDialog.getByRole('button', { name: 'Close' }).click()
   await expect(visualizationDialog).toBeHidden()
@@ -124,6 +125,7 @@ test('visualizes trapped rain water between height bars', async ({
     await page.getByRole('button', { name: 'Area View' }).click()
   } else {
     await areaDialog.getByTitle('Skip to End').click()
+    await expect(areaDialog.getByTitle('Skip to End')).toBeDisabled()
   }
 
   await expect(
@@ -133,10 +135,7 @@ test('visualizes trapped rain water between height bars', async ({
   await expect(page.getByText('water=6')).toBeVisible()
 })
 
-test('visualizes array and rolling DP examples', async ({
-  page,
-  isMobile,
-}) => {
+test('visualizes array and rolling DP examples', async ({ page, isMobile }) => {
   const examples = [
     { label: 'Coin Change', variable: 'dp', table: 'dp: DP table' },
     {
@@ -155,21 +154,17 @@ test('visualizes array and rolling DP examples', async ({
     await page.goto('/')
     await page.getByRole('combobox', { name: 'Example' }).click()
     await page.getByLabel('Search examples').fill(example.label)
-    await page
-      .getByRole('option', { name: example.label, exact: true })
-      .click()
+    await page.getByRole('option', { name: example.label, exact: true }).click()
 
     await expect(page.getByText('Input Parameters')).toBeVisible()
     await page.getByRole('button', { name: 'Run', exact: true }).click()
     await expect(page.getByText('All execution steps')).toBeVisible()
 
-    const dpDialog = page
-      .getByRole('dialog')
-      .filter({
-        has: page.getByRole('heading', {
-          name: `DP View: ${example.variable}`,
-        }),
-      })
+    const dpDialog = page.getByRole('dialog').filter({
+      has: page.getByRole('heading', {
+        name: `DP View: ${example.variable}`,
+      }),
+    })
     if (isMobile) {
       await page.getByTitle('Skip to End').first().click()
       await page.getByRole('button', { name: 'DP View' }).click()
@@ -199,22 +194,18 @@ test('visualizes semantic Map updates', async ({ page, isMobile }) => {
     await page.goto('/')
     await page.getByRole('combobox', { name: 'Example' }).click()
     await page.getByLabel('Search examples').fill(example.label)
-    await page
-      .getByRole('option', { name: example.label, exact: true })
-      .click()
+    await page.getByRole('option', { name: example.label, exact: true }).click()
 
     await expect(page.getByText('Input Parameters')).toBeVisible()
     await page.getByRole('button', { name: 'Run', exact: true }).click()
     await expect(page.getByText('All execution steps')).toBeVisible()
     await expect(page.getByText('Execution Error')).toHaveCount(0)
 
-    const mapDialog = page
-      .getByRole('dialog')
-      .filter({
-        has: page.getByRole('heading', {
-          name: `Map View: ${example.map}`,
-        }),
-      })
+    const mapDialog = page.getByRole('dialog').filter({
+      has: page.getByRole('heading', {
+        name: `Map View: ${example.map}`,
+      }),
+    })
     if (isMobile) {
       await page.getByTitle('Skip to End').first().click()
       await page.getByRole('button', { name: 'Map View' }).click()

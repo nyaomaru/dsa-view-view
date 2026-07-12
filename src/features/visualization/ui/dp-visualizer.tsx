@@ -2,8 +2,8 @@ import { Check } from 'lucide-react'
 import { isBoolean } from '@/shared/lib/guards'
 import { Card } from '@/shared/ui'
 
-type BooleanArrayVisualizerProps = {
-  /** Boolean or numeric DP array to render as an index-to-value table. */
+type DpVisualizerProps = {
+  /** Boolean or numeric DP values to render as a label-to-value table. */
   data: readonly (boolean | number)[]
   /** Variable name displayed in the visualizer title. */
   name: string
@@ -17,14 +17,14 @@ type BooleanArrayVisualizerProps = {
   description?: string
 }
 
-export function BooleanArrayVisualizer({
+export function DpVisualizer({
   data,
   name,
   labels,
   labelHeader = 'index',
   tableKind,
   description,
-}: BooleanArrayVisualizerProps) {
+}: DpVisualizerProps) {
   const isBooleanTable = data.every(isBoolean)
 
   return (
@@ -49,7 +49,7 @@ export function BooleanArrayVisualizer({
           </div>
           {data.map((value, index) => (
             <div
-              key={index}
+              key={labels?.[index] ?? index}
               className="grid grid-cols-[5rem_1fr] border-b last:border-b-0"
             >
               <div className="border-r px-3 py-2 font-mono text-sm text-muted-foreground">

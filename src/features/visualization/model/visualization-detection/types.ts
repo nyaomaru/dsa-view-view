@@ -13,7 +13,7 @@ export type VisualizationDetection = {
   primaryStackName: string | undefined
   /** Primary numeric array to show as a bar chart. */
   primaryArrayName: string | undefined
-  /** Primary numeric array to show in container-area view. */
+  /** Primary height source to show in area or rain-water view. */
   primaryAreaArrayName: string | undefined
   /** Step index where area pointers are available. */
   primaryAreaStepIndex: number | undefined
@@ -25,8 +25,8 @@ export type VisualizationDetection = {
   primarySlidingWindowStringName: string | undefined
   /** Step index where sliding-window pointers are available. */
   primarySlidingWindowStepIndex: number | undefined
-  /** Primary boolean array to show in DP view. */
-  primaryBooleanArrayName: string | undefined
+  /** Primary boolean, numeric, or rolling state source for DP View. */
+  primaryDpName: string | undefined
   /** Primary semantic Map variable to show in Map View. */
   primaryMapName: string | undefined
   /** Step index where Map View context is first available. */

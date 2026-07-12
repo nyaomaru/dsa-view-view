@@ -1,23 +1,13 @@
 import {
   isArray,
+  isDate,
   isFunction,
-  isInstanceOf,
+  isMap,
   isObject,
+  isRegExp,
+  isSet,
   isSymbol,
 } from '@/shared/lib/guards'
-
-const isDate = isInstanceOf(
-  Date as unknown as abstract new (...args: unknown[]) => Date
-)
-const isMap = isInstanceOf(
-  Map as unknown as abstract new (...args: unknown[]) => Map<unknown, unknown>
-)
-const isRegExp = isInstanceOf(
-  RegExp as unknown as abstract new (...args: unknown[]) => RegExp
-)
-const isSet = isInstanceOf(
-  Set as unknown as abstract new (...args: unknown[]) => Set<unknown>
-)
 
 function getFunctionLabel(value: Function): string {
   return value.name ? `[Function ${value.name}]` : '[Function]'

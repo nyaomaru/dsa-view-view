@@ -13,28 +13,26 @@ import {
   isMatrix,
   isNull,
   isNumericArray,
-  isUndefined,
 } from '@/shared/lib/guards'
+import { safeStringify } from '@/shared/lib/safe-stringify'
 import {
   getBinarySearchIndexState,
   isBinarySearchArrayCandidate,
 } from '../lib/binary-search-view'
 import { getAreaVisualizationState } from '../lib/area-view'
 import { getSlidingWindowVisualizationState } from '../lib/sliding-window-view'
-import {
-  getRollingDpState,
-  isRollingDpCandidate,
-} from '../lib/rolling-dp-view'
+import { getRollingDpState, isRollingDpCandidate } from '../lib/rolling-dp-view'
 import { getGraphNodeAdjacencyRecord } from '../lib/graph-view'
 import { getMapVisualizationState } from '../lib/map-view'
-import type { VisualizationType } from './visualization-modal'
+import { getExecutionStepSearchOrder } from '../lib/execution-step-search'
+import type { VisualizationType } from '../model/types'
 import { StackVisualizer } from './stack-visualizer'
 import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
 import { BarChartVisualizer } from './bar-chart-visualizer'
 import { AreaVisualizer } from './area-visualizer'
 import { BinarySearchVisualizer } from './binary-search-visualizer'
 import { SlidingWindowVisualizer } from './sliding-window-visualizer'
-import { BooleanArrayVisualizer } from './boolean-array-visualizer'
+import { DpVisualizer } from './dp-visualizer'
 import { GraphVisualizer } from './graph-visualizer'
 import { MatrixVisualizer } from './matrix-visualizer'
 import { MapVisualizer } from './map-visualizer'
@@ -58,35 +56,6 @@ type VisualizationContentProps = {
   treeGraphDisplayName?: string
 }
 
-function getStepSearchOrder({
-  executionState,
-  targetStepIndex,
-  preferPastSteps = false,
-}: {
-  /** Execution state whose steps should be searched. */
-  executionState: ExecutionState
-  /** Preferred step index to include near the front of the search order. */
-  targetStepIndex?: number
-  /** Whether past steps should be searched before future steps. */
-  preferPastSteps?: boolean
-}): number[] {
-  const currentStepIndex = executionState.currentStep
-  const futureStepIndexes = Array.from(
-    { length: executionState.steps.length - currentStepIndex - 1 },
-    (_, index) => currentStepIndex + index + 1
-  )
-  const pastStepIndexes = Array.from({ length: currentStepIndex }, (_, index) =>
-    Math.max(0, currentStepIndex - index - 1)
-  )
-  const surroundingStepIndexes = preferPastSteps
-    ? [...pastStepIndexes, ...futureStepIndexes]
-    : [...futureStepIndexes, ...pastStepIndexes]
-
-  return [currentStepIndex, targetStepIndex, ...surroundingStepIndexes].filter(
-    (index): index is number => !isUndefined(index)
-  )
-}
-
 function findNumericArrayStep({
   executionState,
   variableName,
@@ -99,12 +68,12 @@ function findNumericArrayStep({
   /** Preferred step index to check before surrounding steps. */
   targetStepIndex?: number
 }): ExecutionStepSnapshot | undefined {
-  const orderedIndexes = getStepSearchOrder({
+  const orderedIndexes = getExecutionStepSearchOrder({
     executionState,
     targetStepIndex,
   })
 
-  for (const index of new Set(orderedIndexes)) {
+  for (const index of orderedIndexes) {
     const step = executionState.steps[index]
 
     if (step && isNumericArray(step.variables[variableName])) {
@@ -124,12 +93,12 @@ function findTreeNodeStep({
   /** Tree node variable name to find. */
   variableName: string
 }): ExecutionStepSnapshot | undefined {
-  const orderedIndexes = getStepSearchOrder({
+  const orderedIndexes = getExecutionStepSearchOrder({
     executionState,
     preferPastSteps: true,
   })
 
-  for (const index of new Set(orderedIndexes)) {
+  for (const index of orderedIndexes) {
     const step = executionState.steps[index]
 
     if (step && isTreeNodeShape(step.variables[variableName])) {
@@ -154,11 +123,8 @@ function NumericArrayError({
       <p className="font-semibold">Unable to visualize "{targetVariable}"</p>
       <p>Expected a numeric array, but got:</p>
       <pre className="mt-2 text-xs bg-white/50 p-2 rounded">
-        {JSON.stringify(data, null, 2)}
+        {safeStringify(data, 2)}
       </pre>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Type: {typeof data}, IsArray: {isArray(data) ? 'Yes' : 'No'}
-      </p>
     </div>
   )
 }
@@ -277,11 +243,12 @@ export function VisualizationModalContent({
       )
     }
 
-    case 'boolean-array': {
+    case 'dp': {
       const data = getCurrentStepVariable(targetVariable)
-      const rollingDpStep = [...new Set(
-        getStepSearchOrder({ executionState, targetStepIndex })
-      )]
+      const rollingDpStep = getExecutionStepSearchOrder({
+        executionState,
+        targetStepIndex,
+      })
         .map((index) => executionState.steps[index])
         .find(
           (step) =>
@@ -298,7 +265,7 @@ export function VisualizationModalContent({
 
       if (rollingDpState) {
         return (
-          <BooleanArrayVisualizer
+          <DpVisualizer
             data={rollingDpState.values}
             name={targetVariable}
             labels={rollingDpState.labels}
@@ -316,16 +283,17 @@ export function VisualizationModalContent({
           : null
 
       return dpData ? (
-        <BooleanArrayVisualizer data={dpData} name={targetVariable} />
+        <DpVisualizer data={dpData} name={targetVariable} />
       ) : (
         <div>Variable is not a boolean or numeric DP array</div>
       )
     }
 
     case 'map': {
-      const mapState = [...new Set(
-        getStepSearchOrder({ executionState, targetStepIndex })
-      )]
+      const mapState = getExecutionStepSearchOrder({
+        executionState,
+        targetStepIndex,
+      })
         .map((index) => executionState.steps[index])
         .map((step) =>
           step
@@ -430,7 +398,7 @@ export function VisualizationModalContent({
       )
     }
 
-    default:
+    case null:
       return null
   }
 }

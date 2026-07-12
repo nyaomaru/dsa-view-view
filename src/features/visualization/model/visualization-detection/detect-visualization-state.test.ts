@@ -145,12 +145,8 @@ describe('detectVisualizationState', () => {
       createStep(1, 'dp[i] = Math.max(...)', { dp: [1, 1, 2, 3] }),
     ])
 
-    expect(detectVisualizationState(coinChangeState).primaryBooleanArrayName).toBe(
-      'dp'
-    )
-    expect(detectVisualizationState(lisState).primaryBooleanArrayName).toBe(
-      'dp'
-    )
+    expect(detectVisualizationState(coinChangeState).primaryDpName).toBe('dp')
+    expect(detectVisualizationState(lisState).primaryDpName).toBe('dp')
   })
 
   it('selects rolling prev2 and prev1 state for DP View', () => {
@@ -164,9 +160,7 @@ describe('detectVisualizationState', () => {
       }),
     ])
 
-    expect(detectVisualizationState(state).primaryBooleanArrayName).toBe(
-      'nums'
-    )
+    expect(detectVisualizationState(state).primaryDpName).toBe('nums')
   })
 
   it('selects semantic seen and counts maps for Map View', () => {
@@ -192,9 +186,7 @@ describe('detectVisualizationState', () => {
     ])
 
     expect(detectVisualizationState(twoSumState).primaryMapName).toBe('seen')
-    expect(detectVisualizationState(anagramState).primaryMapName).toBe(
-      'counts'
-    )
+    expect(detectVisualizationState(anagramState).primaryMapName).toBe('counts')
   })
 
   it('handles cyclic list nodes while selecting list candidates', () => {

@@ -1,4 +1,4 @@
-import { isObject } from './guards'
+import { isMap, isObject, isSet } from './guards'
 
 /**
  * Serializes a value without throwing on circular or unsupported structures.
@@ -20,6 +20,20 @@ export function safeStringify(value: unknown, space?: number): string {
           }
 
           seen.add(item)
+
+          if (isMap(item)) {
+            return {
+              type: 'Map',
+              entries: Array.from(item.entries()),
+            }
+          }
+
+          if (isSet(item)) {
+            return {
+              type: 'Set',
+              values: Array.from(item.values()),
+            }
+          }
         }
 
         return item

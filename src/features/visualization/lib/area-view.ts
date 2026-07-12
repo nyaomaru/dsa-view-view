@@ -1,4 +1,5 @@
 import {
+  equals,
   isInteger,
   isNull,
   isNumber,
@@ -6,6 +7,8 @@ import {
   isUndefined,
 } from '@/shared/lib/guards'
 import type { ExecutionState } from '@/entities/execution'
+
+const isHeightVariableName = equals('height')
 
 /** Pointer-derived area metrics for a two-pointer execution step. */
 export type AreaPointerState = {
@@ -276,16 +279,14 @@ export function getAreaVisualizationState({
   const currentData = currentStep?.variables[variableName]
   const currentRainWaterState =
     isNumericArray(currentData) && currentStep
-      ? getRainWaterPointerState(
-          currentData.map(Number),
-          currentStep.variables
-        )
+      ? getRainWaterPointerState(currentData.map(Number), currentStep.variables)
       : null
   const currentAreaState =
     isNumericArray(currentData) && currentStep
       ? getAreaPointerState(currentData.map(Number), currentStep.variables)
       : null
-  const areaStep = currentAreaState || currentRainWaterState ? currentStep : fallbackStep
+  const areaStep =
+    currentAreaState || currentRainWaterState ? currentStep : fallbackStep
   const data = areaStep?.variables[variableName]
 
   if (!isNumericArray(data)) return null
@@ -327,7 +328,7 @@ export function isAreaViewCandidate(
   variables: Record<string, unknown>
 ): boolean {
   if (!isNumericArray(value) || value.length < 2) return false
-  if (variableName.toLowerCase() !== 'height') return false
+  if (!isHeightVariableName(variableName.toLowerCase())) return false
   const numericValue = value.map(Number)
   if (!isNull(getRainWaterPointerState(numericValue, variables))) return true
   if (isUndefined(readNumberVariable(variables, ['best', 'maxArea', 'max']))) {

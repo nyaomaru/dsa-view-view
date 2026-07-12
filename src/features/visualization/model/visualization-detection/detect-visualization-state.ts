@@ -4,29 +4,23 @@ import { isGraphNodeShape, isTreeNodeShape } from '@/entities/data-structure'
 import { isNumericArray, isUndefined } from '@/shared/lib/guards'
 import {
   getPrimaryArrayName,
-  getPrimaryBooleanArrayName,
+  getPrimaryDpArrayName,
   getPrimaryGraphName,
   getPrimaryStackName,
   hasInitialTreeNodeVariable,
 } from './array-candidates'
 import {
-  getPrimaryAreaArrayName,
-  getPrimaryAreaStepIndex,
-  getPrimaryBinarySearchArrayName,
-  getPrimaryBinarySearchStepIndex,
-  getPrimaryRollingDpArrayName,
-  getPrimarySlidingWindowStepIndex,
-  getPrimarySlidingWindowStringName,
+  getPrimaryAreaCandidate,
+  getPrimaryBinarySearchCandidate,
+  getPrimaryRollingDpName,
+  getPrimarySlidingWindowCandidate,
 } from './indexed-candidates'
 import {
   getPrimaryListNodeName,
   getVisualizableListNodeNames,
 } from './list-candidates'
-import {
-  getPrimaryMatrixName,
-  getPrimaryMatrixStepIndex,
-} from './matrix-candidates'
-import { getPrimaryMapName, getPrimaryMapStepIndex } from './map-candidates'
+import { getPrimaryMatrixCandidate } from './matrix-candidates'
+import { getPrimaryMapCandidate } from './map-candidates'
 import { collectVisualizationMutationMetadata } from './mutation-metadata'
 import {
   getPrimaryConstructedTreeNodeName,
@@ -72,52 +66,31 @@ export function detectVisualizationState(
     includeNumericResultArrays: prefersResultStack || !hasSort,
     mutatedNumericArrayNames: metadata.mutatedNumericArrayNames,
   })
-  const primaryBinarySearchArrayName = getPrimaryBinarySearchArrayName(
+  const primaryBinarySearchCandidate = getPrimaryBinarySearchCandidate(
     executionState,
     initialVariableNames
   )
-  const primaryBinarySearchStepIndex = getPrimaryBinarySearchStepIndex(
-    executionState,
-    primaryBinarySearchArrayName
-  )
-  const primaryAreaArrayName = getPrimaryAreaArrayName(
+  const primaryAreaCandidate = getPrimaryAreaCandidate(
     executionState,
     initialVariableNames
   )
-  const primaryAreaStepIndex = getPrimaryAreaStepIndex(
-    executionState,
-    primaryAreaArrayName
-  )
-  const primarySlidingWindowStringName =
-    getPrimarySlidingWindowStringName(executionState)
-  const primarySlidingWindowStepIndex = getPrimarySlidingWindowStepIndex(
-    executionState,
-    primarySlidingWindowStringName
-  )
-  const primaryBooleanArrayName =
-    getPrimaryBooleanArrayName(
+  const primarySlidingWindowCandidate =
+    getPrimarySlidingWindowCandidate(executionState)
+  const primaryDpName =
+    getPrimaryDpArrayName(
       variableEntries,
-      initialVariableNames,
       metadata.mutatedBooleanArrayNames,
       metadata.mutatedNumericArrayNames
-    ) ?? getPrimaryRollingDpArrayName(executionState, initialVariableNames)
-  const primaryMapName = getPrimaryMapName(executionState)
-  const primaryMapStepIndex = getPrimaryMapStepIndex(
-    executionState,
-    primaryMapName
-  )
+    ) ?? getPrimaryRollingDpName(executionState, initialVariableNames)
+  const primaryMapCandidate = getPrimaryMapCandidate(executionState)
   const primaryGraphName = isGraphNodeShape(executionState.returnValue)
     ? RETURN_VALUE_LABEL
     : getPrimaryGraphName(variableEntries, initialVariableNames)
-  const primaryMatrixName = getPrimaryMatrixName(
+  const primaryMatrixCandidate = getPrimaryMatrixCandidate(
     executionState,
     metadata,
     initialVariableStepNumber,
     initialVariableNames
-  )
-  const primaryMatrixStepIndex = getPrimaryMatrixStepIndex(
-    executionState,
-    primaryMatrixName
   )
   const primaryTreeNodeName =
     getPrimaryTreeNodeName(
@@ -151,18 +124,18 @@ export function detectVisualizationState(
     isClassDesignTrace,
     primaryStackName,
     primaryArrayName: hasSort ? primaryArrayName : undefined,
-    primaryAreaArrayName,
-    primaryAreaStepIndex,
-    primaryBinarySearchArrayName,
-    primaryBinarySearchStepIndex,
-    primarySlidingWindowStringName,
-    primarySlidingWindowStepIndex,
-    primaryBooleanArrayName,
-    primaryMapName,
-    primaryMapStepIndex,
+    primaryAreaArrayName: primaryAreaCandidate?.name,
+    primaryAreaStepIndex: primaryAreaCandidate?.stepIndex,
+    primaryBinarySearchArrayName: primaryBinarySearchCandidate?.name,
+    primaryBinarySearchStepIndex: primaryBinarySearchCandidate?.stepIndex,
+    primarySlidingWindowStringName: primarySlidingWindowCandidate?.name,
+    primarySlidingWindowStepIndex: primarySlidingWindowCandidate?.stepIndex,
+    primaryDpName,
+    primaryMapName: primaryMapCandidate?.name,
+    primaryMapStepIndex: primaryMapCandidate?.stepIndex,
     primaryGraphName,
-    primaryMatrixName,
-    primaryMatrixStepIndex,
+    primaryMatrixName: primaryMatrixCandidate?.name,
+    primaryMatrixStepIndex: primaryMatrixCandidate?.stepIndex,
     primaryTreeNodeName,
     visualizableTreeNodeNames: [...visualizableTreeNodeNames],
     primaryListNodeName,

@@ -88,7 +88,8 @@ export function MapVisualizer({ state }: MapVisualizerProps) {
       <div className="space-y-5 p-4">
         <div className="space-y-1 text-center">
           <h3 className="font-mono text-lg font-semibold text-muted-foreground">
-            {state.mapName}: {state.mode === 'lookup' ? 'lookup table' : 'frequency table'}
+            {state.mapName}:{' '}
+            {state.mode === 'lookup' ? 'lookup table' : 'frequency table'}
           </h3>
         </div>
 
@@ -112,10 +113,8 @@ export function MapVisualizer({ state }: MapVisualizerProps) {
             state.entries.map((entry) => {
               const isActive =
                 (state.mode === 'lookup' && entry.key === state.complement) ||
-                (state.mode === 'frequency' &&
-                  entry.key === state.currentChar)
-              const isBalanced =
-                state.mode === 'frequency' && entry.value === 0
+                (state.mode === 'frequency' && entry.key === state.currentChar)
+              const isBalanced = state.mode === 'frequency' && entry.value === 0
 
               return (
                 <div
