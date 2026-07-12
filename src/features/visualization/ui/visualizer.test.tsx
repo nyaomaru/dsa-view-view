@@ -1903,6 +1903,7 @@ describe('Visualizer return value display', () => {
       />
     )
 
+    expect(screen.queryByText('Graph View')).not.toBeInTheDocument()
     expect(screen.queryByText('Matrix View')).not.toBeInTheDocument()
     expect(screen.getByText('Stack Visualization: result')).toBeInTheDocument()
     const dialog = screen.getByRole('dialog')

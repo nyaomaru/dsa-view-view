@@ -126,6 +126,7 @@ test('shows Top K result growth instead of buckets Matrix View', async ({
 
   await page.getByTitle('Skip to End').first().click()
 
+  await expect(page.getByText('Graph View')).toHaveCount(0)
   await expect(page.getByText('Matrix View')).toHaveCount(0)
   if (isMobile) {
     const resultRow = page.getByText('result', { exact: true }).locator('../..')

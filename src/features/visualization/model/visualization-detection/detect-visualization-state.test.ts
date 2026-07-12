@@ -86,6 +86,7 @@ describe('detectVisualizationState', () => {
     const detection = detectVisualizationState(state)
 
     expect(detection.primaryStackName).toBe('result')
+    expect(detection.primaryGraphName).toBeUndefined()
     expect(detection.primaryMatrixName).toBeUndefined()
   })
 

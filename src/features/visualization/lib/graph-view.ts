@@ -10,7 +10,13 @@ import {
   type GraphNodeValue,
 } from '@/entities/data-structure'
 
-const GRAPH_VARIABLE_NAMES = new Set(['adj', 'adjacency', 'graph'])
+const GRAPH_VARIABLE_NAMES = new Set([
+  'adj',
+  'adjacency',
+  'adjacencylist',
+  'adjlist',
+  'graph',
+])
 const isBinaryCell = oneOfValues(0, 1, '0', '1')
 
 function isGraphVariableName(name: string): boolean {
@@ -32,8 +38,8 @@ export function isAdjacencyListCandidate(
   name: string,
   value: unknown
 ): value is readonly (readonly unknown[])[] {
-  if (isAdjacencyList(value)) return true
-  if (!isGraphVariableName(name) || !isMatrix(value)) return false
+  if (!isGraphVariableName(name)) return false
+  if (!isAdjacencyList(value) && !isMatrix(value)) return false
   if (isSquareBinaryMatrix(value)) return false
 
   return value.every((neighbors) =>
