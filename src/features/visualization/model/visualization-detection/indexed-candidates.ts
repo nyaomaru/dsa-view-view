@@ -3,6 +3,7 @@ import { isUndefined } from '@/shared/lib/guards'
 import { isBinarySearchArrayCandidate } from '../../lib/binary-search-view'
 import { isAreaViewCandidate } from '../../lib/area-view'
 import { isSlidingWindowCandidate } from '../../lib/sliding-window-view'
+import { isRollingDpCandidate } from '../../lib/rolling-dp-view'
 import { getVisualizableVariableEntries } from './variables'
 
 export function getPrimaryBinarySearchArrayName(
@@ -100,6 +101,23 @@ export function getPrimaryAreaStepIndex(
   )
 
   return primaryAreaStepIndex >= 0 ? primaryAreaStepIndex : undefined
+}
+
+export function getPrimaryRollingDpArrayName(
+  executionState: ExecutionState,
+  initialVariableNames: Set<string>
+): string | undefined {
+  for (const step of executionState.steps) {
+    const candidate = getVisualizableVariableEntries(step.variables).find(
+      ([name, value]) =>
+        initialVariableNames.has(name) &&
+        isRollingDpCandidate(name, value, step.variables)
+    )?.[0]
+
+    if (!isUndefined(candidate)) return candidate
+  }
+
+  return undefined
 }
 
 export function getPrimarySlidingWindowStringName(

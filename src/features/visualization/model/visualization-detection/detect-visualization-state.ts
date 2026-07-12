@@ -14,6 +14,7 @@ import {
   getPrimaryAreaStepIndex,
   getPrimaryBinarySearchArrayName,
   getPrimaryBinarySearchStepIndex,
+  getPrimaryRollingDpArrayName,
   getPrimarySlidingWindowStepIndex,
   getPrimarySlidingWindowStringName,
 } from './indexed-candidates'
@@ -92,11 +93,13 @@ export function detectVisualizationState(
     executionState,
     primarySlidingWindowStringName
   )
-  const primaryBooleanArrayName = getPrimaryBooleanArrayName(
-    variableEntries,
-    initialVariableNames,
-    metadata.mutatedBooleanArrayNames
-  )
+  const primaryBooleanArrayName =
+    getPrimaryBooleanArrayName(
+      variableEntries,
+      initialVariableNames,
+      metadata.mutatedBooleanArrayNames,
+      metadata.mutatedNumericArrayNames
+    ) ?? getPrimaryRollingDpArrayName(executionState, initialVariableNames)
   const primaryGraphName = isGraphNodeShape(executionState.returnValue)
     ? RETURN_VALUE_LABEL
     : getPrimaryGraphName(variableEntries, initialVariableNames)

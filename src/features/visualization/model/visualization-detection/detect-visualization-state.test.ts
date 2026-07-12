@@ -117,6 +117,58 @@ describe('detectVisualizationState', () => {
     expect(detectVisualizationState(state).primaryStackName).toBe('answer')
   })
 
+  it('selects height for a trapping-rain-water area view', () => {
+    const state = createExecutionState([
+      createStep(0, 'Function called', {
+        height: [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1],
+      }),
+      createStep(1, 'water += leftMax - height[left]', {
+        height: [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1],
+        left: 3,
+        right: 10,
+        leftMax: 1,
+        rightMax: 1,
+        water: 1,
+      }),
+    ])
+
+    expect(detectVisualizationState(state).primaryAreaArrayName).toBe('height')
+  })
+
+  it('selects mutated numeric dp arrays for DP View', () => {
+    const coinChangeState = createExecutionState([
+      createStep(0, 'Initialized dp', { dp: [0, 12, 12, 12] }),
+      createStep(1, 'dp[x] = Math.min(...)', { dp: [0, 1, 2, 3] }),
+    ])
+    const lisState = createExecutionState([
+      createStep(0, 'Initialized dp', { dp: [1, 1, 1, 1] }),
+      createStep(1, 'dp[i] = Math.max(...)', { dp: [1, 1, 2, 3] }),
+    ])
+
+    expect(detectVisualizationState(coinChangeState).primaryBooleanArrayName).toBe(
+      'dp'
+    )
+    expect(detectVisualizationState(lisState).primaryBooleanArrayName).toBe(
+      'dp'
+    )
+  })
+
+  it('selects rolling prev2 and prev1 state for DP View', () => {
+    const state = createExecutionState([
+      createStep(0, 'Function called', { nums: [2, 7, 9, 3, 1] }),
+      createStep(1, 'prev1 = current', {
+        nums: [2, 7, 9, 3, 1],
+        prev2: 7,
+        prev1: 11,
+        current: 11,
+      }),
+    ])
+
+    expect(detectVisualizationState(state).primaryBooleanArrayName).toBe(
+      'nums'
+    )
+  })
+
   it('handles cyclic list nodes while selecting list candidates', () => {
     const head: Record<string, unknown> = { val: 1, next: null }
     head.next = head

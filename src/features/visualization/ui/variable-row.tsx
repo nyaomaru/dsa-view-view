@@ -132,7 +132,11 @@ function getInlineVisualizationAvailability({
 
   return {
     array: isArray(value),
-    booleanArray: dataStructure && isBooleanArray(value) && value.length > 0,
+    booleanArray:
+      dataStructure &&
+      (isBooleanArray(value) ||
+        (name.toLowerCase() === 'dp' && isNumericArray(value))) &&
+      value.length > 0,
     treeNode:
       dataStructure &&
       visualizableTreeNodeNames.includes(name) &&

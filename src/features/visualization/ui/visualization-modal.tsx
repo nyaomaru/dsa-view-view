@@ -126,11 +126,11 @@ function getVisualizationDescription(
     case 'list-graph':
       return 'Visualize linked list next pointers and cycle edges.'
     case 'boolean-array':
-      return 'Visualize boolean array as an index-to-value DP table.'
+      return 'Visualize a DP array as an index-to-value table.'
     case 'bar-chart':
       return 'Visualize numeric array as a bar chart.'
     case 'area':
-      return 'Visualize the current two-pointer container area.'
+      return 'Visualize the current two-pointer area or trapped water.'
     case 'binary-search':
       return 'Visualize the current binary-search range and mid index.'
     case 'sliding-window':

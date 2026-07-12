@@ -21,6 +21,10 @@ import {
 } from '../lib/binary-search-view'
 import { getAreaVisualizationState } from '../lib/area-view'
 import { getSlidingWindowVisualizationState } from '../lib/sliding-window-view'
+import {
+  getRollingDpState,
+  isRollingDpCandidate,
+} from '../lib/rolling-dp-view'
 import { getGraphNodeAdjacencyRecord } from '../lib/graph-view'
 import type { VisualizationType } from './visualization-modal'
 import { StackVisualizer } from './stack-visualizer'
@@ -273,11 +277,45 @@ export function VisualizationModalContent({
 
     case 'boolean-array': {
       const data = getCurrentStepVariable(targetVariable)
+      const rollingDpStep = [...new Set(
+        getStepSearchOrder({ executionState, targetStepIndex })
+      )]
+        .map((index) => executionState.steps[index])
+        .find(
+          (step) =>
+            step &&
+            isRollingDpCandidate(
+              targetVariable,
+              step.variables[targetVariable],
+              step.variables
+            )
+        )
+      const rollingDpState = rollingDpStep
+        ? getRollingDpState(rollingDpStep.variables)
+        : null
 
-      return isBooleanArray(data) ? (
-        <BooleanArrayVisualizer data={data} name={targetVariable} />
+      if (rollingDpState) {
+        return (
+          <BooleanArrayVisualizer
+            data={rollingDpState.values}
+            name={targetVariable}
+            labels={rollingDpState.labels}
+            tableKind="rolling DP state"
+            description="prev2 and prev1 carry the best totals from the previous two positions."
+          />
+        )
+      }
+
+      const dpData = isBooleanArray(data)
+        ? data
+        : isNumericArray(data)
+          ? data.map(Number)
+          : null
+
+      return dpData ? (
+        <BooleanArrayVisualizer data={dpData} name={targetVariable} />
       ) : (
-        <div>Variable is not a boolean array</div>
+        <div>Variable is not a boolean or numeric DP array</div>
       )
     }
 

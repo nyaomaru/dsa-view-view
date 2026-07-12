@@ -100,6 +100,88 @@ test('visualizes Product Except Self answer growth', async ({
   ).toBeVisible()
 })
 
+test('visualizes trapped rain water between height bars', async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto('/')
+
+  await page.getByRole('combobox', { name: 'Example' }).click()
+  await page.getByLabel('Search examples').fill('trapping rain water')
+  await page
+    .getByRole('option', { name: 'Trapping Rain Water', exact: true })
+    .click()
+
+  await expect(page.getByText('Input Parameters')).toBeVisible()
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+  await expect(page.getByText('All execution steps')).toBeVisible()
+
+  const areaDialog = page
+    .getByRole('dialog')
+    .filter({ has: page.getByRole('heading', { name: 'Area View: height' }) })
+  if (isMobile) {
+    await page.getByTitle('Skip to End').first().click()
+    await page.getByRole('button', { name: 'Area View' }).click()
+  } else {
+    await areaDialog.getByTitle('Skip to End').click()
+  }
+
+  await expect(
+    page.getByRole('heading', { name: 'Area View: height' })
+  ).toBeVisible()
+  await expect(page.getByText('Rain Water View: height')).toBeVisible()
+  await expect(page.getByText('water=6')).toBeVisible()
+})
+
+test('visualizes array and rolling DP examples', async ({
+  page,
+  isMobile,
+}) => {
+  const examples = [
+    { label: 'Coin Change', variable: 'dp', table: 'dp: DP table' },
+    {
+      label: 'Longest Increasing Subsequence',
+      variable: 'dp',
+      table: 'dp: DP table',
+    },
+    {
+      label: 'House Robber',
+      variable: 'nums',
+      table: 'nums: rolling DP state',
+    },
+  ]
+
+  for (const example of examples) {
+    await page.goto('/')
+    await page.getByRole('combobox', { name: 'Example' }).click()
+    await page.getByLabel('Search examples').fill(example.label)
+    await page
+      .getByRole('option', { name: example.label, exact: true })
+      .click()
+
+    await expect(page.getByText('Input Parameters')).toBeVisible()
+    await page.getByRole('button', { name: 'Run', exact: true }).click()
+    await expect(page.getByText('All execution steps')).toBeVisible()
+
+    const dpDialog = page
+      .getByRole('dialog')
+      .filter({
+        has: page.getByRole('heading', {
+          name: `DP View: ${example.variable}`,
+        }),
+      })
+    await page.getByTitle('Skip to End').first().click()
+    if (isMobile) {
+      await page.getByRole('button', { name: 'DP View' }).click()
+    } else {
+      await expect(dpDialog).toBeVisible()
+    }
+
+    await expect(dpDialog).toBeVisible()
+    await expect(dpDialog.getByText(example.table)).toBeVisible()
+  }
+})
+
 test('executes Two Sum with Map snapshots in the worker', async ({ page }) => {
   await page.goto('/')
 

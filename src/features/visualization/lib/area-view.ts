@@ -9,6 +9,8 @@ import type { ExecutionState } from '@/entities/execution'
 
 /** Pointer-derived area metrics for a two-pointer execution step. */
 export type AreaPointerState = {
+  /** Container-area visualization mode. */
+  mode: 'container'
   /** Left pointer index. */
   leftIndex: number
   /** Right pointer index. */
@@ -23,12 +25,33 @@ export type AreaPointerState = {
   bestArea?: number
 }
 
+/** Pointer and accumulated-water metrics for a rain-water execution step. */
+export type RainWaterPointerState = {
+  /** Trapping-rain-water visualization mode. */
+  mode: 'rain-water'
+  /** Left pointer index. */
+  leftIndex: number
+  /** Right pointer index. */
+  rightIndex: number
+  /** Highest wall observed from the left. */
+  leftMax: number
+  /** Highest wall observed from the right. */
+  rightMax: number
+  /** Accumulated trapped water. */
+  totalWater: number
+  /** Water depth currently resolved for each processed bar. */
+  waterDepths: number[]
+}
+
+/** Area-view state supported by the container and rain-water modes. */
+export type AreaViewPointerState = AreaPointerState | RainWaterPointerState
+
 /** Data and pointer metrics required by the area visualization. */
 export type AreaVisualizationState = {
   /** Numeric source array. */
   data: number[]
   /** Pointer metrics for the displayed execution step. */
-  areaState: AreaPointerState
+  areaState: AreaViewPointerState
 }
 
 function readIntegerVariable(
@@ -91,12 +114,106 @@ export function getAreaPointerState(
   const currentHeight = Math.min(data[leftIndex], data[rightIndex])
 
   return {
+    mode: 'container',
     leftIndex,
     rightIndex,
     currentHeight,
     width,
     currentArea: currentHeight * width,
     bestArea: readNumberVariable(variables, ['best', 'maxArea', 'max']),
+  }
+}
+
+function getRainWaterDepths({
+  data,
+  leftIndex,
+  rightIndex,
+  leftMax,
+  rightMax,
+  totalWater,
+}: {
+  data: number[]
+  leftIndex: number
+  rightIndex: number
+  leftMax: number
+  rightMax: number
+  totalWater: number
+}): number[] {
+  const prefixMax: number[] = []
+  const suffixMax: number[] = []
+  let runningMax = 0
+
+  data.forEach((height, index) => {
+    runningMax = Math.max(runningMax, height)
+    prefixMax[index] = runningMax
+  })
+
+  runningMax = 0
+  for (let index = data.length - 1; index >= 0; index -= 1) {
+    runningMax = Math.max(runningMax, data[index])
+    suffixMax[index] = runningMax
+  }
+
+  const depths = data.map((height, index) => {
+    if (index < leftIndex) return Math.max(0, prefixMax[index] - height)
+    if (index > rightIndex) return Math.max(0, suffixMax[index] - height)
+    return 0
+  })
+  const resolvedWater = depths.reduce((sum, depth) => sum + depth, 0)
+  const unresolvedWater = totalWater - resolvedWater
+
+  if (unresolvedWater > 0) {
+    const leftDepth = Math.max(0, leftMax - data[leftIndex])
+    const rightDepth = Math.max(0, rightMax - data[rightIndex])
+
+    if (leftDepth === unresolvedWater) depths[leftIndex] = leftDepth
+    else if (rightDepth === unresolvedWater) depths[rightIndex] = rightDepth
+  }
+
+  return depths
+}
+
+/** Derives rain-water pointer state from a compatible execution step. */
+export function getRainWaterPointerState(
+  data: number[],
+  variables: Record<string, unknown>
+): RainWaterPointerState | null {
+  const leftIndex = readIntegerVariable(variables, ['l', 'left'])
+  const rightIndex = readIntegerVariable(variables, ['r', 'right'])
+  const leftMax = readNumberVariable(variables, ['leftMax'])
+  const rightMax = readNumberVariable(variables, ['rightMax'])
+  const totalWater = readNumberVariable(variables, ['water'])
+
+  if (
+    isNull(leftIndex) ||
+    isNull(rightIndex) ||
+    isUndefined(leftMax) ||
+    isUndefined(rightMax) ||
+    isUndefined(totalWater) ||
+    leftIndex < 0 ||
+    rightIndex < 0 ||
+    leftIndex >= data.length ||
+    rightIndex >= data.length ||
+    leftIndex > rightIndex
+  ) {
+    return null
+  }
+
+  return {
+    mode: 'rain-water',
+    leftIndex,
+    rightIndex,
+    leftMax,
+    rightMax,
+    totalWater,
+    waterDepths: getRainWaterDepths({
+      data,
+      leftIndex,
+      rightIndex,
+      leftMax,
+      rightMax,
+      totalWater,
+    }),
   }
 }
 
@@ -157,16 +274,30 @@ export function getAreaVisualizationState({
   const fallbackStep =
     executionState.steps[targetStepIndex ?? executionState.currentStep]
   const currentData = currentStep?.variables[variableName]
+  const currentRainWaterState =
+    isNumericArray(currentData) && currentStep
+      ? getRainWaterPointerState(
+          currentData.map(Number),
+          currentStep.variables
+        )
+      : null
   const currentAreaState =
     isNumericArray(currentData) && currentStep
       ? getAreaPointerState(currentData.map(Number), currentStep.variables)
       : null
-  const areaStep = currentAreaState ? currentStep : fallbackStep
+  const areaStep = currentAreaState || currentRainWaterState ? currentStep : fallbackStep
   const data = areaStep?.variables[variableName]
 
   if (!isNumericArray(data)) return null
 
   const numericData = data.map(Number)
+  const rainWaterState = areaStep
+    ? getRainWaterPointerState(numericData, areaStep.variables)
+    : null
+  if (!isNull(rainWaterState)) {
+    return { data: numericData, areaState: rainWaterState }
+  }
+
   const shouldUseBestAreaState =
     executionState.isComplete || currentStep?.type === 'return'
   const areaState = shouldUseBestAreaState
@@ -197,9 +328,11 @@ export function isAreaViewCandidate(
 ): boolean {
   if (!isNumericArray(value) || value.length < 2) return false
   if (variableName.toLowerCase() !== 'height') return false
+  const numericValue = value.map(Number)
+  if (!isNull(getRainWaterPointerState(numericValue, variables))) return true
   if (isUndefined(readNumberVariable(variables, ['best', 'maxArea', 'max']))) {
     return false
   }
 
-  return !isNull(getAreaPointerState(value.map(Number), variables))
+  return !isNull(getAreaPointerState(numericValue, variables))
 }

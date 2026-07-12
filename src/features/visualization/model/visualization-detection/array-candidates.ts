@@ -72,15 +72,18 @@ export function hasInitialTreeNodeVariable(
 export function getPrimaryBooleanArrayName(
   variableEntries: VariableEntries,
   initialVariableNames: Set<string>,
-  mutatedBooleanArrayNames: Set<string>
+  mutatedBooleanArrayNames: Set<string>,
+  mutatedNumericArrayNames: Set<string>
 ): string | undefined {
   return variableEntries
     .filter(
       ([name, value]) =>
         !isResultVariableName(name) &&
-        isBooleanArray(value) &&
+        (isBooleanArray(value) || isNumericArray(value)) &&
         value.length > 0 &&
-        mutatedBooleanArrayNames.has(name)
+        isDpName(name.toLowerCase()) &&
+        (mutatedBooleanArrayNames.has(name) ||
+          mutatedNumericArrayNames.has(name))
     )
     .sort(([leftName], [rightName]) => {
       if (isDpName(leftName.toLowerCase())) return -1

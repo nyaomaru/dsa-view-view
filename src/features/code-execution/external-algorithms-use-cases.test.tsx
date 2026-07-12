@@ -579,7 +579,7 @@ describe('external algorithms use cases', () => {
     expect(screen.getByText('Return Value')).toBeInTheDocument()
   })
 
-  it('runs trapping rain water and shows only the return value view', () => {
+  it('runs trapping rain water and exposes the area view', () => {
     const parameters: FunctionParameter[] = [
       { name: 'height', type: 'number-array', optional: false },
     ]
@@ -594,7 +594,7 @@ describe('external algorithms use cases', () => {
 
     renderVisualizer(completeAtStep(state, state.steps.length - 1))
 
-    expectNoStructureView()
+    expect(screen.getByText('Area View')).toBeInTheDocument()
     expect(screen.getByText('Return Value')).toBeInTheDocument()
   })
 

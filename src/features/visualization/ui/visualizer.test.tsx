@@ -777,6 +777,59 @@ describe('Visualizer return value display', () => {
     expect(screen.queryByText('Stack Visualization: s')).not.toBeInTheDocument()
   })
 
+  it('auto-opens a rain-water area view with resolved water', async () => {
+    const height = [0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]
+    const steps: ExecutionState['steps'] = [
+      {
+        stepNumber: 0,
+        type: 'function-call',
+        line: 1,
+        description: 'Function called',
+        variables: { height },
+        timestamp: Date.now(),
+        callStack: ['root', 'trap'],
+      },
+      {
+        stepNumber: 1,
+        type: 'assignment',
+        line: 12,
+        description: 'water += leftMax - height[left]',
+        variables: {
+          height,
+          left: 3,
+          right: 10,
+          leftMax: 1,
+          rightMax: 1,
+          water: 1,
+        },
+        timestamp: Date.now(),
+        callStack: ['root', 'trap'],
+      },
+    ]
+
+    render(
+      <Visualizer
+        executionState={createExecutionStateWithSteps(steps)}
+        isRunning={false}
+        autoOpenPrimaryVisualization
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: 'Area View: height' })
+    ).toBeInTheDocument()
+    expect(screen.getByText('Rain Water View: height')).toBeInTheDocument()
+    expect(screen.getByText('water=1')).toBeInTheDocument()
+    expect(screen.getByLabelText('Water at index 2: 1')).toBeInTheDocument()
+  })
+
   it('shows Sort Graph when a numeric array changes in a sort trace', () => {
     const steps: ExecutionState['steps'] = [
       {
@@ -1101,6 +1154,100 @@ describe('Visualizer return value display', () => {
     expect(screen.getByText('5')).toBeInTheDocument()
     expect(screen.getAllByText('true')).toHaveLength(3)
     expect(screen.getAllByText('false')).toHaveLength(3)
+  })
+
+  it('shows a vertical DP View for mutated numeric dp arrays', async () => {
+    const steps: ExecutionState['steps'] = [
+      {
+        stepNumber: 0,
+        type: 'assignment',
+        line: 2,
+        description: 'const dp = Array(amount + 1).fill(amount + 1)',
+        variables: { dp: [0, 12, 12, 12] },
+        timestamp: Date.now(),
+        callStack: ['root', 'coinChange'],
+      },
+      {
+        stepNumber: 1,
+        type: 'assignment',
+        line: 7,
+        description: 'dp[x] = Math.min(dp[x], dp[x - coin] + 1)',
+        variables: { dp: [0, 1, 2, 3] },
+        timestamp: Date.now(),
+        callStack: ['root', 'coinChange'],
+      },
+    ]
+
+    render(
+      <Visualizer
+        executionState={createExecutionStateWithSteps(steps)}
+        isRunning={false}
+        autoOpenPrimaryVisualization
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: 'DP View: dp' })
+    ).toBeInTheDocument()
+    expect(screen.getByText('dp: DP table')).toBeInTheDocument()
+    expect(
+      screen.getByText('Each row shows the current DP value for its index.')
+    ).toBeInTheDocument()
+  })
+
+  it('shows rolling House Robber state in DP View', async () => {
+    const nums = [2, 7, 9, 3, 1]
+    const steps: ExecutionState['steps'] = [
+      {
+        stepNumber: 0,
+        type: 'function-call',
+        line: 1,
+        description: 'Function called',
+        variables: { nums },
+        timestamp: Date.now(),
+        callStack: ['root', 'rob'],
+      },
+      {
+        stepNumber: 1,
+        type: 'assignment',
+        line: 11,
+        description: 'prev1 = current',
+        variables: { nums, prev2: 7, prev1: 11, current: 11 },
+        timestamp: Date.now(),
+        callStack: ['root', 'rob'],
+      },
+    ]
+
+    render(
+      <Visualizer
+        executionState={createExecutionStateWithSteps(steps)}
+        isRunning={false}
+        autoOpenPrimaryVisualization
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: 'DP View: nums' })
+    ).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText('nums: rolling DP state')).toBeInTheDocument()
+    expect(within(dialog).getByText('prev2')).toBeInTheDocument()
+    expect(within(dialog).getByText('prev1')).toBeInTheDocument()
+    expect(within(dialog).getByText('current')).toBeInTheDocument()
   })
 
   it('prefers a derived matrix for the primary Matrix View', () => {

@@ -1,6 +1,6 @@
 import { Card } from '@/shared/ui'
 import { pxToRem } from '@/shared/lib/units'
-import type { AreaPointerState } from '../lib/area-view'
+import type { AreaViewPointerState } from '../lib/area-view'
 import type { ReactNode } from 'react'
 
 const MAX_CHART_HEIGHT = 280
@@ -19,17 +19,20 @@ type AreaVisualizerProps = {
   /** Variable name displayed in the visualizer title. */
   name: string
   /** Current two-pointer area state. */
-  areaState: AreaPointerState
+  areaState: AreaViewPointerState
 }
 
-function getMarkerLabel(index: number, areaState: AreaPointerState): string {
+function getMarkerLabel(index: number, areaState: AreaViewPointerState): string {
   if (index === areaState.leftIndex) return 'L'
   if (index === areaState.rightIndex) return 'R'
 
   return String(index)
 }
 
-function isBoundaryIndex(index: number, areaState: AreaPointerState): boolean {
+function isBoundaryIndex(
+  index: number,
+  areaState: AreaViewPointerState
+): boolean {
   return index === areaState.leftIndex || index === areaState.rightIndex
 }
 
@@ -79,7 +82,10 @@ export function AreaVisualizer({ data, name, areaState }: AreaVisualizerProps) {
   const leftPercent = (areaState.leftIndex / data.length) * 100
   const rightPercent =
     ((data.length - areaState.rightIndex - 1) / data.length) * 100
-  const areaHeightPercent = (areaState.currentHeight / maxValue) * 100
+  const areaHeightPercent =
+    areaState.mode === 'container'
+      ? (areaState.currentHeight / maxValue) * 100
+      : 0
   const columnTemplate = `repeat(${data.length}, ${CHART_COLUMN_TEMPLATE_MIN})`
   const markerLabels = data.map((_, index) => getMarkerLabel(index, areaState))
 
@@ -88,14 +94,25 @@ export function AreaVisualizer({ data, name, areaState }: AreaVisualizerProps) {
       <div className="flex h-full flex-col gap-4 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 className="font-mono text-lg font-semibold text-muted-foreground">
-            Area View: {name}
+            {areaState.mode === 'rain-water' ? 'Rain Water View' : 'Area View'}:{' '}
+            {name}
           </h3>
           <div className="flex flex-wrap gap-2 font-mono text-xs">
             <AreaStat>L={areaState.leftIndex}</AreaStat>
             <AreaStat>R={areaState.rightIndex}</AreaStat>
-            <AreaStat emphasized>area={areaState.currentArea}</AreaStat>
-            {areaState.bestArea !== undefined && (
-              <AreaStat>best={areaState.bestArea}</AreaStat>
+            {areaState.mode === 'container' ? (
+              <>
+                <AreaStat emphasized>area={areaState.currentArea}</AreaStat>
+                {areaState.bestArea !== undefined && (
+                  <AreaStat>best={areaState.bestArea}</AreaStat>
+                )}
+              </>
+            ) : (
+              <>
+                <AreaStat>leftMax={areaState.leftMax}</AreaStat>
+                <AreaStat>rightMax={areaState.rightMax}</AreaStat>
+                <AreaStat emphasized>water={areaState.totalWater}</AreaStat>
+              </>
             )}
           </div>
         </div>
@@ -112,16 +129,22 @@ export function AreaVisualizer({ data, name, areaState }: AreaVisualizerProps) {
                 gridTemplateColumns: columnTemplate,
               }}
             >
-              <div
-                className="pointer-events-none absolute bottom-0 border-2 border-primary/80 bg-primary/20"
-                style={{
-                  left: `${leftPercent}%`,
-                  right: `${rightPercent}%`,
-                  height: `${areaHeightPercent}%`,
-                }}
-              />
+              {areaState.mode === 'container' && (
+                <div
+                  className="pointer-events-none absolute bottom-0 border-2 border-primary/80 bg-primary/20"
+                  style={{
+                    left: `${leftPercent}%`,
+                    right: `${rightPercent}%`,
+                    height: `${areaHeightPercent}%`,
+                  }}
+                />
+              )}
               {data.map((value, index) => {
                 const barHeightPercent = (value / maxValue) * 100
+                const waterHeightPercent =
+                  areaState.mode === 'rain-water'
+                    ? (areaState.waterDepths[index] / maxValue) * 100
+                    : 0
                 const isBoundary = isBoundaryIndex(index, areaState)
 
                 return (
@@ -140,6 +163,16 @@ export function AreaVisualizer({ data, name, areaState }: AreaVisualizerProps) {
                         height: `${Math.max(barHeightPercent, MIN_BAR_HEIGHT)}%`,
                       }}
                     />
+                    {waterHeightPercent > 0 && (
+                      <div
+                        aria-label={`Water at index ${index}: ${areaState.mode === 'rain-water' ? areaState.waterDepths[index] : 0}`}
+                        className="absolute inset-x-0 border-x border-t border-sky-500/70 bg-sky-400/40"
+                        style={{
+                          bottom: `${barHeightPercent}%`,
+                          height: `${waterHeightPercent}%`,
+                        }}
+                      />
+                    )}
                   </div>
                 )
               })}
