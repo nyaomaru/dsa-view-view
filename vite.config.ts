@@ -15,6 +15,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    include: ['@babel/generator', '@babel/traverse'],
+  },
   server: {
     fs: {
       allow: [

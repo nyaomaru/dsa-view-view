@@ -85,6 +85,25 @@ test('executes worker traces containing variable declarations', async ({
   ).toHaveCount(0)
 })
 
+test('executes Two Sum with Map snapshots in the worker', async ({ page }) => {
+  await page.goto('/')
+
+  await page.getByRole('combobox', { name: 'Example' }).click()
+  await page.getByLabel('Search examples').fill('two sum')
+  await page.getByRole('option', { name: 'Two Sum', exact: true }).click()
+
+  await expect(page.getByText('Input Parameters')).toBeVisible()
+  const executionWorkerStarted = page.waitForEvent('worker', {
+    predicate: (worker) => worker.url().includes('execution-worker'),
+  })
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+  await executionWorkerStarted
+
+  await expect(page.getByText('All execution steps')).toBeVisible()
+  await expect(page.getByText('Execution Error')).toHaveCount(0)
+  await expect(page.getByText('[0,1]')).toBeVisible()
+})
+
 test('returns cyclic clone graphs across the worker boundary', async ({
   page,
   isMobile,
