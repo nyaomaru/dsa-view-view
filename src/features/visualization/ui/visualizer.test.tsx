@@ -1860,6 +1860,56 @@ describe('Visualizer return value display', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('shows Top K result growth instead of an inactive buckets matrix', () => {
+    const steps: ExecutionState['steps'] = [
+      {
+        stepNumber: 0,
+        type: 'variable-declaration',
+        line: 7,
+        description: 'const buckets = Array.from(...)',
+        variables: {
+          buckets: [[], [], [], []],
+          result: [],
+        },
+        timestamp: Date.now(),
+        callStack: ['root', 'topKFrequent'],
+      },
+      {
+        stepNumber: 1,
+        type: 'array-mutation',
+        line: 18,
+        description: 'result.push(num)',
+        variables: {
+          buckets: [[], [3], [1, 2], []],
+          result: [1, 2],
+        },
+        timestamp: Date.now(),
+        callStack: ['root', 'topKFrequent'],
+      },
+    ]
+
+    render(
+      <Visualizer
+        executionState={createExecutionStateWithSteps(steps)}
+        isRunning={false}
+        autoOpenPrimaryVisualization
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    expect(screen.queryByText('Matrix View')).not.toBeInTheDocument()
+    expect(screen.getByText('Stack Visualization: result')).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText('1')).toBeInTheDocument()
+    expect(within(dialog).getByText('2')).toBeInTheDocument()
+  })
+
   it('auto-opens TreeNode traversal result arrays as the primary stack visualization', () => {
     const root = {
       val: 1,

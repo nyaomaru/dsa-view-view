@@ -36,7 +36,13 @@ function collectMatrixCandidateNames(
     })
   })
 
-  return [...matrixNames]
+  return [...matrixNames].filter((name) => {
+    const values = executionState.steps
+      .map((step) => step.variables[name])
+      .filter((value) => !isUndefined(value))
+
+    return values.length > 0 && values.every(isMatrix)
+  })
 }
 
 function scoreMatrixCandidate({

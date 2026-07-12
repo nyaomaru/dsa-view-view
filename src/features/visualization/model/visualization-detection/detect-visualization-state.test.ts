@@ -72,6 +72,35 @@ describe('detectVisualizationState', () => {
     expect(detection.primaryGraphName).toBe('graph')
   })
 
+  it('prefers a numeric result stack over buckets that become ragged', () => {
+    const state = createExecutionState([
+      createStep(0, 'Created buckets', {
+        buckets: [[], [], [], []],
+        result: [],
+      }),
+      createStep(1, 'result.push(num)', {
+        buckets: [[], [3], [1, 2], []],
+        result: [1, 2],
+      }),
+    ])
+    const detection = detectVisualizationState(state)
+
+    expect(detection.primaryStackName).toBe('result')
+    expect(detection.primaryMatrixName).toBeUndefined()
+  })
+
+  it('does not treat the final worker result as a growing result stack', () => {
+    const state = createExecutionState([
+      createStep(0, 'Function called', { nums: [2, 7, 11, 15] }),
+      createStep(1, 'Returned: [0,1]', {
+        nums: [2, 7, 11, 15],
+        result: [0, 1],
+      }),
+    ])
+
+    expect(detectVisualizationState(state).primaryStackName).toBeUndefined()
+  })
+
   it('handles cyclic list nodes while selecting list candidates', () => {
     const head: Record<string, unknown> = { val: 1, next: null }
     head.next = head

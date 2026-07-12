@@ -44,14 +44,19 @@ export function getPrimaryArrayName(
 
 export function getPrimaryStackName(
   variableEntries: VariableEntries,
-  options: { includeNumericResultArrays?: boolean } = {}
+  options: {
+    includeNumericResultArrays?: boolean
+    mutatedNumericArrayNames?: Set<string>
+  } = {}
 ): string | undefined {
   return variableEntries.find(
     ([name, value]) =>
       isResultLikeName(name) &&
       isArray(value) &&
       value.length > 0 &&
-      (options.includeNumericResultArrays || !isNumericArray(value))
+      (!isNumericArray(value) ||
+        (options.includeNumericResultArrays &&
+          options.mutatedNumericArrayNames?.has(name)))
   )?.[0]
 }
 

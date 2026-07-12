@@ -54,6 +54,7 @@ export function detectVisualizationState(
   const { initialVariableStepNumber, initialVariableNames } =
     getInitialVariableContext(executionState)
   const metadata = collectVisualizationMutationMetadata(executionState)
+  const hasSort = hasSortTrace(executionState)
   const prefersResultStack =
     hasInitialTreeNodeVariable(variableEntries, initialVariableNames) &&
     variableEntries.some(
@@ -66,7 +67,8 @@ export function detectVisualizationState(
     { excludeResultLikeArrays: prefersResultStack }
   )
   const primaryStackName = getPrimaryStackName(variableEntries, {
-    includeNumericResultArrays: prefersResultStack,
+    includeNumericResultArrays: prefersResultStack || !hasSort,
+    mutatedNumericArrayNames: metadata.mutatedNumericArrayNames,
   })
   const primaryBinarySearchArrayName = getPrimaryBinarySearchArrayName(
     executionState,
@@ -139,9 +141,7 @@ export function detectVisualizationState(
     hasRecursion,
     isClassDesignTrace,
     primaryStackName,
-    primaryArrayName: hasSortTrace(executionState)
-      ? primaryArrayName
-      : undefined,
+    primaryArrayName: hasSort ? primaryArrayName : undefined,
     primaryAreaArrayName,
     primaryAreaStepIndex,
     primaryBinarySearchArrayName,

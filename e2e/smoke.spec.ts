@@ -41,13 +41,17 @@ test('loads, compiles, runs a demo, and opens core dialogs', async ({
     )
   }
 
-  await page.getByTitle('Visualize as bar chart').click()
-
   const visualizationDialog = page
     .getByRole('dialog')
     .filter({ has: page.getByRole('heading', { name: 'Bar Chart: nums' }) })
+  if (isMobile) {
+    await page.getByTitle('Visualize as bar chart').click()
+  } else if (!(await visualizationDialog.isVisible())) {
+    await page.getByTitle('Visualize as bar chart').click({ force: true })
+  }
   await expect(visualizationDialog).toBeVisible()
   await visualizationDialog.getByRole('button', { name: 'Close' }).click()
+  await expect(visualizationDialog).toBeHidden()
 
   if (!isMobile) {
     await page.getByRole('button', { name: 'Open link menu' }).click()
@@ -102,6 +106,35 @@ test('executes Two Sum with Map snapshots in the worker', async ({ page }) => {
   await expect(page.getByText('All execution steps')).toBeVisible()
   await expect(page.getByText('Execution Error')).toHaveCount(0)
   await expect(page.getByText('[0,1]')).toBeVisible()
+})
+
+test('shows Top K result growth instead of buckets Matrix View', async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto('/')
+
+  await page.getByRole('combobox', { name: 'Example' }).click()
+  await page.getByLabel('Search examples').fill('top k frequent')
+  await page
+    .getByRole('option', { name: 'Top K Frequent', exact: true })
+    .click()
+
+  await expect(page.getByText('Input Parameters')).toBeVisible()
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+  await expect(page.getByText('All execution steps')).toBeVisible()
+
+  await page.getByTitle('Skip to End').first().click()
+
+  await expect(page.getByText('Matrix View')).toHaveCount(0)
+  if (isMobile) {
+    const resultRow = page.getByText('result', { exact: true }).locator('../..')
+    await resultRow.getByTitle('Visualize as stack').click()
+  }
+
+  await expect(
+    page.getByRole('heading', { name: 'Stack Visualization: result' })
+  ).toBeVisible()
 })
 
 test('returns cyclic clone graphs across the worker boundary', async ({
