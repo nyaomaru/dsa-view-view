@@ -26,6 +26,7 @@ import {
   getPrimaryMatrixName,
   getPrimaryMatrixStepIndex,
 } from './matrix-candidates'
+import { getPrimaryMapName, getPrimaryMapStepIndex } from './map-candidates'
 import { collectVisualizationMutationMetadata } from './mutation-metadata'
 import {
   getPrimaryConstructedTreeNodeName,
@@ -100,6 +101,11 @@ export function detectVisualizationState(
       metadata.mutatedBooleanArrayNames,
       metadata.mutatedNumericArrayNames
     ) ?? getPrimaryRollingDpArrayName(executionState, initialVariableNames)
+  const primaryMapName = getPrimaryMapName(executionState)
+  const primaryMapStepIndex = getPrimaryMapStepIndex(
+    executionState,
+    primaryMapName
+  )
   const primaryGraphName = isGraphNodeShape(executionState.returnValue)
     ? RETURN_VALUE_LABEL
     : getPrimaryGraphName(variableEntries, initialVariableNames)
@@ -152,6 +158,8 @@ export function detectVisualizationState(
     primarySlidingWindowStringName,
     primarySlidingWindowStepIndex,
     primaryBooleanArrayName,
+    primaryMapName,
+    primaryMapStepIndex,
     primaryGraphName,
     primaryMatrixName,
     primaryMatrixStepIndex,

@@ -41,6 +41,10 @@ type VariablesCardProps = {
   primarySlidingWindowStepIndex?: number
   /** Primary boolean array variable detected for DP visualization. */
   primaryBooleanArrayName?: string
+  /** Primary semantic Map variable detected for Map View. */
+  primaryMapName?: string
+  /** Step index where Map View context is first available. */
+  primaryMapStepIndex?: number
   /** Primary graph variable detected for graph visualization. */
   primaryGraphName?: string
   /** Primary matrix variable detected for matrix visualization. */
@@ -69,6 +73,8 @@ type VariablesCardProps = {
   onOpenSlidingWindow: (variableName: string, stepIndex?: number) => void
   /** Opens boolean array DP visualization for a variable. */
   onOpenBooleanArray: (variableName: string) => void
+  /** Opens semantic Map visualization for a variable. */
+  onOpenMap: (variableName: string, stepIndex?: number) => void
   /** Opens graph visualization for a variable. */
   onOpenGraph: (variableName: string) => void
   /** Opens matrix visualization for a variable. */
@@ -95,6 +101,8 @@ export function VariablesCard({
   primarySlidingWindowStringName,
   primarySlidingWindowStepIndex,
   primaryBooleanArrayName,
+  primaryMapName,
+  primaryMapStepIndex,
   primaryGraphName,
   primaryMatrixName,
   primaryMatrixStepIndex,
@@ -109,6 +117,7 @@ export function VariablesCard({
   onOpenBinarySearch,
   onOpenSlidingWindow,
   onOpenBooleanArray,
+  onOpenMap,
   onOpenGraph,
   onOpenMatrix,
   onOpenTreeGraph,
@@ -188,6 +197,17 @@ export function VariablesCard({
             >
               <CheckSquare className="w-4 h-4" />
               DP View
+            </Button>
+          )}
+          {primaryMapName && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => onOpenMap(primaryMapName, primaryMapStepIndex)}
+            >
+              <Search className="w-4 h-4" />
+              Map View
             </Button>
           )}
           {primaryGraphName && (

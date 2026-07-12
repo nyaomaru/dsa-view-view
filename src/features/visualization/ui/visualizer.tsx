@@ -46,6 +46,7 @@ type ModalType =
   | 'tree-graph'
   | 'list-graph'
   | 'boolean-array'
+  | 'map'
   | 'area'
   | 'binary-search'
   | 'sliding-window'
@@ -87,6 +88,8 @@ export function Visualizer({
     primarySlidingWindowStringName,
     primarySlidingWindowStepIndex,
     primaryBooleanArrayName,
+    primaryMapName,
+    primaryMapStepIndex,
     primaryGraphName,
     primaryMatrixName,
     primaryMatrixStepIndex,
@@ -229,6 +232,12 @@ export function Visualizer({
       return
     }
 
+    if (primaryMapName) {
+      openModal('map', primaryMapName, primaryMapStepIndex)
+      autoOpenedStepsRef.current = executionState.steps
+      return
+    }
+
     if (primaryGraphName) {
       openModal('graph', primaryGraphName)
       autoOpenedStepsRef.current = executionState.steps
@@ -264,6 +273,8 @@ export function Visualizer({
     primarySlidingWindowStringName,
     primarySlidingWindowStepIndex,
     primaryBooleanArrayName,
+    primaryMapName,
+    primaryMapStepIndex,
     primaryGraphName,
     primaryListNodeName,
     primaryMatrixName,
@@ -308,6 +319,8 @@ export function Visualizer({
         primarySlidingWindowStringName={primarySlidingWindowStringName}
         primarySlidingWindowStepIndex={primarySlidingWindowStepIndex}
         primaryBooleanArrayName={primaryBooleanArrayName}
+        primaryMapName={primaryMapName}
+        primaryMapStepIndex={primaryMapStepIndex}
         primaryGraphName={primaryGraphName}
         primaryMatrixName={primaryMatrixName}
         primaryMatrixStepIndex={primaryMatrixStepIndex}
@@ -329,6 +342,9 @@ export function Visualizer({
         }
         onOpenBooleanArray={(variableName) =>
           openModal('boolean-array', variableName)
+        }
+        onOpenMap={(variableName, stepIndex) =>
+          openModal('map', variableName, stepIndex)
         }
         onOpenGraph={(variableName) => openModal('graph', variableName)}
         onOpenMatrix={(variableName, stepIndex) =>

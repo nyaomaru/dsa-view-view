@@ -18,6 +18,13 @@ const CHANGED_CELL_INITIAL_SCALE = 1.1
 const CHANGED_CELL_INITIAL_OPACITY = 0.8
 const CELL_SPRING_STIFFNESS = 300
 const CELL_SPRING_DAMPING = 20
+const SHORT_STRING_MAX_LENGTH = 3
+const VALUE_TINT_CLASSES = [
+  'bg-background',
+  'bg-primary/[0.08]',
+  'bg-primary/[0.14]',
+  'bg-primary/[0.20]',
+]
 
 const rem = (value: number) => `${value}rem`
 
@@ -62,17 +69,30 @@ export const MatrixVisualizer: React.FC<MatrixVisualizerProps> = ({
     return formatDisplayValue(val)
   }
 
-  const getCellStyles = (_val: unknown, hasChanged: boolean) => {
+  const getCellStyles = (hasChanged: boolean) => {
     if (hasChanged) {
-      return 'z-10 border-primary bg-primary/10 font-bold ring-2 ring-primary/30'
+      return 'z-10 border-primary font-bold ring-2 ring-primary/30'
     }
-    return 'border-border bg-background'
+    return 'border-border'
   }
 
-  const getCellContentStyles = (val: unknown) =>
-    isString(val)
+  const getCellContentStyles = (val: unknown) => {
+    const isLongString = isString(val) && val.length > SHORT_STRING_MAX_LENGTH
+
+    return isLongString
       ? 'min-w-0 max-w-full break-all whitespace-normal text-center text-sm leading-relaxed'
       : 'text-4xl'
+  }
+
+  const getCellValueTint = (val: unknown) => {
+    const displayValue = renderCellContent(val)
+    let hash = 0
+    for (let index = 0; index < displayValue.length; index += 1) {
+      hash += displayValue.charCodeAt(index)
+    }
+
+    return VALUE_TINT_CLASSES[hash % VALUE_TINT_CLASSES.length]
+  }
 
   return (
     <div className="flex w-full min-w-0 flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -123,7 +143,8 @@ export const MatrixVisualizer: React.FC<MatrixVisualizerProps> = ({
                     }}
                     className={cn(
                       `${MATRIX_CELL_MIN_HEIGHT_CLASS} min-w-0 overflow-hidden p-3 flex items-center justify-center font-mono text-foreground transition-colors duration-300 border relative`,
-                      getCellStyles(val, hasChanged)
+                      getCellValueTint(val),
+                      getCellStyles(hasChanged)
                     )}
                   >
                     <span className={getCellContentStyles(val)}>

@@ -27,6 +27,10 @@ export type VisualizationDetection = {
   primarySlidingWindowStepIndex: number | undefined
   /** Primary boolean array to show in DP view. */
   primaryBooleanArrayName: string | undefined
+  /** Primary semantic Map variable to show in Map View. */
+  primaryMapName: string | undefined
+  /** Step index where Map View context is first available. */
+  primaryMapStepIndex: number | undefined
   /** Primary adjacency-list graph variable. */
   primaryGraphName: string | undefined
   /** Primary matrix variable. */

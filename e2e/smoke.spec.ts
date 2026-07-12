@@ -170,10 +170,13 @@ test('visualizes array and rolling DP examples', async ({
           name: `DP View: ${example.variable}`,
         }),
       })
-    await page.getByTitle('Skip to End').first().click()
     if (isMobile) {
+      await page.getByTitle('Skip to End').first().click()
       await page.getByRole('button', { name: 'DP View' }).click()
+    } else if (await dpDialog.isVisible()) {
+      await dpDialog.getByTitle('Skip to End').click()
     } else {
+      await page.getByTitle('Skip to End').first().click()
       await expect(dpDialog).toBeVisible()
     }
 
@@ -182,23 +185,48 @@ test('visualizes array and rolling DP examples', async ({
   }
 })
 
-test('executes Two Sum with Map snapshots in the worker', async ({ page }) => {
-  await page.goto('/')
+test('visualizes semantic Map updates', async ({ page, isMobile }) => {
+  const examples = [
+    { label: 'Two Sum', map: 'seen', table: 'seen: lookup table' },
+    {
+      label: 'Valid Anagram',
+      map: 'counts',
+      table: 'counts: frequency table',
+    },
+  ]
 
-  await page.getByRole('combobox', { name: 'Example' }).click()
-  await page.getByLabel('Search examples').fill('two sum')
-  await page.getByRole('option', { name: 'Two Sum', exact: true }).click()
+  for (const example of examples) {
+    await page.goto('/')
+    await page.getByRole('combobox', { name: 'Example' }).click()
+    await page.getByLabel('Search examples').fill(example.label)
+    await page
+      .getByRole('option', { name: example.label, exact: true })
+      .click()
 
-  await expect(page.getByText('Input Parameters')).toBeVisible()
-  const executionWorkerStarted = page.waitForEvent('worker', {
-    predicate: (worker) => worker.url().includes('execution-worker'),
-  })
-  await page.getByRole('button', { name: 'Run', exact: true }).click()
-  await executionWorkerStarted
+    await expect(page.getByText('Input Parameters')).toBeVisible()
+    await page.getByRole('button', { name: 'Run', exact: true }).click()
+    await expect(page.getByText('All execution steps')).toBeVisible()
+    await expect(page.getByText('Execution Error')).toHaveCount(0)
 
-  await expect(page.getByText('All execution steps')).toBeVisible()
-  await expect(page.getByText('Execution Error')).toHaveCount(0)
-  await expect(page.getByText('[0,1]')).toBeVisible()
+    const mapDialog = page
+      .getByRole('dialog')
+      .filter({
+        has: page.getByRole('heading', {
+          name: `Map View: ${example.map}`,
+        }),
+      })
+    if (isMobile) {
+      await page.getByTitle('Skip to End').first().click()
+      await page.getByRole('button', { name: 'Map View' }).click()
+    } else if (await mapDialog.isVisible()) {
+      await mapDialog.getByTitle('Skip to End').click()
+    } else {
+      await page.getByTitle('Skip to End').first().click()
+    }
+
+    await expect(mapDialog).toBeVisible()
+    await expect(mapDialog.getByText(example.table)).toBeVisible()
+  }
 })
 
 test('shows Top K result growth instead of buckets Matrix View', async ({

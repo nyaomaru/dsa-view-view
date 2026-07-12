@@ -9,6 +9,8 @@ type BooleanArrayVisualizerProps = {
   name: string
   /** Optional labels used instead of numeric indexes. */
   labels?: readonly string[]
+  /** Header for the index or state-name column. */
+  labelHeader?: string
   /** Optional table-kind label shown after the variable name. */
   tableKind?: string
   /** Optional explanation shown above the table. */
@@ -19,6 +21,7 @@ export function BooleanArrayVisualizer({
   data,
   name,
   labels,
+  labelHeader = 'index',
   tableKind,
   description,
 }: BooleanArrayVisualizerProps) {
@@ -41,7 +44,7 @@ export function BooleanArrayVisualizer({
 
         <div className="overflow-hidden rounded-md border">
           <div className="grid grid-cols-[5rem_1fr] border-b bg-muted/60 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <div className="border-r px-3 py-2">index</div>
+            <div className="border-r px-3 py-2">{labelHeader}</div>
             <div className="px-3 py-2">value</div>
           </div>
           {data.map((value, index) => (

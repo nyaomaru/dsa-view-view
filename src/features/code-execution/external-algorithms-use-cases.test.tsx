@@ -410,6 +410,7 @@ function renderVisualizer(executionState: ExecutionState) {
 function expectNoStructureView() {
   expect(screen.queryByText('Sort Graph')).not.toBeInTheDocument()
   expect(screen.queryByText('Area View')).not.toBeInTheDocument()
+  expect(screen.queryByText('Map View')).not.toBeInTheDocument()
   expect(screen.queryByText('Matrix View')).not.toBeInTheDocument()
   expect(screen.queryByText('Tree Graph')).not.toBeInTheDocument()
   expect(screen.queryByText('List Graph')).not.toBeInTheDocument()
@@ -454,7 +455,7 @@ describe('external algorithms use cases', () => {
     expect(screen.getByText('Sort Graph')).toBeInTheDocument()
   })
 
-  it('runs two sum and shows only the return value view', () => {
+  it('runs two sum and exposes the map view', () => {
     const parameters: FunctionParameter[] = [
       { name: 'nums', type: 'number-array', optional: false },
       { name: 'target', type: 'number', optional: false },
@@ -471,7 +472,7 @@ describe('external algorithms use cases', () => {
 
     renderVisualizer(completeAtStep(state, state.steps.length - 1))
 
-    expectNoStructureView()
+    expect(screen.getByText('Map View')).toBeInTheDocument()
     expect(screen.getByText('Return Value')).toBeInTheDocument()
   })
 
@@ -539,7 +540,7 @@ describe('external algorithms use cases', () => {
     expect(screen.getByText('Return Value')).toBeInTheDocument()
   })
 
-  it('runs valid anagram without exposing a structure view', () => {
+  it('runs valid anagram and exposes the map view', () => {
     const parameters: FunctionParameter[] = [
       { name: 's', type: 'string', optional: false },
       { name: 't', type: 'string', optional: false },
@@ -556,7 +557,7 @@ describe('external algorithms use cases', () => {
 
     renderVisualizer(completeAtStep(state, state.steps.length - 1))
 
-    expectNoStructureView()
+    expect(screen.getByText('Map View')).toBeInTheDocument()
     expect(screen.getByText('Return Value')).toBeInTheDocument()
   })
 

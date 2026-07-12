@@ -32,6 +32,7 @@ type VisualizationModalProps = {
     | 'tree-graph'
     | 'list-graph'
     | 'boolean-array'
+    | 'map'
     | 'area'
     | 'binary-search'
     | 'sliding-window'
@@ -90,6 +91,8 @@ function getVisualizationTitle({
       return `List Graph: ${targetVariable}`
     case 'boolean-array':
       return `DP View: ${targetVariable}`
+    case 'map':
+      return `Map View: ${targetVariable}`
     case 'bar-chart':
       return `Bar Chart: ${targetVariable}`
     case 'area':
@@ -127,6 +130,8 @@ function getVisualizationDescription(
       return 'Visualize linked list next pointers and cycle edges.'
     case 'boolean-array':
       return 'Visualize a DP array as an index-to-value table.'
+    case 'map':
+      return 'Visualize Map updates and the current lookup context.'
     case 'bar-chart':
       return 'Visualize numeric array as a bar chart.'
     case 'area':
@@ -200,7 +205,8 @@ export function VisualizationModal({
             'py-4 flex-1 min-h-0 overflow-y-auto',
             (type === 'matrix' ||
               type === 'list-graph' ||
-              type === 'boolean-array') &&
+              type === 'boolean-array' ||
+              type === 'map') &&
               'flex items-center justify-center'
           )}
           data-tree-scroll-container

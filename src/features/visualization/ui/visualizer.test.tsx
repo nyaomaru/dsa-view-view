@@ -1250,6 +1250,96 @@ describe('Visualizer return value display', () => {
     expect(within(dialog).getByText('current')).toBeInTheDocument()
   })
 
+  it('shows Two Sum lookup context in Map View', async () => {
+    const steps: ExecutionState['steps'] = [
+      {
+        stepNumber: 0,
+        type: 'assignment',
+        line: 7,
+        description: 'const complement = target - nums[i]',
+        variables: {
+          nums: [2, 7, 11, 15],
+          target: 9,
+          i: 1,
+          complement: 2,
+          seen: new Map([[2, 0]]),
+        },
+        timestamp: Date.now(),
+        callStack: ['root', 'twoSum'],
+      },
+    ]
+
+    render(
+      <Visualizer
+        executionState={createExecutionStateWithSteps(steps)}
+        isRunning={false}
+        autoOpenPrimaryVisualization
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: 'Map View: seen' })
+    ).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText('seen: lookup table')).toBeInTheDocument()
+    expect(within(dialog).getByText('complement=2')).toBeInTheDocument()
+    expect(within(dialog).getByText('match → result [0, 1]')).toBeInTheDocument()
+  })
+
+  it('shows Anagram character counts in Map View', async () => {
+    const steps: ExecutionState['steps'] = [
+      {
+        stepNumber: 0,
+        type: 'assignment',
+        line: 11,
+        description: 'counts.set(char, next)',
+        variables: {
+          s: 'anagram',
+          t: 'nagaram',
+          char: 'n',
+          counts: new Map([
+            ['a', 2],
+            ['n', 0],
+          ]),
+        },
+        timestamp: Date.now(),
+        callStack: ['root', 'isAnagram'],
+      },
+    ]
+
+    render(
+      <Visualizer
+        executionState={createExecutionStateWithSteps(steps)}
+        isRunning={false}
+        autoOpenPrimaryVisualization
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: 'Map View: counts' })
+    ).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    expect(
+      within(dialog).getByText('counts: frequency table')
+    ).toBeInTheDocument()
+    expect(within(dialog).getByText('char="n"')).toBeInTheDocument()
+    expect(within(dialog).getByText('active')).toBeInTheDocument()
+  })
+
   it('prefers a derived matrix for the primary Matrix View', () => {
     const mat = [
       [0, 0, 0],

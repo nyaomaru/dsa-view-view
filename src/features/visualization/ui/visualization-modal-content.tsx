@@ -26,6 +26,7 @@ import {
   isRollingDpCandidate,
 } from '../lib/rolling-dp-view'
 import { getGraphNodeAdjacencyRecord } from '../lib/graph-view'
+import { getMapVisualizationState } from '../lib/map-view'
 import type { VisualizationType } from './visualization-modal'
 import { StackVisualizer } from './stack-visualizer'
 import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
@@ -36,6 +37,7 @@ import { SlidingWindowVisualizer } from './sliding-window-visualizer'
 import { BooleanArrayVisualizer } from './boolean-array-visualizer'
 import { GraphVisualizer } from './graph-visualizer'
 import { MatrixVisualizer } from './matrix-visualizer'
+import { MapVisualizer } from './map-visualizer'
 import { TreeGraphVisualizer } from './tree-graph-visualizer'
 import { ListGraphVisualizer } from './list-graph-visualizer'
 
@@ -300,6 +302,7 @@ export function VisualizationModalContent({
             data={rollingDpState.values}
             name={targetVariable}
             labels={rollingDpState.labels}
+            labelHeader="state"
             tableKind="rolling DP state"
             description="prev2 and prev1 carry the best totals from the previous two positions."
           />
@@ -316,6 +319,29 @@ export function VisualizationModalContent({
         <BooleanArrayVisualizer data={dpData} name={targetVariable} />
       ) : (
         <div>Variable is not a boolean or numeric DP array</div>
+      )
+    }
+
+    case 'map': {
+      const mapState = [...new Set(
+        getStepSearchOrder({ executionState, targetStepIndex })
+      )]
+        .map((index) => executionState.steps[index])
+        .map((step) =>
+          step
+            ? getMapVisualizationState(
+                targetVariable,
+                step.variables[targetVariable],
+                step.variables
+              )
+            : null
+        )
+        .find((state) => !isNull(state))
+
+      return mapState ? (
+        <MapVisualizer state={mapState} />
+      ) : (
+        <div>Map lookup context is not available.</div>
       )
     }
 

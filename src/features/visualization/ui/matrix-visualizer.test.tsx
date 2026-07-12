@@ -25,6 +25,20 @@ describe('MatrixVisualizer', () => {
     expect(screen.getByText('42')).toHaveClass('text-4xl')
   })
 
+  it('uses large text and distinct tints for short grid values', () => {
+    render(<MatrixVisualizer data={[[0, 1, '2']]} name="grid" />)
+
+    const zeroCell = screen.getByText('0').parentElement
+    const oneCell = screen.getByText('1').parentElement
+    const twoCell = screen.getByText('2').parentElement
+
+    expect(screen.getByText('0')).toHaveClass('text-4xl')
+    expect(screen.getByText('1')).toHaveClass('text-4xl')
+    expect(screen.getByText('2')).toHaveClass('text-4xl')
+    expect(zeroCell?.className).not.toBe(oneCell?.className)
+    expect(oneCell?.className).not.toBe(twoCell?.className)
+  })
+
   it('tints cells whose values changed from the previous matrix', () => {
     render(
       <MatrixVisualizer
@@ -40,8 +54,11 @@ describe('MatrixVisualizer', () => {
       />
     )
 
-    expect(screen.getByText('#').parentElement).toHaveClass('bg-primary/10')
-    expect(screen.getByText('A').parentElement).toHaveClass('bg-background')
+    expect(screen.getByText('#').parentElement).toHaveClass(
+      'border-primary',
+      'ring-2'
+    )
+    expect(screen.getByText('A').parentElement).toHaveClass('border-border')
   })
 
   it('keeps wide matrices scrollable from the left edge', () => {

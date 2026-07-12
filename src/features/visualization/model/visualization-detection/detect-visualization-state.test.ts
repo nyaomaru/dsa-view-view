@@ -169,6 +169,34 @@ describe('detectVisualizationState', () => {
     )
   })
 
+  it('selects semantic seen and counts maps for Map View', () => {
+    const twoSumState = createExecutionState([
+      createStep(0, 'seen.set(nums[i], i)', {
+        nums: [2, 7, 11, 15],
+        target: 9,
+        i: 1,
+        complement: 2,
+        seen: new Map([[2, 0]]),
+      }),
+    ])
+    const anagramState = createExecutionState([
+      createStep(0, 'counts.set(char, next)', {
+        s: 'anagram',
+        t: 'nagaram',
+        char: 'n',
+        counts: new Map([
+          ['a', 3],
+          ['n', 0],
+        ]),
+      }),
+    ])
+
+    expect(detectVisualizationState(twoSumState).primaryMapName).toBe('seen')
+    expect(detectVisualizationState(anagramState).primaryMapName).toBe(
+      'counts'
+    )
+  })
+
   it('handles cyclic list nodes while selecting list candidates', () => {
     const head: Record<string, unknown> = { val: 1, next: null }
     head.next = head
