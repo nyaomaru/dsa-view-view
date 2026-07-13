@@ -2283,6 +2283,22 @@ describe('Visualizer return value display', () => {
       <Visualizer
         executionState={{
           ...initialState,
+          currentStep: 0,
+        }}
+        {...visualizerProps}
+      />
+    )
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByText('Variable is not an array')).toBeVisible()
+    expect(within(dialog).queryByText('1')).not.toBeInTheDocument()
+    expect(within(dialog).queryByText('2')).not.toBeInTheDocument()
+    expect(within(dialog).queryByText('3')).not.toBeInTheDocument()
+
+    rerender(
+      <Visualizer
+        executionState={{
+          ...initialState,
           currentStep: 3,
           isComplete: true,
           returnValue: 2,
@@ -2291,7 +2307,6 @@ describe('Visualizer return value display', () => {
       />
     )
 
-    const dialog = screen.getByRole('dialog')
     expect(within(dialog).queryByText('Variable is not an array')).toBeNull()
     expect(within(dialog).getByText('Return Value')).toBeInTheDocument()
     expect(within(dialog).getByText('1')).toBeInTheDocument()

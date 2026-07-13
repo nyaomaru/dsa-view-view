@@ -100,6 +100,7 @@ function findArrayStep({
     executionState,
     targetStepIndex,
     preferPastSteps: true,
+    includeFutureSteps: false,
   })
 
   for (const index of orderedIndexes) {
