@@ -2210,6 +2210,95 @@ describe('Visualizer return value display', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('keeps a derived traversal stack visible after the variable leaves scope', async () => {
+    const root = {
+      val: 2,
+      left: { val: 1, left: null, right: null },
+      right: { val: 3, left: null, right: null },
+    }
+    const steps: ExecutionState['steps'] = [
+      {
+        stepNumber: 0,
+        type: 'function-entry',
+        line: 1,
+        description: 'Entering function: kthSmallest',
+        variables: { root, k: 2 },
+        timestamp: Date.now(),
+        callStack: ['root', 'kthSmallest'],
+      },
+      {
+        stepNumber: 1,
+        type: 'variable-declaration',
+        line: 2,
+        description: 'const arr = []',
+        variables: { root, k: 2, arr: [] },
+        timestamp: Date.now(),
+        callStack: ['root', 'kthSmallest'],
+      },
+      {
+        stepNumber: 2,
+        type: 'array-mutation',
+        line: 10,
+        description: 'arr.push(node.val)',
+        variables: { root, k: 2, arr: [1, 2, 3] },
+        timestamp: Date.now(),
+        callStack: ['root', 'kthSmallest', 'dfs'],
+      },
+      {
+        stepNumber: 3,
+        type: 'return',
+        line: 15,
+        description: 'return arr[k - 1]',
+        variables: { root, k: 2 },
+        timestamp: Date.now(),
+        callStack: ['root'],
+      },
+    ]
+    const initialState: ExecutionState = {
+      currentStep: 2,
+      totalSteps: steps.length,
+      steps,
+      isComplete: false,
+    }
+    const visualizerProps = {
+      isRunning: false,
+      autoOpenPrimaryVisualization: true,
+      onPause: noop,
+      onRunAll: noop,
+      onReset: noop,
+      onStepForward: noop,
+      onStepBackward: noop,
+      onSkipToEnd: noop,
+      onJumpToStep: noop,
+    }
+    const { rerender } = render(
+      <Visualizer executionState={initialState} {...visualizerProps} />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Stack Visualization: arr')).toBeInTheDocument()
+    })
+
+    rerender(
+      <Visualizer
+        executionState={{
+          ...initialState,
+          currentStep: 3,
+          isComplete: true,
+          returnValue: 2,
+        }}
+        {...visualizerProps}
+      />
+    )
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).queryByText('Variable is not an array')).toBeNull()
+    expect(within(dialog).getByText('Return Value')).toBeInTheDocument()
+    expect(within(dialog).getByText('1')).toBeInTheDocument()
+    expect(within(dialog).getAllByText('2')).toHaveLength(2)
+    expect(within(dialog).getByText('3')).toBeInTheDocument()
+  })
+
   it('prefers result arrays over path arrays for the primary sort bar chart', () => {
     const steps: ExecutionState['steps'] = [
       {

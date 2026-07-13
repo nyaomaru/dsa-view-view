@@ -10,6 +10,7 @@ import { isDpVariableName } from '../../lib/dp-view'
 import {
   isResultLikeName,
   isResultVariableName,
+  isTraversalWorklistName,
   isWorkingPathName,
 } from './variables'
 import type { VariableEntries } from './types'
@@ -56,6 +57,23 @@ export function getPrimaryStackName(
       (!isNumericArray(value) ||
         (options.includeNumericResultArrays &&
           options.mutatedNumericArrayNames?.has(name)))
+  )?.[0]
+}
+
+export function getPrimaryTraversalResultArrayName(
+  variableEntries: VariableEntries,
+  initialVariableNames: Set<string>,
+  mutatedNumericArrayNames: Set<string>
+): string | undefined {
+  return variableEntries.find(
+    ([name, value]) =>
+      !initialVariableNames.has(name) &&
+      !isWorkingPathName(name) &&
+      !isTraversalWorklistName(name) &&
+      !isDpVariableName(name.toLowerCase()) &&
+      isNumericArray(value) &&
+      value.length > 0 &&
+      mutatedNumericArrayNames.has(name)
   )?.[0]
 }
 

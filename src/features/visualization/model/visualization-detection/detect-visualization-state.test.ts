@@ -117,6 +117,25 @@ describe('detectVisualizationState', () => {
     expect(detectVisualizationState(state).primaryStackName).toBe('answer')
   })
 
+  it('selects a derived traversal array regardless of its variable name', () => {
+    const root = {
+      val: 2,
+      left: { val: 1, left: null, right: null },
+      right: { val: 3, left: null, right: null },
+    }
+    const state = createExecutionState([
+      createStep(0, 'Function called', { root, k: 2 }),
+      createStep(1, 'const arr = []', { root, k: 2, arr: [] }),
+      createStep(2, 'arr.push(node.val)', {
+        root,
+        k: 2,
+        arr: [1, 2, 3],
+      }),
+    ])
+
+    expect(detectVisualizationState(state).primaryStackName).toBe('arr')
+  })
+
   it('selects height for a trapping-rain-water area view', () => {
     const state = createExecutionState([
       createStep(0, 'Function called', {

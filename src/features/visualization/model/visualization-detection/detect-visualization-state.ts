@@ -7,6 +7,7 @@ import {
   getPrimaryDpArrayName,
   getPrimaryGraphName,
   getPrimaryStackName,
+  getPrimaryTraversalResultArrayName,
   hasInitialTreeNodeVariable,
 } from './array-candidates'
 import {
@@ -51,8 +52,12 @@ export function detectVisualizationState(
     getInitialVariableContext(executionState)
   const metadata = collectVisualizationMutationMetadata(executionState)
   const hasSort = hasSortTrace(executionState)
+  const hasInitialTreeNode = hasInitialTreeNodeVariable(
+    variableEntries,
+    initialVariableNames
+  )
   const prefersResultStack =
-    hasInitialTreeNodeVariable(variableEntries, initialVariableNames) &&
+    hasInitialTreeNode &&
     variableEntries.some(
       ([name, value]) => isResultLikeName(name) && isNumericArray(value)
     )
@@ -62,10 +67,18 @@ export function detectVisualizationState(
     metadata.mutatedNumericArrayNames,
     { excludeResultLikeArrays: prefersResultStack }
   )
-  const primaryStackName = getPrimaryStackName(variableEntries, {
-    includeNumericResultArrays: prefersResultStack || !hasSort,
-    mutatedNumericArrayNames: metadata.mutatedNumericArrayNames,
-  })
+  const primaryStackName =
+    getPrimaryStackName(variableEntries, {
+      includeNumericResultArrays: prefersResultStack || !hasSort,
+      mutatedNumericArrayNames: metadata.mutatedNumericArrayNames,
+    }) ??
+    (hasInitialTreeNode
+      ? getPrimaryTraversalResultArrayName(
+          variableEntries,
+          initialVariableNames,
+          metadata.mutatedNumericArrayNames
+        )
+      : undefined)
   const primaryBinarySearchCandidate = getPrimaryBinarySearchCandidate(
     executionState,
     initialVariableNames
