@@ -2,7 +2,7 @@ import type { ExecutionState, ExecutionStep } from '@/entities/execution'
 import { isInteger, isNull, isString } from '@/shared/lib/guards'
 
 const STRING_SOURCE_NAMES = new Set(['s', 'str', 'text'])
-const PATTERN_SOURCE_NAMES = ['p', 'pattern', 'word'] as const
+const PATTERN_SOURCE_NAMES = ['p', 'pattern', 't', 'word'] as const
 
 /** Window boundaries and optional pattern metadata for one execution step. */
 export type SlidingWindowState = {
@@ -57,8 +57,8 @@ export function getSlidingWindowState(
 ): SlidingWindowState | null {
   if (!isString(value) || value.length === 0) return null
 
-  const left = variables.left
-  const right = variables.right
+  const left = variables.left ?? variables.l
+  const right = variables.right ?? variables.r
 
   if (!isInteger(left) || !isInteger(right)) {
     return null

@@ -298,6 +298,47 @@ function maxArea(height: number[]): number {
   return best
 }
 `
+const minWindowCode = `
+function minWindow(s: string, t: string): string {
+  if (t.length === 0 || s.length === 0) return ''
+
+  const need = new Map<string, number>()
+  for (const char of t) {
+    need.set(char, (need.get(char) || 0) + 1)
+  }
+
+  const have = new Map<string, number>()
+  const required = need.size
+  let formed = 0
+  let l = 0
+  let bestLen = Infinity
+  let bestL = 0
+
+  for (let r = 0; r < s.length; r++) {
+    const char = s[r]
+    have.set(char, (have.get(char) || 0) + 1)
+
+    if (need.has(char) && have.get(char) === need.get(char)) formed++
+
+    while (l <= r && formed === required) {
+      const windowLen = r - l + 1
+      if (windowLen < bestLen) {
+        bestLen = windowLen
+        bestL = l
+      }
+
+      const leftChar = s[l]
+      have.set(leftChar, have.get(leftChar)! - 1)
+      if (need.has(leftChar) && have.get(leftChar)! < need.get(leftChar)) {
+        formed--
+      }
+      l++
+    }
+  }
+
+  return bestLen === Infinity ? '' : s.slice(bestL, bestL + bestLen)
+}
+`
 const mySqrtCode = loadAlgorithm('math/my-sqrt.ts')
 const wordBreakCode = loadAlgorithm('dynamic-programming/word-break.ts')
 const numIslandsCode = loadAlgorithm('graphs/number-of-islands.ts')
@@ -598,6 +639,45 @@ describe('external algorithms use cases', () => {
 
     expectNoStructureView()
     expect(screen.getByText('Return Value')).toBeInTheDocument()
+  })
+
+  it('runs minimum window substring and exposes the sliding window view', () => {
+    const parameters: FunctionParameter[] = [
+      { name: 's', type: 'string', optional: false },
+      { name: 't', type: 'string', optional: false },
+    ]
+    const inputs = convertInputValues(parameters, {
+      s: 'ADOBECODEBANC',
+      t: 'ABC',
+    })
+    const state = executeCode(minWindowCode, inputs, 'minWindow')
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe('BANC')
+
+    const currentStep = findVisualizationStep(state, (variables) => {
+      const left = variables.l
+      const right = variables.r
+
+      return (
+        Number.isInteger(left) &&
+        Number.isInteger(right) &&
+        Number(left) <= Number(right)
+      )
+    })
+    renderVisualizer(
+      {
+        ...state,
+        currentStep,
+        isComplete: false,
+      },
+      true
+    )
+
+    expect(
+      screen.getByRole('heading', { name: 'Sliding Window View: s' })
+    ).toBeInTheDocument()
+    expect(screen.getByText('pattern: ABC')).toBeInTheDocument()
   })
 
   it('runs trapping rain water and exposes the area view', () => {
