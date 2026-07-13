@@ -64,7 +64,7 @@
     "postcss": "^8.5.16",
     "tailwindcss": "4.3.2",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "~6.0.3",
+    "typescript": "~7.0.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.2.4",
     "vite-plus": "0.2.4",
     "vitest": "4.1.10"
