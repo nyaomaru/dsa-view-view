@@ -6,6 +6,7 @@ export function getExecutionStepSearchOrder({
   executionState,
   targetStepIndex,
   preferPastSteps = false,
+  includeFutureSteps = true,
 }: {
   /** Execution state whose steps should be searched. */
   executionState: ExecutionState
@@ -13,12 +14,16 @@ export function getExecutionStepSearchOrder({
   targetStepIndex?: number
   /** Whether past steps should be searched before future steps. */
   preferPastSteps?: boolean
+  /** Whether surrounding steps after the current step should be searched. */
+  includeFutureSteps?: boolean
 }): number[] {
   const { currentStep, steps } = executionState
-  const futureStepIndexes = Array.from(
-    { length: Math.max(0, steps.length - currentStep - 1) },
-    (_, index) => currentStep + index + 1
-  )
+  const futureStepIndexes = includeFutureSteps
+    ? Array.from(
+        { length: Math.max(0, steps.length - currentStep - 1) },
+        (_, index) => currentStep + index + 1
+      )
+    : []
   const pastStepIndexes = Array.from(
     { length: Math.max(0, currentStep) },
     (_, index) => currentStep - index - 1

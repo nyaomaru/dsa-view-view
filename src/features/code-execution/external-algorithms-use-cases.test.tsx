@@ -303,6 +303,22 @@ const wordBreakCode = loadAlgorithm('dynamic-programming/word-break.ts')
 const numIslandsCode = loadAlgorithm('graphs/number-of-islands.ts')
 const floodFillCode = loadAlgorithm('matrix/flood-fill.ts')
 const maxDepthCode = loadAlgorithm('tree/max-depth.ts')
+const kthSmallestCode = `
+function kthSmallest(root: TreeNode | null, k: number): number {
+  const arr: number[] = []
+
+  function dfs(node: TreeNode | null) {
+    if (!node) return
+
+    dfs(node.left)
+    arr.push(node.val)
+    dfs(node.right)
+  }
+
+  dfs(root)
+  return arr[k - 1]
+}
+`
 const invertTreeCode = loadAlgorithm('binary-search-tree/invert-binary-tree.ts')
 const reverseListCode = loadAlgorithm('linked-list/reverse-list.ts')
 const mergeTwoListsCode = loadAlgorithm('linked-list/merge-two-lists.ts')
@@ -391,11 +407,15 @@ function completeAtStep(
   }
 }
 
-function renderVisualizer(executionState: ExecutionState) {
+function renderVisualizer(
+  executionState: ExecutionState,
+  autoOpenPrimaryVisualization = false
+) {
   render(
     <Visualizer
       executionState={executionState}
       isRunning={false}
+      autoOpenPrimaryVisualization={autoOpenPrimaryVisualization}
       onPause={noop}
       onRunAll={noop}
       onReset={noop}
@@ -755,6 +775,36 @@ describe('external algorithms use cases', () => {
     renderVisualizer(completeAtStep(state, currentStep))
 
     expect(screen.getByText('Tree Graph')).toBeInTheDocument()
+  })
+
+  it('shows a derived inorder array as the primary Stack View', () => {
+    const parameters: FunctionParameter[] = [
+      { name: 'root', type: 'tree-node', optional: false },
+      { name: 'k', type: 'number', optional: false },
+    ]
+    const inputs = convertInputValues(parameters, {
+      root: '[2,1,3]',
+      k: '2',
+    })
+    const state = executeCode(kthSmallestCode, inputs, 'kthSmallest')
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(2)
+
+    const currentStep = findVisualizationStep(
+      state,
+      (variables) => Array.isArray(variables.arr) && variables.arr.length === 3
+    )
+    renderVisualizer(
+      {
+        ...state,
+        currentStep,
+        isComplete: false,
+      },
+      true
+    )
+
+    expect(screen.getByText('Stack Visualization: arr')).toBeInTheDocument()
   })
 
   it('runs invert tree and exposes the tree graph view', () => {

@@ -33,4 +33,15 @@ describe('getExecutionStepSearchOrder', () => {
       })
     ).toEqual([2, 1, 0, 3, 4])
   })
+
+  it('can exclude future steps while preserving an explicit target', () => {
+    expect(
+      getExecutionStepSearchOrder({
+        executionState,
+        targetStepIndex: 4,
+        preferPastSteps: true,
+        includeFutureSteps: false,
+      })
+    ).toEqual([2, 4, 1, 0])
+  })
 })

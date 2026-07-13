@@ -84,6 +84,36 @@ function findNumericArrayStep({
   return undefined
 }
 
+function findArrayStep({
+  executionState,
+  variableName,
+  targetStepIndex,
+}: {
+  /** Execution state whose steps should be searched. */
+  executionState: ExecutionState
+  /** Array variable name to find. */
+  variableName: string
+  /** Preferred step index to check before surrounding steps. */
+  targetStepIndex?: number
+}): ExecutionStepSnapshot | undefined {
+  const orderedIndexes = getExecutionStepSearchOrder({
+    executionState,
+    targetStepIndex,
+    preferPastSteps: true,
+    includeFutureSteps: false,
+  })
+
+  for (const index of orderedIndexes) {
+    const step = executionState.steps[index]
+
+    if (step && isArray(step.variables[variableName])) {
+      return step
+    }
+  }
+
+  return undefined
+}
+
 function findTreeNodeStep({
   executionState,
   variableName,
@@ -149,7 +179,11 @@ export function VisualizationModalContent({
 
   switch (type) {
     case 'stack': {
-      const data = getCurrentStepVariable(targetVariable)
+      const data = findArrayStep({
+        executionState,
+        variableName: targetVariable,
+        targetStepIndex,
+      })?.variables[targetVariable]
 
       return isArray(data) ? (
         <StackVisualizer data={data} name={targetVariable} />
