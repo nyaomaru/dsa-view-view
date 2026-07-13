@@ -61,7 +61,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "jsdom": "29.1.1",
     "lefthook": "^2.1.10",
-    "postcss": "^8.5.18",
+    "postcss": "^8.5.16",
     "tailwindcss": "4.3.2",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "~7.0.2",
