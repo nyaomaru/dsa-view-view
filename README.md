@@ -11,7 +11,7 @@ Write code, run it with structured inputs, and see the arrays, matrices,
 trees, lists, stacks, pointers, and return values move as the function executes.
 
 It is built for those moments when reading the code is not enough and you want
-to _see_ why the answer changes.
+to _view_ why the answer changes.
 
 [![DSA View View demo](./public/demo/dsa-view-view-demo.gif)](https://dsa-view-view.vercel.app/)
 
