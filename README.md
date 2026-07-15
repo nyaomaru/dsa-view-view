@@ -36,7 +36,7 @@ to _view_ why the answer changes.
   Create a tokenized share URL for the current example, code, input, mode, and runtime step.
 
 - 📺 **A tiny monitor friend**<br />
-  ViewView reacts while you validate, wait, run, and finish algorithms.
+  Mr. View reacts while you validate, wait, run, and finish algorithms.
 
 ## What It Feels Good For
 
