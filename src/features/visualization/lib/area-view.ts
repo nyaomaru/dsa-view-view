@@ -185,7 +185,7 @@ export function getRainWaterPointerState(
   const rightIndex = readIntegerVariable(variables, ['r', 'right'])
   const leftMax = readNumberVariable(variables, ['leftMax'])
   const rightMax = readNumberVariable(variables, ['rightMax'])
-  const totalWater = readNumberVariable(variables, ['water'])
+  const totalWater = readNumberVariable(variables, ['water', 'trappedWater'])
 
   if (
     isNull(leftIndex) ||

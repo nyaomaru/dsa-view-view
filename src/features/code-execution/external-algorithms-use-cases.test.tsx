@@ -120,19 +120,19 @@ function trap(height: number[]): number {
   let right = height.length - 1
   let leftMax = 0
   let rightMax = 0
-  let water = 0
+  let trappedWater = 0
   while (left < right) {
     if (height[left] < height[right]) {
       leftMax = Math.max(leftMax, height[left])
-      water += leftMax - height[left]
+      trappedWater += leftMax - height[left]
       left++
     } else {
       rightMax = Math.max(rightMax, height[right])
-      water += rightMax - height[right]
+      trappedWater += rightMax - height[right]
       right--
     }
   }
-  return water
+  return trappedWater
 }
 `,
   'math/my-sqrt.ts': `
@@ -680,7 +680,7 @@ describe('external algorithms use cases', () => {
     expect(screen.getByText('pattern: ABC')).toBeInTheDocument()
   })
 
-  it('runs trapping rain water and exposes the area view', () => {
+  it('runs trapping rain water and opens the area view', async () => {
     const parameters: FunctionParameter[] = [
       { name: 'height', type: 'number-array', optional: false },
     ]
@@ -693,10 +693,12 @@ describe('external algorithms use cases', () => {
     expect(state.error).toBeUndefined()
     expect(state.returnValue).toBe(6)
 
-    renderVisualizer(completeAtStep(state, state.steps.length - 1))
+    renderVisualizer(completeAtStep(state, state.steps.length - 1), true)
 
     expect(screen.getByText('Area View')).toBeInTheDocument()
-    expect(screen.getByText('Return Value')).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Rain Water View: height' })
+    ).toBeInTheDocument()
   })
 
   it('runs container with most water and exposes the area view', () => {
