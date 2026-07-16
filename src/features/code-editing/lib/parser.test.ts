@@ -179,6 +179,42 @@ class MinHeap {
     })
   })
 
+  it('prefers a later design class over an earlier behavioral helper', () => {
+    const signature = extractFunctionSignature(`
+class DoublyLinkedList {
+  add(value: number): void {}
+  remove(value: number): void {}
+}
+
+class LRUCache {
+  get(key: number): number { return -1 }
+  put(key: number, value: number): void {}
+  has(key: number): boolean { return false }
+}
+`)
+
+    expect(signature).toMatchObject({
+      kind: 'class',
+      name: 'LRUCache',
+      methods: [{ name: 'get' }, { name: 'put' }, { name: 'has' }],
+    })
+  })
+
+  it('uses a lone prepared class override as the design target', () => {
+    const signature = extractFunctionSignature(`
+class MinHeap {
+  push(value: number): void {}
+  pop(): number { return 0 }
+}
+`)
+
+    expect(signature).toMatchObject({
+      kind: 'class',
+      name: 'MinHeap',
+      methods: [{ name: 'push' }, { name: 'pop' }],
+    })
+  })
+
   it('detects returned function parameters for LeetCode factory solutions', () => {
     const signature = extractFunctionSignature(`
 function isBadVersion(n: number): boolean {

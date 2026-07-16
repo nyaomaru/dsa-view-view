@@ -26,3 +26,4 @@ export {
   isParamTypeStringMatrix,
   isParamTypeTreeNode,
 } from './model/parameter-type'
+export { isPreparedTypeScriptClassName } from './model/prepared-class-name'

@@ -12,10 +12,11 @@ import type {
   TypeAnnotation,
 } from '@babel/types'
 
-import type {
-  ClassMethodSignature,
-  FunctionSignature,
-  FunctionParameter,
+import {
+  isPreparedTypeScriptClassName,
+  type ClassMethodSignature,
+  type FunctionParameter,
+  type FunctionSignature,
 } from '@/entities/code'
 import { define, hasKey, isObject, oneOfValues } from '@/shared/lib/guards'
 import {
@@ -288,9 +289,14 @@ function shouldPreferClassSignature(
 ): boolean {
   if (!current) return true
 
-  return (
-    (current.methods?.length ?? 0) === 0 && (candidate.methods?.length ?? 0) > 0
-  )
+  const candidateIsPrepared = isPreparedTypeScriptClassName(candidate.name)
+  const currentIsPrepared = isPreparedTypeScriptClassName(current.name)
+
+  if (candidateIsPrepared !== currentIsPrepared) {
+    return currentIsPrepared
+  }
+
+  return (candidate.methods?.length ?? 0) > (current.methods?.length ?? 0)
 }
 
 /**

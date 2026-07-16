@@ -1,4 +1,5 @@
 import { parse } from '@babel/parser'
+import { isPreparedTypeScriptClassName } from '../model/prepared-class-name'
 
 /**
  * Built-in class definition injected when user code references a common DSA type.
@@ -610,10 +611,6 @@ class Counter<T> {
   },
 ]
 
-const PREPARED_CLASS_NAMES = new Set(
-  PREPARED_CLASSES.map((definition) => definition.name)
-)
-
 const PARSER_OPTIONS = {
   sourceType: 'module' as const,
   plugins: ['typescript' as const],
@@ -684,11 +681,11 @@ function stripPreparedClassImports(code: string): string {
       .forEach((node) => {
         const importsPreparedClass = node.specifiers.some((specifier) => {
           if (specifier.type === 'ImportDefaultSpecifier') {
-            return PREPARED_CLASS_NAMES.has(specifier.local.name)
+            return isPreparedTypeScriptClassName(specifier.local.name)
           }
 
           if (specifier.type === 'ImportSpecifier') {
-            return PREPARED_CLASS_NAMES.has(specifier.local.name)
+            return isPreparedTypeScriptClassName(specifier.local.name)
           }
 
           return false
