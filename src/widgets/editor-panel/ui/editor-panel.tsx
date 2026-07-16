@@ -135,6 +135,15 @@ export function EditorPanel({
             >
               Run demo
             </Button>
+            <a
+              href="https://github.com/nyaomaru/dsa-view-view"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Open GitHub repository"
+              className="flex h-11 w-11 flex-none items-center justify-center transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <img src="/sns/github.svg" alt="" className="h-9 w-9" />
+            </a>
             <ShareButton
               createShareUrl={onCreateShareUrl}
               className="h-11 w-[8.5rem] flex-none sm:w-[10rem] lg:hidden"

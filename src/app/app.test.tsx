@@ -153,7 +153,9 @@ describe('App runtime execution', () => {
       ((await screen.findByLabelText('Code Editor')) as HTMLTextAreaElement)
         .value
     ).toContain('function echo')
-    expect(await screen.findByLabelText(/s/)).toHaveValue('hello')
+    expect(
+      await screen.findByLabelText(/^s/, { selector: 'input' })
+    ).toHaveValue('hello')
 
     window.history.pushState({}, '', '/')
   })
