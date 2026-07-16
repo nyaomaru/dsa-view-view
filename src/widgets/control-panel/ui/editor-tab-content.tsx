@@ -11,6 +11,10 @@ export function EditorTabContent({
   onExampleChange,
   onCompile,
 }: EditorTabContentProps) {
+  const hasLintErrors = lintErrors.some(
+    (lintError) => lintError.severity === 'error'
+  )
+
   return (
     <div className="flex h-auto flex-col p-6 lg:h-full">
       <div className="flex-none mb-6 space-y-4">
@@ -26,7 +30,7 @@ export function EditorTabContent({
         </Stack>
         <Button
           onClick={onCompile}
-          disabled={lintErrors.length > 0}
+          disabled={hasLintErrors}
           className="w-full shadow-lg hover:shadow-xl transition-all h-11 text-base font-semibold"
         >
           Compile Code
