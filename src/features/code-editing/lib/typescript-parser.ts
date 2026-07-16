@@ -288,7 +288,9 @@ function shouldPreferClassSignature(
 ): boolean {
   if (!current) return true
 
-  return (candidate.methods?.length ?? 0) > (current.methods?.length ?? 0)
+  return (
+    (current.methods?.length ?? 0) === 0 && (candidate.methods?.length ?? 0) > 0
+  )
 }
 
 /**

@@ -254,6 +254,152 @@ class PriorityQueue<T> {
 }`,
   },
   {
+    name: 'MinHeap',
+    source: `
+class MinHeap {
+  private values: number[] = []
+
+  size(): number {
+    return this.values.length
+  }
+
+  isEmpty(): boolean {
+    return this.values.length === 0
+  }
+
+  peek(): number {
+    if (this.values.length === 0) throw new Error('Cannot peek an empty MinHeap')
+    return this.values[0]
+  }
+
+  push(value: number): void {
+    this.values.push(value)
+    this.bubbleUp(this.values.length - 1)
+  }
+
+  pop(): number {
+    if (this.values.length === 0) throw new Error('Cannot pop an empty MinHeap')
+    const top = this.values[0]
+    const last = this.values.pop()!
+
+    if (this.values.length > 0) {
+      this.values[0] = last
+      this.bubbleDown(0)
+    }
+
+    return top
+  }
+
+  private bubbleUp(index: number): void {
+    while (index > 0) {
+      const parent = Math.floor((index - 1) / 2)
+      if (this.values[parent] <= this.values[index]) break
+      ;[this.values[parent], this.values[index]] = [this.values[index], this.values[parent]]
+      index = parent
+    }
+  }
+
+  private bubbleDown(index: number): void {
+    while (true) {
+      const left = index * 2 + 1
+      const right = index * 2 + 2
+      let smallest = index
+
+      if (
+        left < this.values.length &&
+        this.values[left] < this.values[smallest]
+      ) {
+        smallest = left
+      }
+
+      if (
+        right < this.values.length &&
+        this.values[right] < this.values[smallest]
+      ) {
+        smallest = right
+      }
+
+      if (smallest === index) break
+      ;[this.values[index], this.values[smallest]] = [this.values[smallest], this.values[index]]
+      index = smallest
+    }
+  }
+}`,
+  },
+  {
+    name: 'MaxHeap',
+    source: `
+class MaxHeap {
+  private values: number[] = []
+
+  size(): number {
+    return this.values.length
+  }
+
+  isEmpty(): boolean {
+    return this.values.length === 0
+  }
+
+  peek(): number {
+    if (this.values.length === 0) throw new Error('Cannot peek an empty MaxHeap')
+    return this.values[0]
+  }
+
+  push(value: number): void {
+    this.values.push(value)
+    this.bubbleUp(this.values.length - 1)
+  }
+
+  pop(): number {
+    if (this.values.length === 0) throw new Error('Cannot pop an empty MaxHeap')
+    const top = this.values[0]
+    const last = this.values.pop()!
+
+    if (this.values.length > 0) {
+      this.values[0] = last
+      this.bubbleDown(0)
+    }
+
+    return top
+  }
+
+  private bubbleUp(index: number): void {
+    while (index > 0) {
+      const parent = Math.floor((index - 1) / 2)
+      if (this.values[parent] >= this.values[index]) break
+      ;[this.values[parent], this.values[index]] = [this.values[index], this.values[parent]]
+      index = parent
+    }
+  }
+
+  private bubbleDown(index: number): void {
+    while (true) {
+      const left = index * 2 + 1
+      const right = index * 2 + 2
+      let largest = index
+
+      if (
+        left < this.values.length &&
+        this.values[left] > this.values[largest]
+      ) {
+        largest = left
+      }
+
+      if (
+        right < this.values.length &&
+        this.values[right] > this.values[largest]
+      ) {
+        largest = right
+      }
+
+      if (largest === index) break
+      ;[this.values[index], this.values[largest]] = [this.values[largest], this.values[index]]
+      index = largest
+    }
+  }
+}`,
+  },
+  {
     name: 'Deque',
     source: `
 class Deque<T> {

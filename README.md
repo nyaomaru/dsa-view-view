@@ -24,8 +24,9 @@ to _view_ why the answer changes.
   Arrays become bars, matrices become grids, trees become node graphs, linked lists become chains, and two-pointer area problems get their own visual view.
 
 - 🌳 **DSA-friendly inputs out of the box**<br />
-  `TreeNode`, `ListNode`, nested arrays, matrices, strings, numbers, and class
-  style inputs are supported without ceremony.
+  `TreeNode`, `ListNode`, `MinHeap`, `MaxHeap`, `PriorityQueue`, nested arrays,
+  matrices, strings, numbers, and class-style inputs are supported without
+  ceremony.
 
 - 🔎 **39 built-in examples**<br />
   Search by name, browse by category, and jump into classics like Two Sum,

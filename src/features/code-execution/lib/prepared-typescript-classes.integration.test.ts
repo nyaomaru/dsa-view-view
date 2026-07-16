@@ -4,6 +4,7 @@ import {
   compileTypeScriptCode,
   getPreparedTypeScriptEditorClassSource,
 } from '@/entities/code/lib'
+import { createClassDesignInput } from './class-design-input'
 import { executeCode } from './runner'
 
 describe('prepared classes', () => {
@@ -89,6 +90,18 @@ function reverseList(head: ListNode | null): ListNode | null {
 `)
 
     expect(source).toContain('class ListNode')
+  })
+
+  it('provides editor declarations for MinHeap and MaxHeap', () => {
+    const source = getPreparedTypeScriptEditorClassSource(`
+class MedianFinder {
+  private minHeap = new MinHeap()
+  private maxHeap = new MaxHeap()
+}
+`)
+
+    expect(source).toContain('class MinHeap')
+    expect(source).toContain('class MaxHeap')
   })
 
   it('provides editor declarations for _Node in clone-graph code', () => {
@@ -233,6 +246,53 @@ function topTwo(): number[] {
 
     expect(state.error).toBeUndefined()
     expect(state.returnValue).toEqual([5, 3])
+  })
+
+  it('executes MedianFinder with prepared MinHeap and MaxHeap', () => {
+    const code = `
+class MedianFinder {
+  private minHeap
+  private maxHeap
+
+  constructor() {
+    this.minHeap = new MinHeap()
+    this.maxHeap = new MaxHeap()
+  }
+
+  addNum(num: number): void {
+    this.maxHeap.push(num)
+    this.minHeap.push(this.maxHeap.pop())
+
+    if (this.minHeap.size() > this.maxHeap.size()) {
+      this.maxHeap.push(this.minHeap.pop())
+    }
+  }
+
+  findMedian(): number {
+    if (this.maxHeap.size() > this.minHeap.size()) {
+      return this.maxHeap.peek()
+    }
+
+    return (this.maxHeap.peek() + this.minHeap.peek()) / 2
+  }
+}
+`
+    const inputs = createClassDesignInput(
+      'MedianFinder',
+      [
+        'MedianFinder',
+        'addNum',
+        'addNum',
+        'findMedian',
+        'addNum',
+        'findMedian',
+      ],
+      [[], [1], [2], [], [3], []]
+    )
+    const state = executeCode(code, inputs, 'MedianFinder')
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([null, null, null, 1.5, null, 2])
   })
 
   it('executes sliding-window style code with prepared Deque', () => {

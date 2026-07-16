@@ -157,6 +157,28 @@ class LRUCache {
     })
   })
 
+  it('keeps the first design class ahead of later behavioral helpers', () => {
+    const signature = extractFunctionSignature(`
+class MedianFinder {
+  addNum(num: number): void {}
+  findMedian(): number { return 0 }
+}
+
+class MinHeap {
+  size(): number { return 0 }
+  peek(): number | undefined { return undefined }
+  push(value: number): void {}
+  pop(): number | undefined { return undefined }
+}
+`)
+
+    expect(signature).toMatchObject({
+      kind: 'class',
+      name: 'MedianFinder',
+      methods: [{ name: 'addNum' }, { name: 'findMedian' }],
+    })
+  })
+
   it('detects returned function parameters for LeetCode factory solutions', () => {
     const signature = extractFunctionSignature(`
 function isBadVersion(n: number): boolean {
