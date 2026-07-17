@@ -50,7 +50,7 @@ describe('Word Ladder View', () => {
         seen: new Set(['hit', 'hot', 'dot', 'lot']),
         w: 'hot',
         dist: 2,
-        pat: 'h*t',
+        pat: '*ot',
       }),
     ])
     const view = getWordLadderVisualizationState(state)
@@ -58,7 +58,7 @@ describe('Word Ladder View', () => {
     expect(getWordLadderStepIndex(state)).toBe(0)
     expect(view?.currentWord).toBe('hot')
     expect(view?.currentDistance).toBe(2)
-    expect(view?.activePattern).toBe('h*t')
+    expect(view?.activePattern).toBe('*ot')
     expect(view?.queue).toEqual([
       { word: 'dot', distance: 3 },
       { word: 'lot', distance: 3 },
@@ -73,6 +73,11 @@ describe('Word Ladder View', () => {
     )
     expect(view?.edges).toContainEqual({
       from: 'hit',
+      to: 'hot',
+      isActive: false,
+    })
+    expect(view?.edges).toContainEqual({
+      from: 'dot',
       to: 'hot',
       isActive: true,
     })

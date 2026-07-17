@@ -3,6 +3,7 @@ import {
   define,
   hasKeys,
   isArray,
+  isNull,
   isNumber,
   isSet,
   isString,
@@ -97,6 +98,16 @@ function getWildcardPatterns(word: string): string[] {
     { length: word.length },
     (_, index) => `${word.slice(0, index)}*${word.slice(index + 1)}`
   )
+}
+
+function matchesWildcardPattern(word: string, pattern: string): boolean {
+  if (word.length !== pattern.length) return false
+
+  for (let index = 0; index < word.length; index += 1) {
+    if (pattern[index] !== '*' && pattern[index] !== word[index]) return false
+  }
+
+  return true
 }
 
 function buildWordGraph(words: string[]): {
@@ -220,10 +231,22 @@ export function getWordLadderVisualizationState(
               : 'unvisited',
       isTarget: word === input.endWord,
     })),
-    edges: edges.map((edge) => ({
-      ...edge,
-      isActive: edge.from === currentWord || edge.to === currentWord,
-    })),
+    edges: edges.map((edge) => {
+      const otherWord =
+        edge.from === currentWord
+          ? edge.to
+          : edge.to === currentWord
+            ? edge.from
+            : null
+
+      return {
+        ...edge,
+        isActive:
+          !isNull(otherWord) &&
+          !isNull(activePattern) &&
+          matchesWildcardPattern(otherWord, activePattern),
+      }
+    }),
     queue,
     currentWord,
     currentDistance,
