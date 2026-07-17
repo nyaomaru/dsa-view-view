@@ -70,6 +70,7 @@ export function Visualizer({
     hasRecursion,
     isClassDesignTrace,
     primaryHeapStepIndex,
+    primaryWordLadderStepIndex,
     primaryArrayName,
     primaryAreaArrayName,
     primaryAreaStepIndex,
@@ -225,6 +226,7 @@ export function Visualizer({
         hasRecursion={hasRecursion}
         isClassDesignTrace={isClassDesignTrace}
         primaryHeapStepIndex={primaryHeapStepIndex}
+        primaryWordLadderStepIndex={primaryWordLadderStepIndex}
         primaryArrayName={primaryArrayName}
         primaryAreaArrayName={primaryAreaArrayName}
         primaryAreaStepIndex={primaryAreaStepIndex}

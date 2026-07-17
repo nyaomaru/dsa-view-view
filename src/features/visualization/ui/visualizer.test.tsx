@@ -476,6 +476,46 @@ describe('Visualizer return value display', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('auto-opens Word Ladder View for matching BFS inputs', async () => {
+    const executionState = createExecutionStateWithSteps([
+      {
+        stepNumber: 0,
+        type: 'function-call',
+        line: 0,
+        description: 'Function called',
+        variables: {
+          beginWord: 'hit',
+          endWord: 'cog',
+          wordList: ['hot', 'dot', 'dog', 'lot', 'log', 'cog'],
+        },
+        timestamp: 0,
+      },
+    ])
+
+    render(
+      <Visualizer
+        executionState={{ ...executionState, isComplete: false }}
+        isRunning={false}
+        autoOpenPrimaryVisualization
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'Word Ladder View' })
+      ).toBeInTheDocument()
+    })
+    expect(screen.getByLabelText('hit: unvisited')).toBeInTheDocument()
+    expect(screen.getByLabelText('cog: unvisited, target')).toBeInTheDocument()
+  })
+
   it('auto-opens constructed local roots before falling back to TreeNode return values', async () => {
     const partialRoot = {
       val: 3,

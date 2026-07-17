@@ -33,6 +33,25 @@ function createExecutionState(
 }
 
 describe('detectVisualizationState', () => {
+  it('detects Word Ladder inputs before generic queue and map candidates', () => {
+    const state = createExecutionState([
+      createStep(0, 'Function called', {
+        beginWord: 'hit',
+        endWord: 'cog',
+        wordList: ['hot', 'dot', 'dog', 'lot', 'log', 'cog'],
+      }),
+      createStep(1, 'Initialized BFS', {
+        beginWord: 'hit',
+        endWord: 'cog',
+        wordList: ['hot', 'dot', 'dog', 'lot', 'log', 'cog'],
+        q: [['hit', 1]],
+        buckets: new Map([['h*t', ['hit', 'hot']]]),
+      }),
+    ])
+
+    expect(detectVisualizationState(state).primaryWordLadderStepIndex).toBe(0)
+  })
+
   it('detects the first snapshot containing prepared min and max heaps', () => {
     const state = createExecutionState([
       createStep(0, 'Initialized', {}),

@@ -13,6 +13,7 @@ export type VisualizationType =
   | 'graph'
   | 'matrix'
   | 'heap'
+  | 'word-ladder'
   | null
 
 /** Opens one visualization for an optional variable and fallback step. */

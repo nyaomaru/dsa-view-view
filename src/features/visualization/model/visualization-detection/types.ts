@@ -11,6 +11,8 @@ export type VisualizationDetection = {
   isClassDesignTrace: boolean
   /** First step index containing both prepared MinHeap and MaxHeap state. */
   primaryHeapStepIndex: number | undefined
+  /** First step index containing Word Ladder inputs. */
+  primaryWordLadderStepIndex: number | undefined
   /** Primary result-like array to show as a stack. */
   primaryStackName: string | undefined
   /** Primary numeric array to show as a bar chart. */

@@ -17,6 +17,13 @@ export type PrimaryVisualization = {
 export function getPrimaryVisualization(
   detection: VisualizationDetection
 ): PrimaryVisualization | null {
+  if (!isUndefined(detection.primaryWordLadderStepIndex)) {
+    return {
+      type: 'word-ladder',
+      targetStepIndex: detection.primaryWordLadderStepIndex,
+    }
+  }
+
   if (!isUndefined(detection.primaryHeapStepIndex)) {
     return {
       type: 'heap',

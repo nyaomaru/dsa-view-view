@@ -29,6 +29,8 @@ type VariablesCardProps = {
   isClassDesignTrace?: boolean
   /** First step containing a prepared min/max heap pair. */
   primaryHeapStepIndex?: number
+  /** First step containing Word Ladder inputs. */
+  primaryWordLadderStepIndex?: number
   /** Primary array variable detected for chart visualization. */
   primaryArrayName?: string
   /** Primary numeric array detected for container-area visualization. */
@@ -76,6 +78,7 @@ export function VariablesCard({
   hasRecursion,
   isClassDesignTrace = false,
   primaryHeapStepIndex,
+  primaryWordLadderStepIndex,
   primaryArrayName,
   primaryAreaArrayName,
   primaryAreaStepIndex,
@@ -103,7 +106,24 @@ export function VariablesCard({
           <CardTitle>Variables</CardTitle>
           <CardDescription>Current variable states</CardDescription>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
+          {!isUndefined(primaryWordLadderStepIndex) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                onOpenVisualization(
+                  'word-ladder',
+                  undefined,
+                  primaryWordLadderStepIndex
+                )
+              }
+            >
+              <GitGraph className="w-4 h-4" />
+              Word Ladder View
+            </Button>
+          )}
           {!isUndefined(primaryHeapStepIndex) && (
             <Button
               variant="outline"

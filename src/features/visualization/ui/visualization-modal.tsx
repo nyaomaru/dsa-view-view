@@ -99,6 +99,8 @@ function getVisualizationTitle({
       )
     case 'heap':
       return 'Heap View'
+    case 'word-ladder':
+      return 'Word Ladder View'
     case null:
       return ''
   }
@@ -137,6 +139,8 @@ function getVisualizationDescription(
       return 'Visualize 2D array as a grid.'
     case 'heap':
       return 'Visualize values moving between the prepared max and min heaps.'
+    case 'word-ladder':
+      return 'Visualize the word-transformation graph and current BFS frontier.'
     case null:
       return ''
   }
@@ -200,7 +204,8 @@ export function VisualizationModal({
               type === 'list-graph' ||
               type === 'dp' ||
               type === 'map' ||
-              type === 'heap') &&
+              type === 'heap' ||
+              type === 'word-ladder') &&
               'flex items-start justify-center sm:items-center'
           )}
           data-tree-scroll-container
