@@ -84,13 +84,20 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
       const methodName = t.isIdentifier(path.node.key)
         ? path.node.key.name
         : 'method'
+      const classNode = path.parentPath.parentPath?.node
+      const isDerivedConstructor =
+        path.node.kind === 'constructor' &&
+        (t.isClassDeclaration(classNode) || t.isClassExpression(classNode)) &&
+        Boolean(classNode.superClass)
+
+      // Any receiver read can throw before a derived constructor reaches super().
       context.enterFunction(
         path.node.body,
         methodName,
         getLineNumber(path.node),
         `Entering method: ${methodName}`,
         getParameterNames(path.node.params),
-        true
+        !isDerivedConstructor
       )
     },
     exit() {
