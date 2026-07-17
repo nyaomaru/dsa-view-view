@@ -9,6 +9,7 @@ const emptyDetection: VisualizationDetection = {
   hasRecursion: false,
   isClassDesignTrace: false,
   primaryHeapStepIndex: undefined,
+  primaryWordLadderStepIndex: undefined,
   primaryStackName: undefined,
   primaryArrayName: undefined,
   primaryAreaArrayName: undefined,
@@ -30,6 +31,17 @@ const emptyDetection: VisualizationDetection = {
 }
 
 describe('getPrimaryVisualization', () => {
+  it('prioritizes Word Ladder traces over generic queues and maps', () => {
+    expect(
+      getPrimaryVisualization({
+        ...emptyDetection,
+        primaryWordLadderStepIndex: 2,
+        primaryStackName: 'q',
+        primaryMapName: 'buckets',
+      })
+    ).toEqual({ type: 'word-ladder', targetStepIndex: 2 })
+  })
+
   it('prioritizes prepared dual-heap traces', () => {
     expect(
       getPrimaryVisualization({

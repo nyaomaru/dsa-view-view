@@ -26,6 +26,7 @@ import { getGraphNodeAdjacencyRecord } from '../lib/graph-view'
 import { getMapVisualizationState } from '../lib/map-view'
 import { getExecutionStepSearchOrder } from '../lib/execution-step-search'
 import { getHeapVisualizationState } from '../lib/heap-view'
+import { getWordLadderVisualizationState } from '../lib/word-ladder-view'
 import type { VisualizationType } from '../model/types'
 import { StackVisualizer } from './stack-visualizer'
 import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
@@ -40,6 +41,7 @@ import { MapVisualizer } from './map-visualizer'
 import { TreeGraphVisualizer } from './tree-graph-visualizer'
 import { ListGraphVisualizer } from './list-graph-visualizer'
 import { HeapVisualizer } from './heap-visualizer'
+import { WordLadderVisualizer } from './word-ladder-visualizer'
 
 type ExecutionStepSnapshot = ExecutionState['steps'][number]
 
@@ -182,6 +184,19 @@ export function VisualizationModalContent({
       <HeapVisualizer state={heapState} />
     ) : (
       <div>Prepared heap state is not available at this step.</div>
+    )
+  }
+
+  if (type === 'word-ladder') {
+    const wordLadderState = getWordLadderVisualizationState(
+      executionState,
+      targetStepIndex
+    )
+
+    return wordLadderState ? (
+      <WordLadderVisualizer state={wordLadderState} />
+    ) : (
+      <div>Word Ladder state is not available at this step.</div>
     )
   }
 
