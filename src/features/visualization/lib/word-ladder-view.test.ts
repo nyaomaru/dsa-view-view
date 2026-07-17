@@ -93,6 +93,30 @@ describe('Word Ladder View', () => {
     )
   })
 
+  it('supports queue and visited aliases for the BFS state', () => {
+    const state = createState(1, [
+      createStep(0, inputs),
+      createStep(1, {
+        ...inputs,
+        queue: [['dot', 3]],
+        visited: new Set(['hit', 'hot', 'dot']),
+        w: 'hot',
+        dist: 2,
+      }),
+    ])
+
+    const view = getWordLadderVisualizationState(state)
+
+    expect(view?.queue).toEqual([{ word: 'dot', distance: 3 }])
+    expect(view?.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ word: 'hit', state: 'visited' }),
+        expect.objectContaining({ word: 'hot', state: 'current' }),
+        expect.objectContaining({ word: 'dot', state: 'queued' }),
+      ])
+    )
+  })
+
   it('rejects unrelated string and array inputs', () => {
     const state = createState(0, [
       createStep(0, {

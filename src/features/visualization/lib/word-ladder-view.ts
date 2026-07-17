@@ -202,9 +202,15 @@ export function getWordLadderVisualizationState(
   const words = [...new Set([input.beginWord, ...input.wordList])]
   const { adjacency, edges } = buildWordGraph(words)
   const levels = getWordLevels(input.beginWord, adjacency)
-  const queue = getQueue(currentVariables.q)
+  const queue = getQueue(
+    isArray(currentVariables.q) ? currentVariables.q : currentVariables.queue
+  )
   const queuedWords = new Set(queue.map(({ word }) => word))
-  const seenWords = getSeenWords(currentVariables.seen)
+  const seenWords = getSeenWords(
+    isSet(currentVariables.seen)
+      ? currentVariables.seen
+      : currentVariables.visited
+  )
   let currentWord: string | null = null
   let currentDistance: number | null = null
   if (isString(currentVariables.w) && isNumber(currentVariables.dist)) {
