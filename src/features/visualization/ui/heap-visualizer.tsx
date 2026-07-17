@@ -74,7 +74,7 @@ export function HeapVisualizer({ state }: HeapVisualizerProps) {
   )
 
   return (
-    <Card className="h-full border-0 p-4 shadow-none">
+    <Card className="h-full w-full border-0 p-4 shadow-none">
       <div className="mb-4 flex min-h-10 items-center justify-between gap-4 rounded-md bg-secondary px-4 py-2 text-sm">
         <span>{state.action?.description ?? 'Heap state initialized'}</span>
         <span className="shrink-0 font-mono font-semibold">

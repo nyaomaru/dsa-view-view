@@ -27,5 +27,8 @@ describe('HeapVisualizer', () => {
     expect(screen.getByText('Median: 2.5')).toBeInTheDocument()
     expect(screen.getByLabelText('Max Heap maxHeap')).toBeInTheDocument()
     expect(screen.getByLabelText('Min Heap minHeap')).toBeInTheDocument()
+    expect(screen.getByText('Median: 2.5').closest('.pixel-panel')).toHaveClass(
+      'w-full'
+    )
   })
 })
