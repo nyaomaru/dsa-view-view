@@ -304,11 +304,25 @@ class MedianFinder {
 
       return [Object.fromEntries(heaps.map((heap) => [heap.name, heap.values]))]
     })
+    const firstMaxPopStep = state.steps.find(
+      (step) => step.description === 'this.maxHeap.pop()'
+    )
+    const firstMinPopStep = state.steps.find(
+      (step) => step.description === 'this.minHeap.pop()'
+    )
 
     expect(heapStates).toContainEqual({ minHeap: [], maxHeap: [1] })
     expect(heapStates).toContainEqual({ minHeap: [1], maxHeap: [] })
     expect(heapStates).toContainEqual({ minHeap: [], maxHeap: [1] })
     expect(heapStates).toContainEqual({ minHeap: [2], maxHeap: [1] })
+    expect(firstMaxPopStep?.metadata?.heapTrace?.heaps).toEqual([
+      { name: 'minHeap', kind: 'min', values: [] },
+      { name: 'maxHeap', kind: 'max', values: [] },
+    ])
+    expect(firstMinPopStep?.metadata?.heapTrace?.heaps).toEqual([
+      { name: 'minHeap', kind: 'min', values: [] },
+      { name: 'maxHeap', kind: 'max', values: [] },
+    ])
   })
 
   it('captures locally declared MinHeap and MaxHeap state', () => {
