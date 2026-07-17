@@ -69,6 +69,7 @@ export function Visualizer({
     variableEntries,
     hasRecursion,
     isClassDesignTrace,
+    primaryHeapStepIndex,
     primaryArrayName,
     primaryAreaArrayName,
     primaryAreaStepIndex,
@@ -223,6 +224,7 @@ export function Visualizer({
         expandedVariables={expandedVariables}
         hasRecursion={hasRecursion}
         isClassDesignTrace={isClassDesignTrace}
+        primaryHeapStepIndex={primaryHeapStepIndex}
         primaryArrayName={primaryArrayName}
         primaryAreaArrayName={primaryAreaArrayName}
         primaryAreaStepIndex={primaryAreaStepIndex}

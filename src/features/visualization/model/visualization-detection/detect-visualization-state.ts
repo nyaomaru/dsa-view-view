@@ -48,6 +48,13 @@ export function detectVisualizationState(
     : []
   const hasRecursion = hasRecursiveCallStack(executionState)
   const isClassDesignTrace = hasClassDesignTrace(executionState)
+  const primaryHeapStepIndex = executionState.steps.findIndex((step) => {
+    const heaps = step.metadata?.heapTrace?.heaps ?? []
+    return (
+      heaps.some((heap) => heap.kind === 'min') &&
+      heaps.some((heap) => heap.kind === 'max')
+    )
+  })
   const { initialVariableStepNumber, initialVariableNames } =
     getInitialVariableContext(executionState)
   const metadata = collectVisualizationMutationMetadata(executionState)
@@ -135,6 +142,8 @@ export function detectVisualizationState(
     variableEntries,
     hasRecursion,
     isClassDesignTrace,
+    primaryHeapStepIndex:
+      primaryHeapStepIndex >= 0 ? primaryHeapStepIndex : undefined,
     primaryStackName,
     primaryArrayName: hasSort ? primaryArrayName : undefined,
     primaryAreaArrayName: primaryAreaCandidate?.name,

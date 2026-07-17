@@ -67,7 +67,8 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
         'arrow function',
         getLineNumber(path.node),
         'Entering arrow function',
-        getParameterNames(path.node.params)
+        getParameterNames(path.node.params),
+        context.shouldCaptureClassReceiver()
       )
     },
     exit(path: NodePath<t.ArrowFunctionExpression>) {
@@ -88,7 +89,8 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
         methodName,
         getLineNumber(path.node),
         `Entering method: ${methodName}`,
-        getParameterNames(path.node.params)
+        getParameterNames(path.node.params),
+        true
       )
     },
     exit() {

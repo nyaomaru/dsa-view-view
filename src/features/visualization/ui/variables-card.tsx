@@ -9,6 +9,7 @@ import {
   Stack,
 } from '@/shared/ui'
 import type { ExecutionStep } from '@/entities/execution'
+import { isUndefined } from '@/shared/lib/guards'
 import { VariableRow } from './variable-row'
 import type { OpenVisualization } from '../model/types'
 
@@ -26,6 +27,8 @@ type VariablesCardProps = {
   hasRecursion: boolean
   /** Whether the call tree comes from class-design operations. */
   isClassDesignTrace?: boolean
+  /** First step containing a prepared min/max heap pair. */
+  primaryHeapStepIndex?: number
   /** Primary array variable detected for chart visualization. */
   primaryArrayName?: string
   /** Primary numeric array detected for container-area visualization. */
@@ -72,6 +75,7 @@ export function VariablesCard({
   expandedVariables,
   hasRecursion,
   isClassDesignTrace = false,
+  primaryHeapStepIndex,
   primaryArrayName,
   primaryAreaArrayName,
   primaryAreaStepIndex,
@@ -100,6 +104,17 @@ export function VariablesCard({
           <CardDescription>Current variable states</CardDescription>
         </div>
         <div className="flex gap-2">
+          {!isUndefined(primaryHeapStepIndex) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => onOpenVisualization('heap')}
+            >
+              <BarChart2 className="w-4 h-4" />
+              Heap View
+            </Button>
+          )}
           {primaryArrayName && (
             <Button
               variant="outline"

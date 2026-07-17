@@ -12,6 +12,7 @@ export type VisualizationType =
   | 'bar-chart'
   | 'graph'
   | 'matrix'
+  | 'heap'
   | null
 
 /** Opens one visualization for an optional variable and fallback step. */

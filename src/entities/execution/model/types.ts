@@ -1,5 +1,23 @@
 import type { ExecutionStepType } from './constants'
 
+export type HeapKind = 'min' | 'max'
+
+/** Normalized snapshot of one prepared heap owned by a class instance. */
+export type HeapSnapshot = {
+  /** Property name on the owning class, such as minHeap. */
+  name: string
+  /** Heap ordering represented by this snapshot. */
+  kind: HeapKind
+  /** Heap values in array-backed level order. */
+  values: number[]
+}
+
+/** Prepared heap state captured from the active class receiver. */
+export type HeapTraceSnapshot = {
+  /** Prepared heaps found directly on the class instance. */
+  heaps: HeapSnapshot[]
+}
+
 /** Map of user-provided values for function parameters. */
 export type InputValues = Record<string, unknown>
 
@@ -31,6 +49,8 @@ export type ExecutionStep = {
     conditionResult?: boolean
     /** Related function name. */
     functionName?: string
+    /** Normalized state for prepared MinHeap and MaxHeap instances. */
+    heapTrace?: HeapTraceSnapshot
   }
 }
 

@@ -8,6 +8,7 @@ const emptyDetection: VisualizationDetection = {
   variableEntries: [],
   hasRecursion: false,
   isClassDesignTrace: false,
+  primaryHeapStepIndex: undefined,
   primaryStackName: undefined,
   primaryArrayName: undefined,
   primaryAreaArrayName: undefined,
@@ -29,6 +30,16 @@ const emptyDetection: VisualizationDetection = {
 }
 
 describe('getPrimaryVisualization', () => {
+  it('prioritizes prepared dual-heap traces', () => {
+    expect(
+      getPrimaryVisualization({
+        ...emptyDetection,
+        primaryHeapStepIndex: 3,
+        primaryStackName: 'answer',
+      })
+    ).toEqual({ type: 'heap' })
+  })
+
   it('maps detected candidates to their modal configuration', () => {
     expect(
       getPrimaryVisualization({

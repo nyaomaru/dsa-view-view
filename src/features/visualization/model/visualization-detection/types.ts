@@ -9,6 +9,8 @@ export type VisualizationDetection = {
   hasRecursion: boolean
   /** Whether the trace represents class-design operation calls. */
   isClassDesignTrace: boolean
+  /** First step index containing both prepared MinHeap and MaxHeap state. */
+  primaryHeapStepIndex: number | undefined
   /** Primary result-like array to show as a stack. */
   primaryStackName: string | undefined
   /** Primary numeric array to show as a bar chart. */
