@@ -1,6 +1,7 @@
 export const FUNCTION_ARGUMENTS_LABEL = 'function arguments'
 export const RETURN_VALUE_LABEL = 'return value'
 export const RETURN_LOCATION_LABEL = 'return location'
+export const CLASS_RECEIVER_LABEL = '__algorithmVisualizerClassReceiver'
 
 export const STEP_TYPES = {
   FUNCTION_CALL: 'function-call',

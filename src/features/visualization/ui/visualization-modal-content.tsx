@@ -25,6 +25,7 @@ import { getRollingDpState, isRollingDpCandidate } from '../lib/rolling-dp-view'
 import { getGraphNodeAdjacencyRecord } from '../lib/graph-view'
 import { getMapVisualizationState } from '../lib/map-view'
 import { getExecutionStepSearchOrder } from '../lib/execution-step-search'
+import { getHeapVisualizationState } from '../lib/heap-view'
 import type { VisualizationType } from '../model/types'
 import { StackVisualizer } from './stack-visualizer'
 import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
@@ -38,6 +39,7 @@ import { MatrixVisualizer } from './matrix-visualizer'
 import { MapVisualizer } from './map-visualizer'
 import { TreeGraphVisualizer } from './tree-graph-visualizer'
 import { ListGraphVisualizer } from './list-graph-visualizer'
+import { HeapVisualizer } from './heap-visualizer'
 
 type ExecutionStepSnapshot = ExecutionState['steps'][number]
 
@@ -171,6 +173,16 @@ export function VisualizationModalContent({
 
   if (type === 'tree') {
     return <RecursionTreeVisualizer state={executionState} />
+  }
+
+  if (type === 'heap') {
+    const heapState = getHeapVisualizationState(executionState, targetStepIndex)
+
+    return heapState ? (
+      <HeapVisualizer state={heapState} />
+    ) : (
+      <div>Prepared heap state is not available at this step.</div>
+    )
   }
 
   if (!targetVariable) {

@@ -1,11 +1,12 @@
 import type { VisualizationDetection } from './visualization-detection/types'
 import type { VisualizationType } from './types'
+import { isUndefined } from '@/shared/lib/guards'
 
 export type PrimaryVisualization = {
   /** Modal content selected for the execution trace. */
   type: Exclude<VisualizationType, null>
   /** Variable targeted by the selected content. */
-  targetVariable: string
+  targetVariable?: string
   /** Optional fallback step containing compatible context. */
   targetStepIndex?: number
   /** Whether a list view should continue following the primary pointer. */
@@ -16,6 +17,13 @@ export type PrimaryVisualization = {
 export function getPrimaryVisualization(
   detection: VisualizationDetection
 ): PrimaryVisualization | null {
+  if (!isUndefined(detection.primaryHeapStepIndex)) {
+    return {
+      type: 'heap',
+      targetStepIndex: detection.primaryHeapStepIndex,
+    }
+  }
+
   if (detection.primaryAreaArrayName) {
     return {
       type: 'area',

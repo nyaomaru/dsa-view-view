@@ -54,7 +54,11 @@ function makeNode(): ListNode {
     const state = executeCode(code, {}, 'makeNode')
 
     expect(state.error).toBeUndefined()
-    expect(state.returnValue).toEqual({ val: -1, next: null, source: 'editor' })
+    expect(state.returnValue).toEqual({
+      val: -1,
+      next: null,
+      source: 'editor',
+    })
   })
 
   it('strips shared prepared-class imports and injects the matching class', () => {
@@ -293,6 +297,123 @@ class MedianFinder {
 
     expect(state.error).toBeUndefined()
     expect(state.returnValue).toEqual([null, null, null, 1.5, null, 2])
+
+    const heapStates = state.steps.flatMap((step) => {
+      const heaps = step.metadata?.heapTrace?.heaps
+      if (!heaps) return []
+
+      return [Object.fromEntries(heaps.map((heap) => [heap.name, heap.values]))]
+    })
+    const firstMaxPopStep = state.steps.find(
+      (step) => step.description === 'this.maxHeap.pop()'
+    )
+    const firstMinPopStep = state.steps.find(
+      (step) => step.description === 'this.minHeap.pop()'
+    )
+
+    expect(heapStates).toContainEqual({ minHeap: [], maxHeap: [1] })
+    expect(heapStates).toContainEqual({ minHeap: [1], maxHeap: [] })
+    expect(heapStates).toContainEqual({ minHeap: [], maxHeap: [1] })
+    expect(heapStates).toContainEqual({ minHeap: [2], maxHeap: [1] })
+    expect(firstMaxPopStep?.metadata?.heapTrace?.heaps).toEqual([
+      { name: 'minHeap', kind: 'min', values: [] },
+      { name: 'maxHeap', kind: 'max', values: [] },
+    ])
+    expect(firstMinPopStep?.metadata?.heapTrace?.heaps).toEqual([
+      { name: 'minHeap', kind: 'min', values: [] },
+      { name: 'maxHeap', kind: 'max', values: [] },
+    ])
+  })
+
+  it('captures locally declared MinHeap and MaxHeap state', () => {
+    const code = `
+class MedianFinder {
+  private minHeap
+  private maxHeap
+
+  constructor() {
+    this.minHeap = new MinHeap()
+    this.maxHeap = new MaxHeap()
+  }
+
+  addNum(num: number): void {
+    this.maxHeap.push(num)
+    this.minHeap.push(this.maxHeap.pop()!)
+
+    if (this.minHeap.size() > this.maxHeap.size()) {
+      this.maxHeap.push(this.minHeap.pop())
+    }
+  }
+
+  findMedian(): number {
+    if (this.maxHeap.size() > this.minHeap.size()) {
+      return this.maxHeap.peek()!
+    }
+
+    return (this.maxHeap.peek()! + this.minHeap.peek()) / 2
+  }
+}
+
+class MinHeap {
+  private heap: number[] = []
+
+  size(): number {
+    return this.heap.length
+  }
+
+  peek(): number | undefined {
+    return this.heap[0]
+  }
+
+  push(value: number): void {
+    this.heap.push(value)
+    this.heap.sort((left, right) => left - right)
+  }
+
+  pop(): number {
+    return this.heap.shift()!
+  }
+}
+
+class MaxHeap {
+  private heap: number[] = []
+
+  size(): number {
+    return this.heap.length
+  }
+
+  peek(): number | undefined {
+    return this.heap[0]
+  }
+
+  push(value: number): void {
+    this.heap.push(value)
+    this.heap.sort((left, right) => right - left)
+  }
+
+  pop(): number {
+    return this.heap.shift()!
+  }
+}
+`
+    const inputs = createClassDesignInput(
+      'MedianFinder',
+      ['MedianFinder', 'addNum', 'addNum', 'findMedian'],
+      [[], [1], [2], []]
+    )
+    const state = executeCode(code, inputs, 'MedianFinder')
+    const heapStates = state.steps.flatMap((step) => {
+      const heaps = step.metadata?.heapTrace?.heaps
+      if (!heaps) return []
+
+      return [Object.fromEntries(heaps.map((heap) => [heap.name, heap.values]))]
+    })
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([null, null, null, 1.5])
+    expect(heapStates).toContainEqual({ minHeap: [], maxHeap: [1] })
+    expect(heapStates).toContainEqual({ minHeap: [1], maxHeap: [] })
+    expect(heapStates).toContainEqual({ minHeap: [2], maxHeap: [1] })
   })
 
   it('executes sliding-window style code with prepared Deque', () => {

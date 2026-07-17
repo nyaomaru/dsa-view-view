@@ -1,12 +1,17 @@
 import * as t from '@babel/types'
 
-import { FUNCTION_ARGUMENTS_LABEL, STEP_TYPES } from '@/entities/execution'
+import {
+  CLASS_RECEIVER_LABEL,
+  FUNCTION_ARGUMENTS_LABEL,
+  STEP_TYPES,
+} from '@/entities/execution'
 import { getUniqueNames } from './binding-names'
 import { createRecordStepStatement } from './step-factory'
 
 export class InstrumentationContext {
   private readonly scopeStack: string[][] = []
   private readonly functionStack: string[] = []
+  private readonly classReceiverStack: boolean[] = []
   private readonly instrumentedNodes = new WeakSet<t.Node>()
 
   isInstrumented(node: t.Node): boolean {
@@ -47,6 +52,14 @@ export class InstrumentationContext {
         t.objectProperty(t.identifier(name), t.identifier(name))
       ),
       ...extraProperties,
+      ...(this.shouldCaptureClassReceiver()
+        ? [
+            t.objectProperty(
+              t.stringLiteral(CLASS_RECEIVER_LABEL),
+              t.thisExpression()
+            ),
+          ]
+        : []),
     ]
   }
 
@@ -55,9 +68,11 @@ export class InstrumentationContext {
     functionName: string,
     line: number,
     description: string,
-    parameterNames: string[]
+    parameterNames: string[],
+    captureClassReceiver = false
   ): void {
     this.pushScope(parameterNames)
+    this.classReceiverStack.push(captureClassReceiver)
     body.body.unshift(
       createRecordStepStatement(
         STEP_TYPES.FUNCTION_ENTRY,
@@ -80,7 +95,12 @@ export class InstrumentationContext {
 
   exitFunction(): void {
     this.functionStack.pop()
+    this.classReceiverStack.pop()
     this.popScope()
+  }
+
+  shouldCaptureClassReceiver(): boolean {
+    return this.classReceiverStack[this.classReceiverStack.length - 1] ?? false
   }
 
   getCurrentFunctionName(): string {

@@ -176,11 +176,48 @@ export const createMutationVisitors = (context: InstrumentationContext) => ({
       ? path.node.callee.object
       : null
     const arrayName = getArrayMutationTargetName(calleeObject)
-    if (!arrayName || !path.parentPath.isExpressionStatement()) return
+    if (!arrayName) return
 
     const argumentsCode = path.node.arguments
       .map((argument) => safeGenerate(argument))
       .join(', ')
+    const description = `${arrayName}.${methodName}(${argumentsCode})`
+
+    if (!path.parentPath.isExpressionStatement()) {
+      const resultId = path.scope.generateUidIdentifier(
+        'algorithmVisualizerMutationResult'
+      )
+      const syntheticArrow = context.markInstrumented(
+        t.arrowFunctionExpression(
+          [],
+          t.blockStatement([
+            context.markInstrumented(
+              t.variableDeclaration('const', [
+                t.variableDeclarator(
+                  resultId,
+                  context.markInstrumented(path.node)
+                ),
+              ])
+            ),
+            createRecordStepStatement(
+              STEP_TYPES.ARRAY_MUTATION,
+              getLineNumber(path.node),
+              description,
+              context.createScopeProperties()
+            ),
+            context.markInstrumented(
+              t.returnStatement(t.identifier(resultId.name))
+            ),
+          ])
+        )
+      )
+
+      path.replaceWith(
+        context.markInstrumented(t.callExpression(syntheticArrow, []))
+      )
+      return
+    }
+
     path.replaceWith(
       context.markInstrumented(
         t.sequenceExpression([
@@ -188,7 +225,7 @@ export const createMutationVisitors = (context: InstrumentationContext) => ({
           createRecordStepCall(
             STEP_TYPES.ARRAY_MUTATION,
             getLineNumber(path.node),
-            `${arrayName}.${methodName}(${argumentsCode})`,
+            description,
             context.createScopeProperties()
           ),
         ])

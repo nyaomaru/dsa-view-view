@@ -33,6 +33,33 @@ function createExecutionState(
 }
 
 describe('detectVisualizationState', () => {
+  it('detects the first snapshot containing prepared min and max heaps', () => {
+    const state = createExecutionState([
+      createStep(0, 'Initialized', {}),
+      {
+        ...createStep(1, 'Created min heap', {}),
+        metadata: {
+          heapTrace: {
+            heaps: [{ name: 'minHeap', kind: 'min', values: [] }],
+          },
+        },
+      },
+      {
+        ...createStep(2, 'Created max heap', {}),
+        metadata: {
+          heapTrace: {
+            heaps: [
+              { name: 'minHeap', kind: 'min', values: [] },
+              { name: 'maxHeap', kind: 'max', values: [] },
+            ],
+          },
+        },
+      },
+    ])
+
+    expect(detectVisualizationState(state).primaryHeapStepIndex).toBe(2)
+  })
+
   it('selects a mutated numeric array only for sorting traces', () => {
     const sortingState = createExecutionState([
       createStep(0, 'Initial values', { nums: [2, 1] }),

@@ -97,6 +97,8 @@ function getVisualizationTitle({
           Matrix: {targetVariable}
         </>
       )
+    case 'heap':
+      return 'Heap View'
     case null:
       return ''
   }
@@ -133,6 +135,8 @@ function getVisualizationDescription(
       return 'Visualize adjacency list as a directed graph.'
     case 'matrix':
       return 'Visualize 2D array as a grid.'
+    case 'heap':
+      return 'Visualize values moving between the prepared max and min heaps.'
     case null:
       return ''
   }
@@ -195,7 +199,8 @@ export function VisualizationModal({
             (type === 'matrix' ||
               type === 'list-graph' ||
               type === 'dp' ||
-              type === 'map') &&
+              type === 'map' ||
+              type === 'heap') &&
               'flex items-start justify-center sm:items-center'
           )}
           data-tree-scroll-container

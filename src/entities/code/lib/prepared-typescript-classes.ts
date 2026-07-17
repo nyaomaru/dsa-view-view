@@ -260,6 +260,12 @@ class PriorityQueue<T> {
 class MinHeap {
   private values: number[] = []
 
+  constructor() {
+    Object.defineProperty(this, '__algorithmVisualizerHeapKind', {
+      value: 'min',
+    })
+  }
+
   size(): number {
     return this.values.length
   }
@@ -332,6 +338,12 @@ class MinHeap {
     source: `
 class MaxHeap {
   private values: number[] = []
+
+  constructor() {
+    Object.defineProperty(this, '__algorithmVisualizerHeapKind', {
+      value: 'max',
+    })
+  }
 
   size(): number {
     return this.values.length
