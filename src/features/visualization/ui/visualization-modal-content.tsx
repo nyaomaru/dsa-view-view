@@ -176,7 +176,7 @@ export function VisualizationModalContent({
   }
 
   if (type === 'heap') {
-    const heapState = getHeapVisualizationState(executionState)
+    const heapState = getHeapVisualizationState(executionState, targetStepIndex)
 
     return heapState ? (
       <HeapVisualizer state={heapState} />

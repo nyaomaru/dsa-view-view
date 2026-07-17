@@ -417,6 +417,65 @@ describe('Visualizer return value display', () => {
     expect(screen.getByText('return value Tree Graph')).toBeInTheDocument()
   })
 
+  it('auto-opens Heap View from the first detected heap snapshot', async () => {
+    const executionState = createExecutionStateWithSteps([
+      {
+        stepNumber: 0,
+        type: 'function-call',
+        line: 0,
+        description: 'Function called',
+        variables: {},
+        timestamp: 0,
+      },
+      {
+        stepNumber: 1,
+        type: 'assignment',
+        line: 7,
+        description: 'this.maxHeap = new MaxHeap()',
+        variables: {},
+        timestamp: 1,
+        metadata: {
+          heapTrace: {
+            heaps: [
+              { name: 'minHeap', kind: 'min', values: [] },
+              { name: 'maxHeap', kind: 'max', values: [] },
+            ],
+          },
+        },
+      },
+    ])
+
+    render(
+      <Visualizer
+        executionState={{
+          ...executionState,
+          currentStep: 0,
+          isComplete: false,
+        }}
+        isRunning={false}
+        autoOpenPrimaryVisualization
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'Heap View' })
+      ).toBeInTheDocument()
+    })
+    expect(screen.getByLabelText('Max Heap maxHeap')).toBeInTheDocument()
+    expect(screen.getByLabelText('Min Heap minHeap')).toBeInTheDocument()
+    expect(
+      screen.queryByText('Prepared heap state is not available at this step.')
+    ).not.toBeInTheDocument()
+  })
+
   it('auto-opens constructed local roots before falling back to TreeNode return values', async () => {
     const partialRoot = {
       val: 3,

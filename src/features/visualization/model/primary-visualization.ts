@@ -18,7 +18,10 @@ export function getPrimaryVisualization(
   detection: VisualizationDetection
 ): PrimaryVisualization | null {
   if (!isUndefined(detection.primaryHeapStepIndex)) {
-    return { type: 'heap' }
+    return {
+      type: 'heap',
+      targetStepIndex: detection.primaryHeapStepIndex,
+    }
   }
 
   if (detection.primaryAreaArrayName) {

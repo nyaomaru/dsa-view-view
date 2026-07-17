@@ -70,12 +70,12 @@ describe('getHeapVisualizationState', () => {
       createHeapStep(2, [3, 4], [2, 1]),
     ])
 
-    expect(getHeapVisualizationState(state)?.snapshot).toEqual(
+    expect(getHeapVisualizationState(state, 2)?.snapshot).toEqual(
       state.steps[0].metadata?.heapTrace
     )
   })
 
-  it('does not show a future heap snapshot before construction', () => {
+  it('uses the detected heap step when no snapshot exists at the current step', () => {
     const plainStep: ExecutionStep = {
       stepNumber: 0,
       type: 'function-call',
@@ -86,6 +86,8 @@ describe('getHeapVisualizationState', () => {
     }
     const state = createState(0, [plainStep, createHeapStep(1, [], [])])
 
-    expect(getHeapVisualizationState(state)).toBeNull()
+    expect(getHeapVisualizationState(state, 1)?.snapshot).toEqual(
+      state.steps[1].metadata?.heapTrace
+    )
   })
 })

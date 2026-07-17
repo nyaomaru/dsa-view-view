@@ -127,12 +127,14 @@ function getMedian(snapshot: HeapTraceSnapshot): number | null {
 
 /** Resolves the prepared heap pair active at the selected timeline step. */
 export function getHeapVisualizationState(
-  executionState: ExecutionState
+  executionState: ExecutionState,
+  fallbackStepIndex?: number
 ): HeapVisualizationState | null {
-  const current = findHeapSnapshotAtOrBefore(
-    executionState,
-    executionState.currentStep
-  )
+  const current =
+    findHeapSnapshotAtOrBefore(executionState, executionState.currentStep) ??
+    (isUndefined(fallbackStepIndex)
+      ? null
+      : findHeapSnapshotAtOrBefore(executionState, fallbackStepIndex))
   if (!current) return null
 
   const previous = findHeapSnapshotAtOrBefore(executionState, current.index - 1)

@@ -37,7 +37,7 @@ describe('getPrimaryVisualization', () => {
         primaryHeapStepIndex: 3,
         primaryStackName: 'answer',
       })
-    ).toEqual({ type: 'heap' })
+    ).toEqual({ type: 'heap', targetStepIndex: 3 })
   })
 
   it('maps detected candidates to their modal configuration', () => {

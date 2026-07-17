@@ -109,7 +109,9 @@ export function VariablesCard({
               variant="outline"
               size="sm"
               className="gap-2"
-              onClick={() => onOpenVisualization('heap')}
+              onClick={() =>
+                onOpenVisualization('heap', undefined, primaryHeapStepIndex)
+              }
             >
               <BarChart2 className="w-4 h-4" />
               Heap View
