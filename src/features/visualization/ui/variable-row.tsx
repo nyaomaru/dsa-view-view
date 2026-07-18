@@ -23,6 +23,7 @@ import {
   isPlainObject,
 } from '@/shared/lib/guards'
 import { Button } from '@/shared/ui'
+import { cn } from '@/shared/lib/class-names'
 import {
   getCollapsedValueLabel,
   stringifyValue,
@@ -65,6 +66,8 @@ type VariableRowProps = {
   name: string
   /** Current runtime value for the variable. */
   value: unknown
+  /** Whether this variable is selected for change navigation. */
+  isSelected?: boolean
   /** Expanded/collapsed state keyed by variable name. */
   expandedVariables: Record<string, boolean>
   /** Tree node variable names that can be visualized as tree graphs. */
@@ -280,6 +283,7 @@ function InlineVisualizationActions({
 export function VariableRow({
   name,
   value,
+  isSelected = false,
   expandedVariables,
   visualizableTreeNodeNames = [],
   visualizableListNodeNames = [],
@@ -299,7 +303,12 @@ export function VariableRow({
   })
 
   return (
-    <div className="rounded-md bg-secondary p-2 text-secondary-foreground">
+    <div
+      className={cn(
+        'rounded-md bg-secondary p-2 text-secondary-foreground transition-shadow',
+        isSelected && 'ring-2 ring-primary ring-offset-2 ring-offset-background'
+      )}
+    >
       <div className="flex items-center justify-between gap-3">
         <code className="font-mono text-sm font-medium">{name}</code>
         {needsToggle && (
