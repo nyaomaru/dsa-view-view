@@ -79,4 +79,45 @@ describe('variable change navigation', () => {
     })
     expect(getVariableChangeAtStep(state, 'i', 2)).toBeUndefined()
   })
+
+  it('stops scanning after the nearest earlier change', () => {
+    const currentStep = 100
+    const materializedSteps = new Set<number>()
+    const steps = Array.from({ length: 3_000 }, (_, stepNumber) => {
+      const step = {
+        stepNumber,
+        type: 'assignment',
+        line: stepNumber + 1,
+        description: `Step ${stepNumber}`,
+        variables: {},
+        timestamp: stepNumber,
+      } as ExecutionStep
+
+      Object.defineProperty(step, 'variables', {
+        get: () => {
+          if (stepNumber > currentStep) {
+            throw new Error('A future variable snapshot was materialized')
+          }
+
+          materializedSteps.add(stepNumber)
+          return { left: stepNumber >= 98 ? 1 : 0 }
+        },
+      })
+
+      return step
+    })
+    const state: ExecutionState = {
+      currentStep,
+      totalSteps: steps.length,
+      steps,
+      isComplete: true,
+    }
+
+    expect(findPreviousVariableChange(state, 'left', currentStep)).toEqual({
+      stepIndex: 98,
+      previousValue: 0,
+      currentValue: 1,
+    })
+    expect([...materializedSteps]).toEqual([98, 99, 97])
+  })
 })

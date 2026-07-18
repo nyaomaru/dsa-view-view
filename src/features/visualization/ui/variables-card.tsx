@@ -15,9 +15,8 @@ import { VariableRow } from './variable-row'
 import { VariableChangeNavigator } from './variable-change-navigator'
 import type { OpenVisualization } from '../model/types'
 import {
-  findPreviousChangeInHistory,
+  findPreviousVariableChange,
   getVariableChangeAtStep,
-  getVariableChangeHistory,
 } from '../lib/variable-change-navigation'
 
 /**
@@ -115,16 +114,16 @@ export function VariablesCard({
   const [selectedVariableName, setSelectedVariableName] = useState<
     string | undefined
   >(undefined)
-  const variableChangeHistory = useMemo(
+  const previousChange = useMemo(
     () =>
       selectedVariableName
-        ? getVariableChangeHistory(executionState.steps, selectedVariableName)
-        : [],
-    [executionState.steps, selectedVariableName]
-  )
-  const previousChange = findPreviousChangeInHistory(
-    variableChangeHistory,
-    executionState.currentStep
+        ? findPreviousVariableChange(
+            executionState,
+            selectedVariableName,
+            executionState.currentStep
+          )
+        : undefined,
+    [executionState, selectedVariableName]
   )
   const currentChange = selectedVariableName
     ? getVariableChangeAtStep(

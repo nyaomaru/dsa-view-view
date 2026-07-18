@@ -36,15 +36,17 @@ function getVariableChangeFromSteps(
   const previousStep = steps[stepIndex - 1]
   const currentStep = steps[stepIndex]
   if (isUndefined(previousStep) || isUndefined(currentStep)) return undefined
+  const previousVariables = previousStep.variables
+  const currentVariables = currentStep.variables
   if (
-    !hasVariable(previousStep.variables, variableName) ||
-    !hasVariable(currentStep.variables, variableName)
+    !hasVariable(previousVariables, variableName) ||
+    !hasVariable(currentVariables, variableName)
   ) {
     return undefined
   }
 
-  const previousValue = previousStep.variables[variableName]
-  const currentValue = currentStep.variables[variableName]
+  const previousValue = previousVariables[variableName]
+  const currentValue = currentVariables[variableName]
   if (areVariableValuesEqual(previousValue, currentValue)) return undefined
 
   return {
@@ -67,40 +69,19 @@ export function getVariableChangeAtStep(
   )
 }
 
-/** Builds the ordered value-change history for one variable. */
-export function getVariableChangeHistory(
-  steps: ExecutionStep[],
-  variableName: string
-): VariableChange[] {
-  return steps.flatMap((_step, stepIndex) => {
-    const change = getVariableChangeFromSteps(steps, variableName, stepIndex)
-    return isUndefined(change) ? [] : [change]
-  })
-}
-
-/** Finds the nearest history entry strictly before the supplied step. */
-export function findPreviousChangeInHistory(
-  changes: VariableChange[],
-  beforeStepIndex: number
-): VariableChange | undefined {
-  for (let index = changes.length - 1; index >= 0; index -= 1) {
-    const change = changes[index]
-    if (!isUndefined(change) && change.stepIndex < beforeStepIndex) {
-      return change
-    }
-  }
-
-  return undefined
-}
-
 /** Finds the nearest variable transition strictly before the supplied step. */
 export function findPreviousVariableChange(
   executionState: ExecutionState,
   variableName: string,
   beforeStepIndex: number
 ): VariableChange | undefined {
-  return findPreviousChangeInHistory(
-    getVariableChangeHistory(executionState.steps, variableName),
-    beforeStepIndex
-  )
+  const { steps } = executionState
+  const firstCandidateStep = Math.min(beforeStepIndex - 1, steps.length - 1)
+
+  for (let stepIndex = firstCandidateStep; stepIndex > 0; stepIndex -= 1) {
+    const change = getVariableChangeFromSteps(steps, variableName, stepIndex)
+    if (!isUndefined(change)) return change
+  }
+
+  return undefined
 }
