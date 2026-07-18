@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronUp } from 'lucide-react'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/shared/ui'
 import { isInlineReturnValue, stringifyValue } from '../lib/value-formatting'
 import type { RefObject } from 'react'
@@ -15,6 +15,8 @@ type ReturnValueCardProps = {
   returnValueRef: RefObject<HTMLDivElement | null>
   /** Callback when the detail expansion state changes. */
   onExpandedChange: (isExpanded: boolean) => void
+  /** Moves playback to the previous step when step review is available. */
+  onStepBackward?: () => void
 }
 
 export function ReturnValueCard({
@@ -22,6 +24,7 @@ export function ReturnValueCard({
   isExpanded,
   returnValueRef,
   onExpandedChange,
+  onStepBackward,
 }: ReturnValueCardProps) {
   const shouldInlineReturnValue = isInlineReturnValue(returnValue)
 
@@ -45,19 +48,42 @@ export function ReturnValueCard({
           </Button>
         )}
       </CardHeader>
-      <CardContent>
-        {shouldInlineReturnValue ? (
-          <code className="font-mono text-sm">
-            {stringifyValue(returnValue)}
-          </code>
-        ) : isExpanded ? (
-          <code className="font-mono text-sm">
-            {stringifyValue(returnValue)}
-          </code>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Return value hidden. Open details to inspect it.
-          </p>
+      <CardContent className="space-y-4">
+        <div>
+          {shouldInlineReturnValue ? (
+            <code className="font-mono text-sm">
+              {stringifyValue(returnValue)}
+            </code>
+          ) : isExpanded ? (
+            <code className="font-mono text-sm">
+              {stringifyValue(returnValue)}
+            </code>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Return value hidden. Open details to inspect it.
+            </p>
+          )}
+        </div>
+        {onStepBackward && (
+          <div className="flex flex-col gap-3 rounded-md border border-primary/25 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">
+                Want to see how this result was reached?
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Use Step Backward to review the execution one step at a time.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 gap-1"
+              onClick={onStepBackward}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Step Backward
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
