@@ -266,6 +266,9 @@ export function Visualizer({
             isExpanded={isReturnValueExpanded}
             returnValueRef={returnValueRef}
             onExpandedChange={setIsReturnValueExpanded}
+            onStepBackward={
+              executionState.totalSteps > 1 ? onStepBackward : undefined
+            }
           />
         )}
       <VisualizationModal

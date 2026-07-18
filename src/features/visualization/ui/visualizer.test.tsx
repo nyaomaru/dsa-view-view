@@ -5,7 +5,7 @@ import {
   waitFor,
   within,
 } from '@testing-library/react'
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it, vi } from 'vite-plus/test'
 
 import type { ExecutionState } from '@/entities/execution'
 
@@ -156,6 +156,70 @@ describe('Visualizer return value display', () => {
         'Return value hidden. Open details to inspect it.'
       )
     ).not.toBeInTheDocument()
+    expect(
+      within(returnCard as HTMLElement).queryByText(
+        'Want to see how this result was reached?'
+      )
+    ).not.toBeInTheDocument()
+  })
+
+  it('offers step-by-step review after a multi-step execution completes', () => {
+    const onStepBackward = vi.fn()
+    const steps: ExecutionState['steps'] = [
+      {
+        stepNumber: 0,
+        type: 'function-call',
+        line: 1,
+        description: 'Entering function: add',
+        variables: { total: 0 },
+        timestamp: Date.now(),
+        callStack: ['root', 'add'],
+      },
+      {
+        stepNumber: 1,
+        type: 'return',
+        line: 2,
+        description: 'Returned',
+        variables: { total: 3 },
+        timestamp: Date.now(),
+        callStack: ['root'],
+      },
+    ]
+
+    render(
+      <Visualizer
+        executionState={{
+          ...createExecutionStateWithSteps(steps),
+          returnValue: 3,
+        }}
+        isRunning={false}
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={onStepBackward}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    const returnCard = screen
+      .getByText('Return Value')
+      .closest('.border-primary')
+
+    expect(
+      within(returnCard as HTMLElement).getByText(
+        'Want to see how this result was reached?'
+      )
+    ).toBeInTheDocument()
+
+    fireEvent.click(
+      within(returnCard as HTMLElement).getByRole('button', {
+        name: 'Step Backward',
+      })
+    )
+
+    expect(onStepBackward).toHaveBeenCalledOnce()
   })
 
   it('shows the final return value inside an open visualization modal', () => {
@@ -207,6 +271,11 @@ describe('Visualizer return value display', () => {
     expect(returnCard).not.toBeNull()
     expect(
       within(returnCard as HTMLElement).getByText('42')
+    ).toBeInTheDocument()
+    expect(
+      within(returnCard as HTMLElement).getByText(
+        'Want to see how this result was reached?'
+      )
     ).toBeInTheDocument()
   })
 
