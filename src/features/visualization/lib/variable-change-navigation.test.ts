@@ -62,6 +62,40 @@ describe('variable change navigation', () => {
     })
   })
 
+  it('preserves non-JSON numeric values when comparing snapshots', () => {
+    const state = createState([
+      { distances: [Infinity] },
+      { distances: [NaN] },
+      { distances: [null] },
+    ])
+
+    expect(getVariableChangeAtStep(state, 'distances', 1)).toEqual({
+      stepIndex: 1,
+      previousValue: [Infinity],
+      currentValue: [NaN],
+    })
+    expect(getVariableChangeAtStep(state, 'distances', 2)).toEqual({
+      stepIndex: 2,
+      previousValue: [NaN],
+      currentValue: [null],
+    })
+  })
+
+  it('compares BigInt-containing snapshots without stringifying them', () => {
+    const state = createState([
+      { result: { value: 1n } },
+      { result: { value: 1n } },
+      { result: { value: 2n } },
+    ])
+
+    expect(getVariableChangeAtStep(state, 'result', 1)).toBeUndefined()
+    expect(getVariableChangeAtStep(state, 'result', 2)).toEqual({
+      stepIndex: 2,
+      previousValue: { value: 1n },
+      currentValue: { value: 2n },
+    })
+  })
+
   it('does not treat a variable entering the snapshot as a value change', () => {
     const state = createState([{}, { right: 4 }, { right: 4 }])
 

@@ -1,6 +1,12 @@
 import type { ExecutionState, ExecutionStep } from '@/entities/execution'
-import { isObject, isUndefined } from '@/shared/lib/guards'
-import { safeStringify } from '@/shared/lib/safe-stringify'
+import {
+  isDate,
+  isMap,
+  isObject,
+  isRegExp,
+  isSet,
+  isUndefined,
+} from '@/shared/lib/guards'
 
 /** A variable value transition captured between adjacent execution steps. */
 export type VariableChange = {
@@ -19,11 +25,107 @@ function hasVariable(
   return Object.hasOwn(variables, variableName)
 }
 
-function areVariableValuesEqual(left: unknown, right: unknown): boolean {
+type ComparedObjects = {
+  leftToRight: WeakMap<object, object>
+  rightToLeft: WeakMap<object, object>
+}
+
+function areVariableValuesEqual(
+  left: unknown,
+  right: unknown,
+  compared: ComparedObjects = {
+    leftToRight: new WeakMap(),
+    rightToLeft: new WeakMap(),
+  }
+): boolean {
   if (Object.is(left, right)) return true
   if (!isObject(left) || !isObject(right)) return false
 
-  return safeStringify(left) === safeStringify(right)
+  const comparedRight = compared.leftToRight.get(left)
+  const comparedLeft = compared.rightToLeft.get(right)
+  if (!isUndefined(comparedRight) || !isUndefined(comparedLeft)) {
+    return comparedRight === right && comparedLeft === left
+  }
+
+  compared.leftToRight.set(left, right)
+  compared.rightToLeft.set(right, left)
+
+  if (isDate(left) || isDate(right)) {
+    return (
+      isDate(left) &&
+      isDate(right) &&
+      Object.is(left.getTime(), right.getTime())
+    )
+  }
+
+  if (isRegExp(left) || isRegExp(right)) {
+    return (
+      isRegExp(left) &&
+      isRegExp(right) &&
+      left.source === right.source &&
+      left.flags === right.flags
+    )
+  }
+
+  if (isMap(left) || isMap(right)) {
+    if (!isMap(left) || !isMap(right) || left.size !== right.size) return false
+
+    const leftEntries = Array.from(left.entries())
+    const rightEntries = Array.from(right.entries())
+    return leftEntries.every(([leftKey, leftValue], index) => {
+      const rightEntry = rightEntries[index]
+      return (
+        !isUndefined(rightEntry) &&
+        areVariableValuesEqual(leftKey, rightEntry[0], compared) &&
+        areVariableValuesEqual(leftValue, rightEntry[1], compared)
+      )
+    })
+  }
+
+  if (isSet(left) || isSet(right)) {
+    if (!isSet(left) || !isSet(right) || left.size !== right.size) return false
+
+    const leftValues = Array.from(left.values())
+    const rightValues = Array.from(right.values())
+    return leftValues.every((leftValue, index) =>
+      areVariableValuesEqual(leftValue, rightValues[index], compared)
+    )
+  }
+
+  if (Object.getPrototypeOf(left) !== Object.getPrototypeOf(right)) return false
+
+  const leftKeys = Reflect.ownKeys(left)
+  const rightKeys = Reflect.ownKeys(right)
+  if (leftKeys.length !== rightKeys.length) return false
+
+  return leftKeys.every((key) => {
+    if (!Object.hasOwn(right, key)) return false
+
+    const leftDescriptor = Object.getOwnPropertyDescriptor(left, key)
+    const rightDescriptor = Object.getOwnPropertyDescriptor(right, key)
+    if (isUndefined(leftDescriptor) || isUndefined(rightDescriptor))
+      return false
+    if (
+      leftDescriptor.enumerable !== rightDescriptor.enumerable ||
+      leftDescriptor.configurable !== rightDescriptor.configurable ||
+      leftDescriptor.writable !== rightDescriptor.writable
+    ) {
+      return false
+    }
+
+    if ('value' in leftDescriptor && 'value' in rightDescriptor) {
+      return areVariableValuesEqual(
+        leftDescriptor.value,
+        rightDescriptor.value,
+        compared
+      )
+    }
+
+    return (
+      leftDescriptor.get === rightDescriptor.get &&
+      leftDescriptor.set === rightDescriptor.set
+    )
+  })
 }
 
 function getVariableChangeFromSteps(
