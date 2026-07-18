@@ -175,4 +175,43 @@ describe('VariablesCard', () => {
       screen.getByRole('button', { name: 'Previous change' })
     ).toBeDisabled()
   })
+
+  it('shows non-JSON numeric values in the change comparison', () => {
+    const distanceSteps: ExecutionStep[] = [Infinity, NaN].map(
+      (distance, stepNumber) => ({
+        stepNumber,
+        type: 'assignment',
+        line: stepNumber + 1,
+        description: `distance = ${distance}`,
+        variables: { distances: [distance] },
+        timestamp: stepNumber,
+      })
+    )
+    const distanceState = {
+      currentStep: 1,
+      totalSteps: distanceSteps.length,
+      steps: distanceSteps,
+      isComplete: true,
+    }
+
+    render(
+      <VariablesCard
+        executionState={distanceState}
+        currentStep={distanceSteps[1]}
+        variableEntries={Object.entries(distanceSteps[1].variables)}
+        expandedVariables={{}}
+        hasRecursion={false}
+        onToggleVariable={vi.fn()}
+        onOpenVisualization={vi.fn()}
+        onJumpToStep={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'Variable to track' }))
+    fireEvent.click(screen.getByRole('option', { name: 'distances' }))
+
+    const comparison = screen.getByLabelText('distances value change')
+    expect(within(comparison).getByText('[Infinity]')).toBeInTheDocument()
+    expect(within(comparison).getByText('[NaN]')).toBeInTheDocument()
+  })
 })
