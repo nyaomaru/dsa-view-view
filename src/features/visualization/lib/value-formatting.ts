@@ -100,6 +100,19 @@ export const stringifyValue = (value: unknown): string => {
 }
 
 /**
+ * Produces a bounded display string for compact value comparisons.
+ *
+ * @param value Runtime value to preview.
+ * @returns Serialized value truncated to the shared preview limit.
+ */
+export const stringifyValuePreview = (value: unknown): string => {
+  const serializedValue = stringifyValue(value)
+  if (serializedValue.length <= VALUE_PREVIEW_LIMIT) return serializedValue
+
+  return `${serializedValue.slice(0, VALUE_PREVIEW_LIMIT - 1)}…`
+}
+
+/**
  * Creates a summary label for a collapsed complex value.
  *
  * @param value Collapsed runtime value.

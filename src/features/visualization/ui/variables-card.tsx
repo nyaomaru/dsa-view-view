@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react'
 import { BarChart2, CheckSquare, GitGraph, Grid3X3, Search } from 'lucide-react'
 import {
   Button,
@@ -8,15 +9,22 @@ import {
   CardTitle,
   Stack,
 } from '@/shared/ui'
-import type { ExecutionStep } from '@/entities/execution'
+import type { ExecutionState, ExecutionStep } from '@/entities/execution'
 import { isUndefined } from '@/shared/lib/guards'
 import { VariableRow } from './variable-row'
+import { VariableChangeNavigator } from './variable-change-navigator'
 import type { OpenVisualization } from '../model/types'
+import {
+  findPreviousVariableChange,
+  getVariableChangeAtStep,
+} from '../lib/variable-change-navigation'
 
 /**
  * Props for VariablesCard component.
  */
 type VariablesCardProps = {
+  /** Full execution state used to find variable changes. */
+  executionState: ExecutionState
   /** Currently selected execution step. */
   currentStep?: ExecutionStep
   /** Variable entries visible at the current step. */
@@ -69,9 +77,12 @@ type VariablesCardProps = {
   onToggleVariable: (variableName: string) => void
   /** Opens a primary or inline visualization. */
   onOpenVisualization: OpenVisualization
+  /** Jumps to a specific zero-based execution step index. */
+  onJumpToStep: (stepIndex: number) => void
 }
 
 export function VariablesCard({
+  executionState,
   currentStep,
   variableEntries,
   expandedVariables,
@@ -98,7 +109,39 @@ export function VariablesCard({
   visualizableListNodeNames = [],
   onToggleVariable,
   onOpenVisualization,
+  onJumpToStep,
 }: VariablesCardProps) {
+  const [selectedVariableName, setSelectedVariableName] = useState<
+    string | undefined
+  >(undefined)
+  const previousChange = useMemo(
+    () =>
+      selectedVariableName
+        ? findPreviousVariableChange(
+            executionState,
+            selectedVariableName,
+            executionState.currentStep
+          )
+        : undefined,
+    [executionState, selectedVariableName]
+  )
+  const currentChange = selectedVariableName
+    ? getVariableChangeAtStep(
+        executionState,
+        selectedVariableName,
+        executionState.currentStep
+      )
+    : undefined
+
+  useEffect(() => {
+    setSelectedVariableName(undefined)
+  }, [executionState.steps])
+
+  const handlePreviousChange = () => {
+    if (isUndefined(previousChange)) return
+    onJumpToStep(previousChange.stepIndex)
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between py-4">
@@ -295,22 +338,33 @@ export function VariablesCard({
           )}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         {currentStep && variableEntries.length > 0 ? (
-          <Stack spacing="xs">
-            {variableEntries.map(([name, value]) => (
-              <VariableRow
-                key={name}
-                name={name}
-                value={value}
-                expandedVariables={expandedVariables}
-                visualizableTreeNodeNames={visualizableTreeNodeNames}
-                visualizableListNodeNames={visualizableListNodeNames}
-                onToggleVariable={onToggleVariable}
-                onOpenVisualization={onOpenVisualization}
-              />
-            ))}
-          </Stack>
+          <>
+            <VariableChangeNavigator
+              variableNames={variableEntries.map(([name]) => name)}
+              selectedVariableName={selectedVariableName}
+              previousChange={previousChange}
+              currentChange={currentChange}
+              onSelectedVariableChange={setSelectedVariableName}
+              onPreviousChange={handlePreviousChange}
+            />
+            <Stack spacing="xs">
+              {variableEntries.map(([name, value]) => (
+                <VariableRow
+                  key={name}
+                  name={name}
+                  value={value}
+                  isSelected={name === selectedVariableName}
+                  expandedVariables={expandedVariables}
+                  visualizableTreeNodeNames={visualizableTreeNodeNames}
+                  visualizableListNodeNames={visualizableListNodeNames}
+                  onToggleVariable={onToggleVariable}
+                  onOpenVisualization={onOpenVisualization}
+                />
+              ))}
+            </Stack>
+          </>
         ) : (
           <p className="text-sm text-muted-foreground">
             No variables to display

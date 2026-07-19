@@ -63,6 +63,7 @@ export function Visualizer({
   const returnValueRef = useRef<HTMLDivElement>(null)
   const restartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const autoOpenedStepsRef = useRef<ExecutionState['steps'] | null>(null)
+  const suppressedTimelineScrollStepRef = useRef<number | undefined>(undefined)
   const detection = useVisualizationDetection(executionState)
   const {
     currentStep,
@@ -125,6 +126,11 @@ export function Visualizer({
     }))
   }
 
+  const jumpToVariableChange = (stepIndex: number) => {
+    suppressedTimelineScrollStepRef.current = stepIndex
+    onJumpToStep(stepIndex)
+  }
+
   const handleStartClick = () => {
     if (executionState.isComplete) {
       onReset()
@@ -153,6 +159,11 @@ export function Visualizer({
   )
 
   useEffect(() => {
+    const shouldSuppressTimelineScroll =
+      suppressedTimelineScrollStepRef.current === executionState.currentStep
+    if (shouldSuppressTimelineScroll) return
+    suppressedTimelineScrollStepRef.current = undefined
+
     if (currentStepRef.current && timelineRef.current) {
       currentStepRef.current.scrollIntoView({
         behavior: 'smooth',
@@ -220,6 +231,7 @@ export function Visualizer({
         <ExecutionErrorCard error={executionState.error} />
       )}
       <VariablesCard
+        executionState={executionState}
         currentStep={currentStep}
         variableEntries={variableEntries}
         expandedVariables={expandedVariables}
@@ -246,6 +258,7 @@ export function Visualizer({
         visualizableListNodeNames={visualizableListNodeNames}
         onToggleVariable={toggleVariableDetails}
         onOpenVisualization={openModal}
+        onJumpToStep={jumpToVariableChange}
       />
       <ExecutionTimelineCard
         executionState={executionState}

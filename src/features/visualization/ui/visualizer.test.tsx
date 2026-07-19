@@ -39,9 +39,10 @@ const createExecutionStateWithSteps = (
 })
 
 const noop = () => {}
+const scrollIntoViewMock = vi.fn()
 
 Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-  value: () => {},
+  value: scrollIntoViewMock,
   writable: true,
 })
 
@@ -51,6 +52,60 @@ Object.defineProperty(HTMLElement.prototype, 'scrollTo', {
 })
 
 describe('Visualizer return value display', () => {
+  it('keeps the viewport and focus in place when jumping to a previous variable change', () => {
+    const steps: ExecutionState['steps'] = [0, 0, 1, 1, 2, 2].map(
+      (left, stepNumber) => ({
+        stepNumber,
+        type: 'assignment',
+        line: stepNumber + 1,
+        description: `left = ${left}`,
+        variables: { left },
+        timestamp: stepNumber,
+      })
+    )
+    const jumpToStep = vi.fn()
+    const renderAtStep = (currentStep: number) => (
+      <Visualizer
+        executionState={{
+          currentStep,
+          totalSteps: steps.length,
+          steps,
+          isComplete: false,
+        }}
+        isRunning={false}
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={jumpToStep}
+      />
+    )
+    const { rerender } = render(renderAtStep(5))
+    scrollIntoViewMock.mockClear()
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'Variable to track' }))
+    fireEvent.click(screen.getByRole('option', { name: 'left' }))
+    const previousChangeButton = screen.getByRole('button', {
+      name: 'Previous change',
+    })
+    previousChangeButton.focus()
+    fireEvent.click(previousChangeButton)
+
+    expect(jumpToStep).toHaveBeenCalledWith(4)
+    scrollIntoViewMock.mockClear()
+
+    rerender(renderAtStep(4))
+
+    expect(scrollIntoViewMock).not.toHaveBeenCalled()
+    expect(previousChangeButton).toHaveFocus()
+
+    rerender(renderAtStep(3))
+
+    expect(scrollIntoViewMock).toHaveBeenCalledOnce()
+  })
+
   it('surfaces runtime errors near the top of the runtime view', () => {
     render(
       <Visualizer
