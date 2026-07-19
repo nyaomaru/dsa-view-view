@@ -27,6 +27,7 @@ import { getMapVisualizationState } from '../lib/map-view'
 import { getExecutionStepSearchOrder } from '../lib/execution-step-search'
 import { getHeapVisualizationState } from '../lib/heap-view'
 import { getWordLadderVisualizationState } from '../lib/word-ladder-view'
+import { getExpressionVisualizationState } from '../lib/expression-view'
 import type { VisualizationType } from '../model/types'
 import { StackVisualizer } from './stack-visualizer'
 import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
@@ -42,6 +43,7 @@ import { TreeGraphVisualizer } from './tree-graph-visualizer'
 import { ListGraphVisualizer } from './list-graph-visualizer'
 import { HeapVisualizer } from './heap-visualizer'
 import { WordLadderVisualizer } from './word-ladder-visualizer'
+import { ExpressionVisualizer } from './expression-visualizer'
 
 type ExecutionStepSnapshot = ExecutionState['steps'][number]
 
@@ -197,6 +199,19 @@ export function VisualizationModalContent({
       <WordLadderVisualizer state={wordLadderState} />
     ) : (
       <div>Word Ladder state is not available at this step.</div>
+    )
+  }
+
+  if (type === 'expression') {
+    const expressionState = getExpressionVisualizationState(
+      executionState,
+      targetStepIndex
+    )
+
+    return expressionState ? (
+      <ExpressionVisualizer state={expressionState} />
+    ) : (
+      <div>Expression state is not available at this step.</div>
     )
   }
 

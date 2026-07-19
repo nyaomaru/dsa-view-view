@@ -14,6 +14,7 @@ import {
 } from 'is-kit'
 
 export {
+  and,
   arrayOf,
   define,
   equals,

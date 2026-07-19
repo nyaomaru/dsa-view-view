@@ -640,6 +640,87 @@ describe('Visualizer return value display', () => {
     expect(screen.getByLabelText('cog: unvisited, target')).toBeInTheDocument()
   })
 
+  it('auto-opens Expression View and follows calculator playback', async () => {
+    const steps: ExecutionState['steps'] = [
+      {
+        stepNumber: 0,
+        type: 'function-call',
+        line: 1,
+        description: 'Function called',
+        variables: { s: '1+2' },
+        timestamp: 0,
+      },
+      {
+        stepNumber: 1,
+        type: 'assignment',
+        line: 9,
+        description: 'Read digit',
+        variables: {
+          s: '1+2',
+          res: 0,
+          num: 1,
+          sign: 1,
+          stack: [1],
+          i: 0,
+          char: '1',
+        },
+        timestamp: 1,
+      },
+      {
+        stepNumber: 2,
+        type: 'assignment',
+        line: 14,
+        description: 'Apply operator',
+        variables: {
+          s: '1+2',
+          res: 1,
+          num: 0,
+          sign: 1,
+          stack: [1],
+          i: 1,
+          char: '+',
+        },
+        timestamp: 2,
+      },
+    ]
+    const renderAtStep = (currentStep: number) => (
+      <Visualizer
+        executionState={{
+          currentStep,
+          totalSteps: steps.length,
+          steps,
+          isComplete: false,
+        }}
+        isRunning={false}
+        autoOpenPrimaryVisualization
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+    const { rerender } = render(renderAtStep(0))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'Expression View' })
+      ).toBeInTheDocument()
+    })
+    expect(
+      screen.getByLabelText('Current character 1 at index 0')
+    ).toBeInTheDocument()
+
+    rerender(renderAtStep(2))
+
+    expect(
+      screen.getByLabelText('Current character + at index 1')
+    ).toBeInTheDocument()
+    expect(screen.getByText('Applying operator')).toBeInTheDocument()
+  })
+
   it('auto-opens constructed local roots before falling back to TreeNode return values', async () => {
     const partialRoot = {
       val: 3,

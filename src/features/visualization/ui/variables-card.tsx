@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BarChart2, CheckSquare, GitGraph, Grid3X3, Search } from 'lucide-react'
+import {
+  BarChart2,
+  Calculator,
+  CheckSquare,
+  GitGraph,
+  Grid3X3,
+  Search,
+} from 'lucide-react'
 import {
   Button,
   Card,
@@ -39,6 +46,8 @@ type VariablesCardProps = {
   primaryHeapStepIndex?: number
   /** First step containing Word Ladder inputs. */
   primaryWordLadderStepIndex?: number
+  /** First step containing Basic Calculator-style expression state. */
+  primaryExpressionStepIndex?: number
   /** Primary array variable detected for chart visualization. */
   primaryArrayName?: string
   /** Primary numeric array detected for container-area visualization. */
@@ -90,6 +99,7 @@ export function VariablesCard({
   isClassDesignTrace = false,
   primaryHeapStepIndex,
   primaryWordLadderStepIndex,
+  primaryExpressionStepIndex,
   primaryArrayName,
   primaryAreaArrayName,
   primaryAreaStepIndex,
@@ -178,6 +188,23 @@ export function VariablesCard({
             >
               <BarChart2 className="w-4 h-4" />
               Heap View
+            </Button>
+          )}
+          {!isUndefined(primaryExpressionStepIndex) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                onOpenVisualization(
+                  'expression',
+                  undefined,
+                  primaryExpressionStepIndex
+                )
+              }
+            >
+              <Calculator className="w-4 h-4" />
+              Expression View
             </Button>
           )}
           {primaryArrayName && (

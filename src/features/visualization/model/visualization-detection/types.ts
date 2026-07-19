@@ -13,6 +13,8 @@ export type VisualizationDetection = {
   primaryHeapStepIndex: number | undefined
   /** First step index containing Word Ladder inputs. */
   primaryWordLadderStepIndex: number | undefined
+  /** First step index containing Basic Calculator-style expression state. */
+  primaryExpressionStepIndex: number | undefined
   /** Primary result-like array to show as a stack. */
   primaryStackName: string | undefined
   /** Primary numeric array to show as a bar chart. */

@@ -10,6 +10,7 @@ const emptyDetection: VisualizationDetection = {
   isClassDesignTrace: false,
   primaryHeapStepIndex: undefined,
   primaryWordLadderStepIndex: undefined,
+  primaryExpressionStepIndex: undefined,
   primaryStackName: undefined,
   primaryArrayName: undefined,
   primaryAreaArrayName: undefined,
@@ -50,6 +51,16 @@ describe('getPrimaryVisualization', () => {
         primaryStackName: 'answer',
       })
     ).toEqual({ type: 'heap', targetStepIndex: 3 })
+  })
+
+  it('prioritizes expression state over its generic sign stack', () => {
+    expect(
+      getPrimaryVisualization({
+        ...emptyDetection,
+        primaryExpressionStepIndex: 4,
+        primaryStackName: 'stack',
+      })
+    ).toEqual({ type: 'expression', targetStepIndex: 4 })
   })
 
   it('maps detected candidates to their modal configuration', () => {

@@ -72,6 +72,7 @@ export function Visualizer({
     isClassDesignTrace,
     primaryHeapStepIndex,
     primaryWordLadderStepIndex,
+    primaryExpressionStepIndex,
     primaryArrayName,
     primaryAreaArrayName,
     primaryAreaStepIndex,
@@ -239,6 +240,7 @@ export function Visualizer({
         isClassDesignTrace={isClassDesignTrace}
         primaryHeapStepIndex={primaryHeapStepIndex}
         primaryWordLadderStepIndex={primaryWordLadderStepIndex}
+        primaryExpressionStepIndex={primaryExpressionStepIndex}
         primaryArrayName={primaryArrayName}
         primaryAreaArrayName={primaryAreaArrayName}
         primaryAreaStepIndex={primaryAreaStepIndex}
