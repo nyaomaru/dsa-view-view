@@ -1,0 +1,73 @@
+name: Version Bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: Select version bump type
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.2.2 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate new version
+        run: |
+          pnpm version "${{ inputs.release_type }}" --no-git-tag-version
+          new_version=$(node -p "require('./package.json').version")
+          printf 'new_version=%s\n' "$new_version" >> "$GITHUB_ENV"
+
+      - name: Create release branch
+        run: git checkout -b "release/${{ env.new_version }}"
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and push version bump
+        run: |
+          git add package.json pnpm-lock.yaml
+          git commit -m "chore(release): bump version to ${{ env.new_version }}"
+          git push -u origin "HEAD:release/${{ env.new_version }}"
+
+      - name: Create pull request
+        run: |
+          gh pr create \
+            --base main \
+            --head "release/${{ env.new_version }}" \
+            --title "Release: ${{ env.new_version }}" \
+            --body "Auto-generated release PR for version ${{ env.new_version }}"
