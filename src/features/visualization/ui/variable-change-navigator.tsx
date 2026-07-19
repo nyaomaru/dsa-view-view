@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/shared/ui'
 import type { VariableChange } from '../lib/variable-change-navigation'
-import { stringifyValue } from '../lib/value-formatting'
+import { stringifyValuePreview } from '../lib/value-formatting'
 
 type VariableChangeNavigatorProps = {
   /** Variable names available for change navigation. */
@@ -87,14 +87,14 @@ export function VariableChangeNavigator({
               <div className="min-w-0">
                 <span className="block text-muted-foreground">Previous</span>
                 <code className="block break-all font-mono font-medium">
-                  {stringifyValue(currentChange.previousValue)}
+                  {stringifyValuePreview(currentChange.previousValue)}
                 </code>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground" />
               <div className="min-w-0">
                 <span className="block text-muted-foreground">Current</span>
                 <code className="block break-all font-mono font-medium text-primary">
-                  {stringifyValue(currentChange.currentValue)}
+                  {stringifyValuePreview(currentChange.currentValue)}
                 </code>
               </div>
             </div>

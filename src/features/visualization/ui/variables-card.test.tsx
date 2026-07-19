@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vite-plus/test'
 
 import type { ExecutionStep } from '@/entities/execution'
 
+import { VALUE_PREVIEW_LIMIT } from '../lib/value-formatting'
 import { VariablesCard } from './variables-card'
 
 const step: ExecutionStep = {
@@ -213,5 +214,53 @@ describe('VariablesCard', () => {
     const comparison = screen.getByLabelText('distances value change')
     expect(within(comparison).getByText('[Infinity]')).toBeInTheDocument()
     expect(within(comparison).getByText('[NaN]')).toBeInTheDocument()
+  })
+
+  it('limits both sides of a large value comparison', () => {
+    const previousValues = Array.from({ length: 100 }, (_, index) => index)
+    const currentValues = [...previousValues, 100]
+    const valueSteps: ExecutionStep[] = [previousValues, currentValues].map(
+      (values, stepNumber) => ({
+        stepNumber,
+        type: 'assignment',
+        line: stepNumber + 1,
+        description: 'values changed',
+        variables: { values },
+        timestamp: stepNumber,
+      })
+    )
+    const valueState = {
+      currentStep: 1,
+      totalSteps: valueSteps.length,
+      steps: valueSteps,
+      isComplete: true,
+    }
+
+    render(
+      <VariablesCard
+        executionState={valueState}
+        currentStep={valueSteps[1]}
+        variableEntries={Object.entries(valueSteps[1].variables)}
+        expandedVariables={{}}
+        hasRecursion={false}
+        onToggleVariable={vi.fn()}
+        onOpenVisualization={vi.fn()}
+        onJumpToStep={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'Variable to track' }))
+    fireEvent.click(screen.getByRole('option', { name: 'values' }))
+
+    const comparison = screen.getByLabelText('values value change')
+    const previews = Array.from(comparison.querySelectorAll('code')).map(
+      (element) => element.textContent ?? ''
+    )
+
+    expect(previews).toHaveLength(2)
+    previews.forEach((preview) => {
+      expect(preview).toHaveLength(VALUE_PREVIEW_LIMIT)
+      expect(preview).toMatch(/…$/)
+    })
   })
 })

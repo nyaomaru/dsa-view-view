@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vite-plus/test'
 
-import { isInlineReturnValue, stringifyValue } from './value-formatting'
+import {
+  isInlineReturnValue,
+  stringifyValue,
+  stringifyValuePreview,
+  VALUE_PREVIEW_LIMIT,
+} from './value-formatting'
 
 describe('value formatting', () => {
   it('formats cyclic graph-node return values as adjacency lists', () => {
@@ -16,5 +21,16 @@ describe('value formatting', () => {
 
     expect(stringifyValue(one)).toBe('[[2,4],[1,3],[2,4],[1,3]]')
     expect(isInlineReturnValue(one)).toBe(true)
+  })
+
+  it('limits large value previews without changing short values', () => {
+    const largeValue = Array.from({ length: 100 }, (_, index) => index)
+    const serializedValue = stringifyValue(largeValue)
+
+    expect(stringifyValuePreview([Infinity, NaN])).toBe('[Infinity,NaN]')
+    expect(stringifyValuePreview(largeValue)).toBe(
+      `${serializedValue.slice(0, VALUE_PREVIEW_LIMIT - 1)}…`
+    )
+    expect(stringifyValuePreview(largeValue)).toHaveLength(VALUE_PREVIEW_LIMIT)
   })
 })
