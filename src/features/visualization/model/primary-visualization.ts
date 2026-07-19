@@ -31,6 +31,13 @@ export function getPrimaryVisualization(
     }
   }
 
+  if (!isUndefined(detection.primaryExpressionStepIndex)) {
+    return {
+      type: 'expression',
+      targetStepIndex: detection.primaryExpressionStepIndex,
+    }
+  }
+
   if (detection.primaryAreaArrayName) {
     return {
       type: 'area',

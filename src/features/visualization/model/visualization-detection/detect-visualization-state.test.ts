@@ -79,6 +79,42 @@ describe('detectVisualizationState', () => {
     expect(detectVisualizationState(state).primaryHeapStepIndex).toBe(2)
   })
 
+  it('detects Basic Calculator state before its generic sign stack', () => {
+    const state = createExecutionState([
+      createStep(0, 'Initialized calculator', {
+        s: '1-(2+3)',
+        res: 0,
+        num: 0,
+        sign: 1,
+        stack: [1],
+      }),
+      createStep(1, 'stack.push(sign)', {
+        s: '1-(2+3)',
+        res: 1,
+        num: 0,
+        sign: -1,
+        stack: [1, -1],
+        i: 2,
+        char: '(',
+      }),
+    ])
+    const detection = detectVisualizationState(state)
+
+    expect(detection.primaryExpressionStepIndex).toBe(0)
+    expect(detection.primaryStackName).toBe('stack')
+  })
+
+  it('uses Stack View as a fallback for a mutated variable named stack', () => {
+    const state = createExecutionState([
+      createStep(0, 'Initialized stack', { stack: [1] }),
+      createStep(1, 'stack.push(-1)', { stack: [1, -1] }),
+    ])
+    const detection = detectVisualizationState(state)
+
+    expect(detection.primaryExpressionStepIndex).toBeUndefined()
+    expect(detection.primaryStackName).toBe('stack')
+  })
+
   it('selects a mutated numeric array only for sorting traces', () => {
     const sortingState = createExecutionState([
       createStep(0, 'Initial values', { nums: [2, 1] }),

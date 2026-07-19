@@ -68,6 +68,8 @@ function getVisualizationTitle({
   isClassDesignTrace: boolean
 }): ReactNode {
   switch (type) {
+    case 'expression':
+      return 'Expression View'
     case 'stack':
       return `Stack Visualization: ${targetVariable}`
     case 'tree':
@@ -111,6 +113,8 @@ function getVisualizationDescription(
   isClassDesignTrace: boolean
 ): string {
   switch (type) {
+    case 'expression':
+      return 'Follow the current character, accumulated result, and nested sign context.'
     case 'stack':
       return 'Visualize array as a vertical stack.'
     case 'tree':
@@ -201,6 +205,7 @@ export function VisualizationModal({
           className={cn(
             'py-4 flex-1 min-h-0 overflow-y-auto overscroll-contain',
             (type === 'matrix' ||
+              type === 'expression' ||
               type === 'list-graph' ||
               type === 'dp' ||
               type === 'map' ||

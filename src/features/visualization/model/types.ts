@@ -1,5 +1,6 @@
 /** Visualization content supported by the runtime modal. */
 export type VisualizationType =
+  | 'expression'
   | 'stack'
   | 'tree'
   | 'tree-graph'

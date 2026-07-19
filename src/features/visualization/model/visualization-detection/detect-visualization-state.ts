@@ -39,6 +39,7 @@ import {
 } from './variables'
 import type { VisualizationDetection } from './types'
 import { getWordLadderStepIndex } from '../../lib/word-ladder-view'
+import { getExpressionStepIndex } from '../../lib/expression-view'
 
 export function detectVisualizationState(
   executionState: ExecutionState
@@ -50,6 +51,7 @@ export function detectVisualizationState(
   const hasRecursion = hasRecursiveCallStack(executionState)
   const isClassDesignTrace = hasClassDesignTrace(executionState)
   const primaryWordLadderStepIndex = getWordLadderStepIndex(executionState)
+  const primaryExpressionStepIndex = getExpressionStepIndex(executionState)
   const primaryHeapStepIndex = executionState.steps.findIndex((step) => {
     const heaps = step.metadata?.heapTrace?.heaps ?? []
     return (
@@ -145,6 +147,7 @@ export function detectVisualizationState(
     hasRecursion,
     isClassDesignTrace,
     primaryWordLadderStepIndex,
+    primaryExpressionStepIndex,
     primaryHeapStepIndex:
       primaryHeapStepIndex >= 0 ? primaryHeapStepIndex : undefined,
     primaryStackName,

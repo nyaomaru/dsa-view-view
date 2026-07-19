@@ -16,6 +16,7 @@ import {
 import type { VariableEntries } from './types'
 
 const isGraphLikeName = oneOfValues('graph', 'adj', 'adjacency')
+const isStackLikeName = oneOfValues('stack', 'signstack', 'signs')
 
 export function getPrimaryArrayName(
   variableEntries: VariableEntries,
@@ -49,15 +50,18 @@ export function getPrimaryStackName(
     mutatedNumericArrayNames?: Set<string>
   } = {}
 ): string | undefined {
-  return variableEntries.find(
-    ([name, value]) =>
-      isResultLikeName(name) &&
+  return variableEntries.find(([name, value]) => {
+    const hasStackSemantics = isStackLikeName(name.toLowerCase())
+
+    return (
+      (isResultLikeName(name) || hasStackSemantics) &&
       isArray(value) &&
       value.length > 0 &&
       (!isNumericArray(value) ||
         (options.includeNumericResultArrays &&
           options.mutatedNumericArrayNames?.has(name)))
-  )?.[0]
+    )
+  })?.[0]
 }
 
 export function getPrimaryTraversalResultArrayName(

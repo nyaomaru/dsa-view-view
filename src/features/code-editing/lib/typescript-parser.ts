@@ -18,7 +18,14 @@ import {
   type FunctionParameter,
   type FunctionSignature,
 } from '@/entities/code'
-import { define, hasKey, isObject, oneOfValues } from '@/shared/lib/guards'
+import {
+  and,
+  define,
+  type Guard,
+  hasKey,
+  isObject,
+  oneOfValues,
+} from '@/shared/lib/guards'
 import {
   isArrowFunctionVariableDeclaration,
   isArrowFunctionVariableDeclarator,
@@ -232,9 +239,11 @@ type MethodLikeNode = {
 
 const isMethodNodeType = oneOfValues('ClassMethod', 'MethodDefinition')
 const hasType = hasKey('type')
-
-const isMethodLikeNode = define<MethodLikeNode>(
-  (value) => isObject(value) && hasType(value) && isMethodNodeType(value.type)
+const isMethodLikeNode: Guard<MethodLikeNode> = and(
+  isObject,
+  define<MethodLikeNode>(
+    (value) => hasType(value) && isMethodNodeType(value.type)
+  )
 )
 
 function getClassMethodSignature(
