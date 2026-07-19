@@ -81,11 +81,11 @@ export function ExpressionVisualizer({ state }: ExpressionVisualizerProps) {
         </div>
       </div>
 
-      <section className="mt-5" aria-label="Sign context stack">
+      <section className="mt-5" aria-label="Parenthesis sign stack">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="text-sm font-semibold">Sign context stack</h3>
+          <h3 className="text-sm font-semibold">Parenthesis sign stack</h3>
           <span className="text-xs text-muted-foreground">
-            Parentheses inherit the sign at the top
+            Cumulative signs from the root scope to the current scope
           </span>
         </div>
 
@@ -99,13 +99,21 @@ export function ExpressionVisualizer({ state }: ExpressionVisualizerProps) {
                   ? 'border-primary bg-primary/10 text-primary'
                   : 'border-border bg-background text-foreground'
               )}
+              aria-label={`${formatSign(value)} sign context${
+                reverseIndex === 0 ? ', top' : ''
+              }${reverseIndex === state.signStack.length - 1 ? ', root' : ''}`}
             >
               <span>{formatSign(value)}</span>
-              {reverseIndex === 0 && (
-                <span className="text-[0.625rem] font-semibold uppercase tracking-wide">
-                  Top
-                </span>
-              )}
+              <span className="text-[0.625rem] font-semibold uppercase tracking-wide">
+                {reverseIndex === 0 &&
+                reverseIndex === state.signStack.length - 1
+                  ? 'Top · Root'
+                  : reverseIndex === 0
+                    ? 'Top'
+                    : reverseIndex === state.signStack.length - 1
+                      ? 'Root'
+                      : ''}
+              </span>
             </div>
           ))}
         </div>

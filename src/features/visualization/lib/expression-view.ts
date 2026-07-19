@@ -16,6 +16,7 @@ type Sign = -1 | 1
 
 export type ExpressionAction =
   | 'Preparing expression'
+  | 'Reading character'
   | 'Reading digit'
   | 'Applying operator'
   | 'Entering parentheses'
@@ -76,10 +77,17 @@ function readAliasedValue<T>(
 function getExpressionAction(
   expression: string,
   index: number | undefined,
-  currentChar: string | undefined
+  currentChar: string | undefined,
+  stepDescription: string
 ): ExpressionAction {
   if (!isUndefined(index) && index >= expression.length) {
     return 'Expression complete'
+  }
+  if (
+    stepDescription.startsWith('for (') ||
+    stepDescription.startsWith('const char =')
+  ) {
+    return 'Reading character'
   }
   if (isUndefined(currentChar)) return 'Preparing expression'
   if (/\d/.test(currentChar)) return 'Reading digit'
@@ -91,7 +99,8 @@ function getExpressionAction(
 }
 
 function getExpressionState(
-  variables: Record<string, unknown>
+  variables: Record<string, unknown>,
+  stepDescription: string
 ): ExpressionVisualizationState | null {
   const expression = readAliasedValue(variables, EXPRESSION_NAMES, isExpression)
   const result = readAliasedValue(variables, RESULT_NAMES, isNumber)
@@ -124,7 +133,12 @@ function getExpressionState(
     currentNumber,
     sign,
     signStack: [...signStack],
-    action: getExpressionAction(expression, index, currentChar),
+    action: getExpressionAction(
+      expression,
+      index,
+      currentChar,
+      stepDescription
+    ),
   }
 }
 
@@ -133,7 +147,7 @@ export function getExpressionStepIndex(
   executionState: ExecutionState
 ): number | undefined {
   const stepIndex = executionState.steps.findIndex((step) =>
-    Boolean(getExpressionState(step.variables))
+    Boolean(getExpressionState(step.variables, step.description))
   )
 
   return stepIndex >= 0 ? stepIndex : undefined
@@ -155,7 +169,7 @@ export function getExpressionVisualizationState(
     const step = executionState.steps[index]
     if (!step) continue
 
-    const state = getExpressionState(step.variables)
+    const state = getExpressionState(step.variables, step.description)
     if (state) return state
   }
 

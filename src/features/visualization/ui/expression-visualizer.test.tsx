@@ -24,9 +24,15 @@ describe('ExpressionVisualizer', () => {
     ).toHaveAttribute('aria-current', 'true')
     expect(screen.getByText('Entering parentheses')).toBeInTheDocument()
 
-    const stack = screen.getByLabelText('Sign context stack')
+    const stack = screen.getByLabelText('Parenthesis sign stack')
     expect(within(stack).getByText('Top')).toBeInTheDocument()
     expect(within(stack).getByText('-1')).toBeInTheDocument()
+    expect(
+      within(stack).getByLabelText('-1 sign context, top')
+    ).toBeInTheDocument()
+    expect(
+      within(stack).getByLabelText('+1 sign context, root')
+    ).toBeInTheDocument()
     expect(screen.getByText('Pending total')).toBeInTheDocument()
   })
 })

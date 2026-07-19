@@ -63,11 +63,25 @@ function calculate(s: string): number {
       ...state,
       currentStep: openParenthesisStepIndex,
     })
+    const characterReadStepIndex = state.steps.findIndex(
+      (step) =>
+        step.variables.i === 2 && step.description.startsWith('const char =')
+    )
+    const characterReadView = getExpressionVisualizationState({
+      ...state,
+      currentStep: characterReadStepIndex,
+    })
 
     expect(state.error).toBeUndefined()
     expect(state.returnValue).toBe(-4)
     expect(getExpressionStepIndex(state)).toBeGreaterThanOrEqual(0)
     expect(openParenthesisStepIndex).toBeGreaterThanOrEqual(0)
+    expect(characterReadView).toMatchObject({
+      currentChar: '(',
+      sign: -1,
+      signStack: [1],
+      action: 'Reading character',
+    })
     expect(view).toMatchObject({
       expression: '1-(2+3)',
       index: 2,
