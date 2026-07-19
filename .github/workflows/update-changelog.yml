@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
 
       - name: Update changelog
-        uses: nyaomaru/changelog-bot@v0.6.5
+        uses: nyaomaru/changelog-bot@v0.6.6
         with:
           changelog-path: CHANGELOG.md
           base-branch: main
