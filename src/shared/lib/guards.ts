@@ -4,6 +4,7 @@ import {
   define,
   isBoolean,
   isArray,
+  isInstanceOf,
   isNumber,
   isObject,
   isString,
@@ -27,7 +28,6 @@ export {
   isInfiniteNumber,
   isInstanceOf,
   isInteger,
-  isDate,
   isMap,
   isNaN,
   isNil,
@@ -94,3 +94,6 @@ export const isAdjacencyList = define<MatrixValue>((value) => {
 })
 
 export const isGraphSource = or(isArray, isObject)
+
+/** Matches Date instances, including invalid dates whose timestamp is NaN. */
+export const isDate = isInstanceOf(Date)
