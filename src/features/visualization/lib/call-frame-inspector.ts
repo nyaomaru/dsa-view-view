@@ -66,6 +66,24 @@ const SPECIAL_VARIABLE_NAMES = new Set([
   RETURN_VALUE_LABEL,
 ])
 
+function getCallFrameStatus({
+  frameId,
+  returningFrameId,
+  currentFrameId,
+  activeFrameIds,
+}: {
+  frameId: number
+  returningFrameId?: number
+  currentFrameId?: number
+  activeFrameIds: number[]
+}): CallFrameStatus {
+  if (frameId === returningFrameId) return 'returning'
+  if (frameId === currentFrameId) return 'current'
+  if (activeFrameIds.includes(frameId)) return 'suspended'
+
+  return 'completed'
+}
+
 function getParameters(
   executionState: ExecutionState,
   frame: MutableCallFrame
@@ -79,14 +97,17 @@ function getParameters(
   const latestVariables =
     executionState.steps[frame.lastObservedStepIndex]?.variables ?? {}
 
-  return Object.fromEntries(
-    Object.entries(entryParameters).map(([name, entryValue]) => [
-      name,
-      Object.hasOwn(latestVariables, name)
+  const latestParameterEntries = Object.entries(entryParameters).map(
+    ([name, entryValue]) => {
+      const latestValue = Object.hasOwn(latestVariables, name)
         ? latestVariables[name]
-        : entryValue,
-    ])
+        : entryValue
+
+      return [name, latestValue]
+    }
   )
+
+  return Object.fromEntries(latestParameterEntries)
 }
 
 function getLocals(
@@ -96,16 +117,19 @@ function getLocals(
 ): Record<string, unknown> {
   const variables =
     executionState.steps[frame.lastObservedStepIndex]?.variables ?? {}
+  const localVariables: Record<string, unknown> = {}
 
-  return Object.fromEntries(
-    frame.visibleVariableNames.flatMap((name) => {
-      if (SPECIAL_VARIABLE_NAMES.has(name) || parameterNames.has(name)) {
-        return []
-      }
+  for (const name of frame.visibleVariableNames) {
+    const isParameter = parameterNames.has(name)
+    const isInternalVariable = SPECIAL_VARIABLE_NAMES.has(name)
 
-      return Object.hasOwn(variables, name) ? [[name, variables[name]]] : []
-    })
-  )
+    if (isParameter || isInternalVariable) continue
+    if (!Object.hasOwn(variables, name)) continue
+
+    localVariables[name] = variables[name]
+  }
+
+  return localVariables
 }
 
 /** Whether an execution contains stable call-frame metadata. */
@@ -186,15 +210,12 @@ export function getCallFrameInspectorState(
     activeFrameIds,
     currentFrameId,
     frames: [...frames.values()].map((frame) => {
-      const isActive = activeFrameIds.includes(frame.id)
-      const status: CallFrameStatus =
-        frame.id === returningFrameId
-          ? 'returning'
-          : frame.id === currentFrameId
-            ? 'current'
-            : isActive
-              ? 'suspended'
-              : 'completed'
+      const status = getCallFrameStatus({
+        frameId: frame.id,
+        returningFrameId,
+        currentFrameId,
+        activeFrameIds,
+      })
 
       return {
         id: frame.id,
