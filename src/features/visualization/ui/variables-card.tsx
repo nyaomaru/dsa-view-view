@@ -304,7 +304,7 @@ export function VariablesCard({
               Graph View
             </Button>
           )}
-          {hasRecursion && !primaryTreeNodeName && (
+          {hasRecursion && (
             <Button
               variant="outline"
               size="sm"
@@ -312,7 +312,7 @@ export function VariablesCard({
               onClick={() => onOpenVisualization('tree')}
             >
               <GitGraph className="w-4 h-4" />
-              {isClassDesignTrace ? 'Call Stack View' : 'Tree View'}
+              {isClassDesignTrace ? 'Call Stack View' : 'Call Frames'}
             </Button>
           )}
           {primaryMatrixName && (

@@ -18,6 +18,22 @@ export type HeapTraceSnapshot = {
   heaps: HeapSnapshot[]
 }
 
+export type CallFramePhase = 'enter' | 'update' | 'return'
+
+/** Runtime identity and visible binding names for one logical call frame. */
+export type CallFrameStepMetadata = {
+  /** Stable identifier assigned to one function invocation. */
+  frameId: number
+  /** Parent invocation identifier, when this is a nested call. */
+  parentFrameId?: number
+  /** Function or method name displayed by the frame inspector. */
+  functionName: string
+  /** Frame lifecycle event represented by this execution step. */
+  phase: CallFramePhase
+  /** Variable names visible while this frame recorded the step. */
+  visibleVariableNames: string[]
+}
+
 /** Map of user-provided values for function parameters. */
 export type InputValues = Record<string, unknown>
 
@@ -51,6 +67,8 @@ export type ExecutionStep = {
     functionName?: string
     /** Normalized state for prepared MinHeap and MaxHeap instances. */
     heapTrace?: HeapTraceSnapshot
+    /** Logical call-frame event associated with this step. */
+    callFrame?: CallFrameStepMetadata
   }
 }
 

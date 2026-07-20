@@ -58,6 +58,44 @@ function solve(root: TreeNode | null): number {
       { node: null, depth: 2 },
     ])
 
+    const solveFrameId = state.steps.find(
+      (step) =>
+        step.type === 'function-entry' &&
+        step.metadata?.callFrame?.functionName === 'solve'
+    )?.metadata?.callFrame?.frameId
+    const dfsFrames = dfsEntries.map((step) => step.metadata?.callFrame)
+    const dfsFrameIds = dfsFrames.map((frame) => frame?.frameId)
+
+    expect(solveFrameId).toBeDefined()
+    expect(new Set(dfsFrameIds).size).toBe(dfsEntries.length)
+    expect(dfsFrames).toEqual([
+      expect.objectContaining({
+        parentFrameId: solveFrameId,
+        functionName: 'dfs',
+        phase: 'enter',
+        visibleVariableNames: expect.arrayContaining([
+          FUNCTION_ARGUMENTS_LABEL,
+          'node',
+          'depth',
+        ]),
+      }),
+      expect.objectContaining({ parentFrameId: dfsFrameIds[0] }),
+      expect.objectContaining({ parentFrameId: dfsFrameIds[1] }),
+      expect.objectContaining({ parentFrameId: dfsFrameIds[1] }),
+      expect.objectContaining({ parentFrameId: dfsFrameIds[0] }),
+      expect.objectContaining({ parentFrameId: dfsFrameIds[4] }),
+      expect.objectContaining({ parentFrameId: dfsFrameIds[4] }),
+    ])
+
+    const returnedDfsFrameIds = state.steps.flatMap((step) => {
+      const frame = step.metadata?.callFrame
+      return frame?.functionName === 'dfs' && frame.phase === 'return'
+        ? [frame.frameId]
+        : []
+    })
+
+    expect(new Set(returnedDfsFrameIds)).toEqual(new Set(dfsFrameIds))
+
     const resumedSteps = state.steps.filter(
       (step) =>
         step.type === 'variable-declaration' &&

@@ -30,6 +30,32 @@ const executionState = {
 }
 
 describe('VariablesCard', () => {
+  it('keeps call frames available when recursive DFS also has a tree graph', () => {
+    const openVisualization = vi.fn()
+
+    render(
+      <VariablesCard
+        executionState={executionState}
+        currentStep={step}
+        variableEntries={Object.entries(step.variables)}
+        expandedVariables={{}}
+        hasRecursion
+        primaryTreeNodeName="root"
+        visualizableTreeNodeNames={['root']}
+        onToggleVariable={vi.fn()}
+        onOpenVisualization={openVisualization}
+        onJumpToStep={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Call Frames' }))
+
+    expect(openVisualization).toHaveBeenCalledWith('tree')
+    expect(
+      screen.getByRole('button', { name: 'Tree Graph' })
+    ).toBeInTheDocument()
+  })
+
   it('keeps inline visualization icon buttons large enough for the pixel frame', () => {
     render(
       <VariablesCard

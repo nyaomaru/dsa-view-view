@@ -3,6 +3,7 @@ import * as t from '@babel/types'
 import {
   CLASS_RECEIVER_LABEL,
   FUNCTION_ARGUMENTS_LABEL,
+  FUNCTION_NAME_LABEL,
   STEP_TYPES,
 } from '@/entities/execution'
 import { getUniqueNames } from './binding-names'
@@ -79,6 +80,10 @@ export class InstrumentationContext {
         line,
         description,
         this.createScopeProperties([
+          t.objectProperty(
+            t.stringLiteral(FUNCTION_NAME_LABEL),
+            t.stringLiteral(functionName)
+          ),
           t.objectProperty(
             t.stringLiteral(FUNCTION_ARGUMENTS_LABEL),
             t.objectExpression(

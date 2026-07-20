@@ -1,5 +1,7 @@
 import {
   CLASS_RECEIVER_LABEL,
+  FUNCTION_NAME_LABEL,
+  type CallFrameStepMetadata,
   type ExecutionStep,
   type HeapKind,
   type HeapTraceSnapshot,
@@ -12,6 +14,7 @@ import {
   isFunction,
   isNonArrayObject,
   isNumber,
+  isString,
   isUndefined,
   oneOfValues,
 } from '@/shared/lib/guards'
@@ -100,6 +103,14 @@ export type ExecutionContext = {
   steps: ExecutionStep[]
   /** Current logical call stack. */
   callStack: string[]
+  /** Next stable identifier assigned to a function invocation. */
+  nextFrameId: number
+  /** Active runtime invocations ordered from caller to callee. */
+  frameStack: Array<{
+    frameId: number
+    functionName: string
+    parentFrameId?: number
+  }>
 }
 
 export function createExecutionContext(inputs: InputValues): ExecutionContext {
@@ -110,6 +121,45 @@ export function createExecutionContext(inputs: InputValues): ExecutionContext {
     variableSnapshotCache: [],
     steps: [],
     callStack: ['root'],
+    nextFrameId: 1,
+    frameStack: [],
+  }
+}
+
+function getCallFrameMetadata({
+  context,
+  type,
+  functionName,
+  visibleVariableNames,
+}: {
+  context: ExecutionContext
+  type: ExecutionStep['type']
+  functionName: unknown
+  visibleVariableNames: string[]
+}): CallFrameStepMetadata | undefined {
+  if (type === 'function-entry') {
+    const parentFrame = context.frameStack[context.frameStack.length - 1]
+    const frame = {
+      frameId: context.nextFrameId++,
+      functionName: isString(functionName) ? functionName : 'anonymous',
+      parentFrameId: parentFrame?.frameId,
+    }
+    context.frameStack.push(frame)
+
+    return {
+      ...frame,
+      phase: 'enter',
+      visibleVariableNames,
+    }
+  }
+
+  const frame = context.frameStack[context.frameStack.length - 1]
+  if (!frame) return undefined
+
+  return {
+    ...frame,
+    phase: type === 'return' ? 'return' : 'update',
+    visibleVariableNames,
   }
 }
 
@@ -174,6 +224,14 @@ export function recordExecutionStep(
   const heapTrace = getHeapTraceSnapshot(stepVariables[CLASS_RECEIVER_LABEL])
   const visibleStepVariables = { ...stepVariables }
   delete visibleStepVariables[CLASS_RECEIVER_LABEL]
+  const functionName = visibleStepVariables[FUNCTION_NAME_LABEL]
+  delete visibleStepVariables[FUNCTION_NAME_LABEL]
+  const callFrame = getCallFrameMetadata({
+    context,
+    type,
+    functionName,
+    visibleVariableNames: Object.keys(visibleStepVariables),
+  })
 
   Object.assign(context.variables, visibleStepVariables)
   const variablesForStep =
@@ -181,11 +239,10 @@ export function recordExecutionStep(
   const variableDelta = deepClone(variablesForStep)
 
   if (type === 'function-entry') {
-    const functionName =
-      description.match(/Entering function: (\w+)/)?.[1] || 'anonymous'
-    context.callStack.push(functionName)
+    context.callStack.push(callFrame?.functionName ?? 'anonymous')
   } else if (type === 'return' && context.callStack.length > 1) {
     context.callStack.pop()
+    context.frameStack.pop()
   }
 
   const stepIndex = context.stepNumber++
@@ -199,7 +256,13 @@ export function recordExecutionStep(
       description,
       timestamp: Date.now(),
       callStack: [...context.callStack],
-      metadata: heapTrace ? { heapTrace: deepClone(heapTrace) } : undefined,
+      metadata:
+        heapTrace || callFrame
+          ? {
+              ...(heapTrace ? { heapTrace: deepClone(heapTrace) } : {}),
+              ...(callFrame ? { callFrame } : {}),
+            }
+          : undefined,
     },
     context.variableDeltas,
     context.variableSnapshotCache,
