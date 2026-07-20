@@ -16,6 +16,20 @@ describe('createWorkerTransferValue', () => {
     expect(Number.isNaN(clonedByBrowser.invalidDate.getTime())).toBe(true)
   })
 
+  it.each(['Map', 'Set', 'RegExp'])(
+    'does not treat a spoofed %s tag as a built-in instance',
+    (tag) => {
+      const taggedObject = {
+        [Symbol.toStringTag]: tag,
+        callback() {},
+      }
+
+      expect(createWorkerTransferValue(taggedObject)).toEqual({
+        callback: '[Function callback]',
+      })
+    }
+  )
+
   it('preserves cyclic graphs while replacing local functions', () => {
     const first: {
       val: number
