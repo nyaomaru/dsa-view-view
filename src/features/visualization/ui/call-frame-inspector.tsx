@@ -145,12 +145,15 @@ export function CallFrameInspector({
 
   if (!selectedFrame || !selectedFrameDetails) {
     return (
-      <div className="w-full rounded-md border border-primary/25 bg-primary/5 p-3">
+      <section
+        aria-label="Call frame guidance"
+        className="w-full rounded-md border border-primary/25 bg-primary/5 p-3"
+      >
         <p className="text-sm font-medium">No active calls at this step.</p>
         <p className="text-xs text-muted-foreground">
           Step backward to inspect an earlier call frame.
         </p>
-      </div>
+      </section>
     )
   }
 
@@ -171,12 +174,12 @@ export function CallFrameInspector({
         aria-label="Call frames"
       >
         <section className="space-y-2 lg:shrink-0">
-          <div>
+          <header>
             <h3 className="text-sm font-semibold">Active stack</h3>
             <p className="text-xs text-muted-foreground">
               Current call first, followed by its callers.
             </p>
-          </div>
+          </header>
           {activeFrames.length > 0 ? (
             <div className="space-y-2">
               {activeFrames.map((frame) => (
@@ -189,14 +192,17 @@ export function CallFrameInspector({
               ))}
             </div>
           ) : (
-            <div className="rounded-md border border-primary/25 bg-primary/5 p-3">
-              <p className="text-sm font-medium">
+            <p
+              aria-label="No active calls"
+              className="rounded-md border border-primary/25 bg-primary/5 p-3"
+            >
+              <span className="block text-sm font-medium">
                 No active calls at this step.
-              </p>
-              <p className="text-xs text-muted-foreground">
+              </span>
+              <span className="block text-xs text-muted-foreground">
                 Step backward to inspect an earlier call frame.
-              </p>
-            </div>
+              </span>
+            </p>
           )}
         </section>
 
@@ -221,7 +227,7 @@ export function CallFrameInspector({
         className="min-w-0 space-y-4 rounded-md border bg-card p-4 lg:min-h-0 lg:overflow-y-auto"
         aria-label={`${selectedFrame.functionName} #${selectedFrame.id} frame details`}
       >
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <header className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="font-mono text-base font-semibold">
               {selectedFrame.functionName} #{selectedFrame.id}
@@ -243,7 +249,7 @@ export function CallFrameInspector({
               {STATUS_LABELS[selectedFrame.status]}
             </Badge>
           )}
-        </div>
+        </header>
 
         {selectedFrame.status === 'suspended' && (
           <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
@@ -256,7 +262,7 @@ export function CallFrameInspector({
             className="space-y-2 rounded-md border p-3"
             aria-label="Caller context"
           >
-            <div>
+            <header>
               <h4 className="text-sm font-semibold">Caller context</h4>
               <p className="text-xs text-muted-foreground">
                 State from{' '}
@@ -265,7 +271,7 @@ export function CallFrameInspector({
                 </code>{' '}
                 immediately before this call.
               </p>
-            </div>
+            </header>
             <ValueRows
               values={{
                 ...callerContext.details.parameters,

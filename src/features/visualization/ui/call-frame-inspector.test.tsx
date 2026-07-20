@@ -216,9 +216,7 @@ describe('CallFrameInspector', () => {
   it('keeps completed calls without repeating the Completed label', () => {
     render(<CallFrameInspector executionState={createState(6)} />)
 
-    const guidance = screen.getByText('No active calls at this step.').closest(
-      'div'
-    )
+    const guidance = screen.getByLabelText('No active calls')
 
     expect(guidance).toHaveClass('border-primary/25', 'bg-primary/5')
     expect(guidance).toHaveTextContent(
