@@ -4,6 +4,32 @@ import { executeCode } from '../lib/runner'
 import { createWorkerTransferValue } from './worker-transfer'
 
 describe('createWorkerTransferValue', () => {
+  it('preserves invalid Date instances', () => {
+    const invalidDate = new Date('invalid')
+
+    const transferred = createWorkerTransferValue({ invalidDate })
+    const clonedByBrowser = structuredClone(transferred)
+
+    expect(transferred.invalidDate).toBeInstanceOf(Date)
+    expect(Number.isNaN(transferred.invalidDate.getTime())).toBe(true)
+    expect(clonedByBrowser.invalidDate).toBeInstanceOf(Date)
+    expect(Number.isNaN(clonedByBrowser.invalidDate.getTime())).toBe(true)
+  })
+
+  it.each(['Map', 'Set', 'RegExp'])(
+    'does not treat a spoofed %s tag as a built-in instance',
+    (tag) => {
+      const taggedObject = {
+        [Symbol.toStringTag]: tag,
+        callback() {},
+      }
+
+      expect(createWorkerTransferValue(taggedObject)).toEqual({
+        callback: '[Function callback]',
+      })
+    }
+  )
+
   it('preserves cyclic graphs while replacing local functions', () => {
     const first: {
       val: number

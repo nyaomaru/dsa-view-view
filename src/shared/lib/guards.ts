@@ -92,14 +92,18 @@ export const isAdjacencyList = define<MatrixValue>((value) => {
 
 export const isGraphSource = or(isArray, isObject)
 
+/** Matches Date instances, including invalid dates whose timestamp is NaN. */
+export const isDate = isInstanceOf(Date)
+
+/** Matches genuine Map instances without trusting Symbol.toStringTag. */
 export const isMap = isInstanceOf(Map)
 
+/** Matches genuine Set instances without trusting Symbol.toStringTag. */
 export const isSet = isInstanceOf(
   Set as unknown as abstract new (...args: unknown[]) => Set<unknown>
 )
 
-export const isDate = isInstanceOf(Date)
-
+/** Matches genuine RegExp instances without trusting Symbol.toStringTag. */
 export const isRegExp = isInstanceOf(
   RegExp as unknown as abstract new (...args: unknown[]) => RegExp
 )
