@@ -5,6 +5,7 @@ import { cn } from '@/shared/lib/class-names'
 import {
   getCallFrameDetails,
   getCallFrameInspectorState,
+  getCallerFrameContext,
   type CallFrameStatus,
   type InspectedCallFrame,
 } from '../lib/call-frame-inspector'
@@ -41,7 +42,7 @@ function FrameButton({
       aria-pressed={isSelected}
       onClick={onSelect}
       className={cn(
-        'w-full rounded-md border px-3 py-2 text-left transition-colors',
+        'w-full cursor-pointer rounded-md border px-3 py-2 text-left transition-colors',
         'hover:border-primary/50 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         isSelected ? 'border-primary bg-primary/10' : 'border-border bg-card'
       )}
@@ -51,12 +52,14 @@ function FrameButton({
           {frame.functionName}
           <span className="ml-1 text-muted-foreground">#{frame.id}</span>
         </span>
-        <Badge
-          variant={isExecuting ? 'default' : 'outline'}
-          className="shrink-0"
-        >
-          {STATUS_LABELS[frame.status]}
-        </Badge>
+        {frame.status !== 'completed' && (
+          <Badge
+            variant={isExecuting ? 'default' : 'outline'}
+            className="shrink-0"
+          >
+            {STATUS_LABELS[frame.status]}
+          </Badge>
+        )}
       </span>
       <span className="mt-1 block text-xs text-muted-foreground">
         Depth {frame.depth} · last observed at step{' '}
@@ -126,6 +129,13 @@ export function CallFrameInspector({
         : undefined,
     [executionState, selectedFrame]
   )
+  const callerContext = useMemo(
+    () =>
+      selectedFrame
+        ? getCallerFrameContext(executionState, selectedFrame)
+        : undefined,
+    [executionState, selectedFrame]
+  )
 
   useEffect(() => {
     if (selectedFrameId !== undefined && !selectedFrameStillExists) {
@@ -135,9 +145,12 @@ export function CallFrameInspector({
 
   if (!selectedFrame || !selectedFrameDetails) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Call-frame state is not available at this step.
-      </p>
+      <div className="w-full rounded-md border border-primary/25 bg-primary/5 p-3">
+        <p className="text-sm font-medium">No active calls at this step.</p>
+        <p className="text-xs text-muted-foreground">
+          Step backward to inspect an earlier call frame.
+        </p>
+      </div>
     )
   }
 
@@ -152,31 +165,45 @@ export function CallFrameInspector({
     .reverse()
 
   return (
-    <div className="grid w-full gap-4 lg:grid-cols-[minmax(13rem,0.4fr)_minmax(0,1fr)]">
-      <aside className="space-y-4" aria-label="Call frames">
-        <section className="space-y-2">
+    <div className="grid w-full gap-4 lg:h-full lg:min-h-0 lg:grid-cols-[minmax(13rem,0.4fr)_minmax(0,1fr)]">
+      <aside
+        className="space-y-4 lg:flex lg:min-h-0 lg:flex-col lg:gap-4 lg:space-y-0 lg:overflow-hidden"
+        aria-label="Call frames"
+      >
+        <section className="space-y-2 lg:shrink-0">
           <div>
             <h3 className="text-sm font-semibold">Active stack</h3>
             <p className="text-xs text-muted-foreground">
               Current call first, followed by its callers.
             </p>
           </div>
-          <div className="space-y-2">
-            {activeFrames.map((frame) => (
-              <FrameButton
-                key={frame.id}
-                frame={frame}
-                isSelected={frame.id === effectiveSelectedFrameId}
-                onSelect={() => setSelectedFrameId(frame.id)}
-              />
-            ))}
-          </div>
+          {activeFrames.length > 0 ? (
+            <div className="space-y-2">
+              {activeFrames.map((frame) => (
+                <FrameButton
+                  key={frame.id}
+                  frame={frame}
+                  isSelected={frame.id === effectiveSelectedFrameId}
+                  onSelect={() => setSelectedFrameId(frame.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-md border border-primary/25 bg-primary/5 p-3">
+              <p className="text-sm font-medium">
+                No active calls at this step.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Step backward to inspect an earlier call frame.
+              </p>
+            </div>
+          )}
         </section>
 
         {completedFrames.length > 0 && (
-          <section className="space-y-2">
+          <section className="space-y-2 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:gap-2 lg:space-y-0">
             <h3 className="text-sm font-semibold">Completed calls</h3>
-            <div className="max-h-52 space-y-2 overflow-y-auto pr-1">
+            <div className="space-y-2 overflow-y-auto pr-1 lg:min-h-0 lg:flex-1">
               {completedFrames.map((frame) => (
                 <FrameButton
                   key={frame.id}
@@ -191,7 +218,7 @@ export function CallFrameInspector({
       </aside>
 
       <section
-        className="min-w-0 space-y-4 rounded-md border bg-card p-4"
+        className="min-w-0 space-y-4 rounded-md border bg-card p-4 lg:min-h-0 lg:overflow-y-auto"
         aria-label={`${selectedFrame.functionName} #${selectedFrame.id} frame details`}
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -204,22 +231,49 @@ export function CallFrameInspector({
               {selectedFrame.startStepIndex + 1}
             </p>
           </div>
-          <Badge
-            variant={
-              selectedFrame.status === 'current' ||
-              selectedFrame.status === 'returning'
-                ? 'default'
-                : 'outline'
-            }
-          >
-            {STATUS_LABELS[selectedFrame.status]}
-          </Badge>
+          {selectedFrame.status !== 'completed' && (
+            <Badge
+              variant={
+                selectedFrame.status === 'current' ||
+                selectedFrame.status === 'returning'
+                  ? 'default'
+                  : 'outline'
+              }
+            >
+              {STATUS_LABELS[selectedFrame.status]}
+            </Badge>
+          )}
         </div>
 
         {selectedFrame.status === 'suspended' && (
           <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
             Showing the last state observed before this frame was suspended.
           </p>
+        )}
+
+        {callerContext && (
+          <section
+            className="space-y-2 rounded-md border p-3"
+            aria-label="Caller context"
+          >
+            <div>
+              <h4 className="text-sm font-semibold">Caller context</h4>
+              <p className="text-xs text-muted-foreground">
+                State from{' '}
+                <code className="font-mono">
+                  {callerContext.frame.functionName} #{callerContext.frame.id}
+                </code>{' '}
+                immediately before this call.
+              </p>
+            </div>
+            <ValueRows
+              values={{
+                ...callerContext.details.parameters,
+                ...callerContext.details.locals,
+              }}
+              emptyMessage="No caller variables were observed."
+            />
+          </section>
         )}
 
         <section className="space-y-2">

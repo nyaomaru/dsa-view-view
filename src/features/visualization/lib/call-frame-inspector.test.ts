@@ -10,6 +10,7 @@ import {
 import {
   getCallFrameDetails,
   getCallFrameInspectorState,
+  getCallerFrameContext,
   hasCallFrameMetadata,
 } from './call-frame-inspector'
 
@@ -127,6 +128,19 @@ const steps: ExecutionState['steps'] = [
       childOnly: 'left frame',
     },
     visibleVariableNames: ['node', 'depth', 'total'],
+  }),
+  createStep({
+    frameId: 3,
+    parentFrameId: 1,
+    functionName: 'dfs',
+    phase: 'enter',
+    variables: {
+      [FUNCTION_ARGUMENTS_LABEL]: { node: 'right', depth: 1 },
+      node: 'right',
+      depth: 1,
+      total: 1,
+    },
+    visibleVariableNames: [FUNCTION_ARGUMENTS_LABEL, 'node', 'depth'],
   }),
 ]
 
@@ -251,6 +265,21 @@ describe('call-frame inspector', () => {
 
     expect(state.frames.map((frame) => frame.id)).toEqual([1])
     expect(state.currentFrameId).toBe(1)
+  })
+
+  it('reconstructs caller variables from immediately before each child call', () => {
+    const executionState = createState(6)
+    const state = getCallFrameInspectorState(executionState)
+    const firstChild = state.frames.find((frame) => frame.id === 2)
+    const secondChild = state.frames.find((frame) => frame.id === 3)
+
+    const firstCaller = getCallerFrameContext(executionState, firstChild!)
+    const secondCaller = getCallerFrameContext(executionState, secondChild!)
+
+    expect(firstCaller?.frame.id).toBe(1)
+    expect(firstCaller?.details.locals).toEqual({ total: 0 })
+    expect(secondCaller?.frame.id).toBe(1)
+    expect(secondCaller?.details.locals).toEqual({ total: 1 })
   })
 
   it('leaves legacy traces available to the recursion-tree fallback', () => {

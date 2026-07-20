@@ -47,7 +47,7 @@ function createStep({
   }
 }
 
-const steps = [
+const steps: ExecutionState['steps'] = [
   createStep({
     frameId: 1,
     phase: 'enter',
@@ -99,6 +99,25 @@ const steps = [
     },
     visibleVariableNames: ['node', 'depth', 'childOnly', RETURN_VALUE_LABEL],
   }),
+  createStep({
+    frameId: 1,
+    phase: 'return',
+    variables: {
+      node: 'root',
+      depth: 0,
+      total: 1,
+      [RETURN_VALUE_LABEL]: 1,
+    },
+    visibleVariableNames: ['node', 'depth', 'total', RETURN_VALUE_LABEL],
+  }),
+  {
+    stepNumber: 6,
+    type: 'return',
+    line: 0,
+    description: 'Returned: 1',
+    variables: { result: 1 },
+    timestamp: 0,
+  },
 ]
 
 function createState(currentStep: number): ExecutionState {
@@ -132,6 +151,17 @@ describe('CallFrameInspector', () => {
     expect(parentDetails).toHaveTextContent(
       'Showing the last state observed before this frame was suspended.'
     )
+
+    fireEvent.click(childButton)
+
+    const callerContext = screen.getByRole('region', {
+      name: 'Caller context',
+    })
+    expect(callerContext).toHaveTextContent(
+      'State from dfs #1 immediately before this call.'
+    )
+    expect(callerContext).toHaveTextContent('total')
+    expect(callerContext).toHaveTextContent('0')
   })
 
   it('synchronizes selection when moving before a selected frame existed', () => {
@@ -181,5 +211,31 @@ describe('CallFrameInspector', () => {
       .closest('section')
     expect(returnSection).not.toBeNull()
     expect(within(returnSection!).getByText('1')).toBeInTheDocument()
+  })
+
+  it('keeps completed calls without repeating the Completed label', () => {
+    render(<CallFrameInspector executionState={createState(6)} />)
+
+    const guidance = screen.getByText('No active calls at this step.').closest(
+      'div'
+    )
+
+    expect(guidance).toHaveClass('border-primary/25', 'bg-primary/5')
+    expect(guidance).toHaveTextContent(
+      'Step backward to inspect an earlier call frame.'
+    )
+    expect(screen.getByText('Completed calls')).toBeInTheDocument()
+    expect(screen.queryByText('Completed')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /dfs #1/i })).toHaveClass(
+      'cursor-pointer'
+    )
+
+    const completedSection = screen
+      .getByText('Completed calls')
+      .closest('section')
+    const completedList = completedSection?.querySelector('.overflow-y-auto')
+
+    expect(completedSection).toHaveClass('lg:min-h-0', 'lg:flex-1')
+    expect(completedList).toHaveClass('lg:min-h-0', 'lg:flex-1')
   })
 })

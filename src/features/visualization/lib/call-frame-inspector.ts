@@ -46,6 +46,13 @@ export type CallFrameDetails = {
   returnLocation?: unknown
 }
 
+export type CallerFrameContext = {
+  /** Caller frame reconstructed immediately before the selected call started. */
+  frame: InspectedCallFrame
+  /** Caller values from that point in the timeline. */
+  details: CallFrameDetails
+}
+
 export type CallFrameInspectorState = {
   /** All invocations that have started by the selected step. */
   frames: InspectedCallFrame[]
@@ -156,6 +163,32 @@ export function getCallFrameDetails(
     ),
     returnValue: returnVariables?.[RETURN_VALUE_LABEL],
     returnLocation: returnVariables?.[RETURN_LOCATION_LABEL],
+  }
+}
+
+/** Reconstructs the parent frame immediately before a child invocation starts. */
+export function getCallerFrameContext(
+  executionState: ExecutionState,
+  frame: InspectedCallFrame
+): CallerFrameContext | undefined {
+  if (isUndefined(frame.parentId) || frame.startStepIndex === 0) {
+    return undefined
+  }
+
+  const stateBeforeCall: ExecutionState = {
+    ...executionState,
+    currentStep: frame.startStepIndex - 1,
+    isComplete: false,
+  }
+  const callerFrame = getCallFrameInspectorState(
+    stateBeforeCall
+  ).frames.find((candidate) => candidate.id === frame.parentId)
+
+  if (!callerFrame) return undefined
+
+  return {
+    frame: callerFrame,
+    details: getCallFrameDetails(executionState, callerFrame),
   }
 }
 
