@@ -4,6 +4,7 @@ import {
   isParamTypeBooleanArray,
   isParamTypeGraphNode,
   isParamTypeListNode,
+  isParamTypeListNodeArray,
   isParamTypeMatrix,
   isParamTypeNumber,
   isParamTypeNumberArray,
@@ -76,6 +77,19 @@ function parseGraphInput(value: unknown): GraphNodeValue | null {
   })
 
   return nodes[0] ?? null
+}
+
+function parseListNodeArrayInput(
+  value: unknown
+): ReturnType<typeof parseListInput>[] {
+  const parsed = isString(value) ? safeJsonParse(value, isArray) : null
+  const listValues = parsed?.valid
+    ? parsed.value
+    : isArray(value)
+      ? value
+      : []
+
+  return listValues.map(parseListInput)
 }
 
 /**
@@ -162,6 +176,7 @@ function convertParameterInput(
     return convertTreeInput(param, value, context)
   }
   if (isParamTypeListNode(param)) return parseListInput(value)
+  if (isParamTypeListNodeArray(param)) return parseListNodeArrayInput(value)
   if (isParamTypeGraphNode(param)) return parseGraphInput(value)
   return convertScalarInput(param, value)
 }

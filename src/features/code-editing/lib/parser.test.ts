@@ -85,6 +85,46 @@ function mergeTwoLists(
     expect(signature?.returnType).toBe('list-node')
   })
 
+  it('detects arrays of nullable ListNode values as list-node-array inputs', () => {
+    const signature = extractFunctionSignature(`
+function mergeKLists(lists: (ListNode | null)[]): ListNode | null {
+  return lists[0] ?? null
+}
+`)
+
+    expect(signature).not.toBeNull()
+    expect(signature?.parameters).toEqual([
+      { name: 'lists', type: 'list-node-array', optional: false },
+    ])
+    expect(signature?.returnType).toBe('list-node')
+  })
+
+  it('detects non-nullable ListNode arrays as list-node-array inputs', () => {
+    const signature = extractFunctionSignature(`
+function firstList(lists: ListNode[]): ListNode | null {
+  return lists[0] ?? null
+}
+`)
+
+    expect(signature?.parameters[0]?.type).toBe('list-node-array')
+  })
+
+  it('detects generic Array and ReadonlyArray ListNode inputs', () => {
+    const signature = extractFunctionSignature(`
+function inspectLists(
+  lists: Array<ListNode | null>,
+  readonlyLists: ReadonlyArray<ListNode>
+): number {
+  return lists.length + readonlyLists.length
+}
+`)
+
+    expect(signature?.parameters).toEqual([
+      { name: 'lists', type: 'list-node-array', optional: false },
+      { name: 'readonlyLists', type: 'list-node-array', optional: false },
+    ])
+  })
+
   it('detects _Node union parameters as graph-node inputs', () => {
     const signature = extractFunctionSignature(`
 function cloneGraph(node: _Node | null): _Node | null {

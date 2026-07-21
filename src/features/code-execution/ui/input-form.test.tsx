@@ -16,6 +16,14 @@ const listSignature: FunctionSignature = {
   returnType: 'list-node',
 }
 
+const listArraySignature: FunctionSignature = {
+  name: 'mergeKLists',
+  parameters: [
+    { name: 'lists', type: 'list-node-array', optional: false },
+  ],
+  returnType: 'list-node',
+}
+
 const binarySearchSignature: FunctionSignature = {
   name: 'binarySearch',
   parameters: [
@@ -172,6 +180,30 @@ describe('InputForm ListNode inputs', () => {
     }
     expect(listToArray(submitted.head)).toEqual([1, 2, 3])
     expect(submitted.head?.next?.next?.next).toBeNull()
+  })
+
+  it('submits each nested array as a linked list', async () => {
+    const handleSubmit = vi.fn()
+
+    render(<InputForm signature={listArraySignature} onSubmit={handleSubmit} />)
+
+    fireEvent.change(screen.getByLabelText(/lists/), {
+      target: { value: '[[1,4,5],[1,3,4],[2,6]]' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Run' }))
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledTimes(1)
+    })
+
+    const submitted = handleSubmit.mock.calls[0][0] as {
+      lists: (TestListNode | null)[]
+    }
+    expect(submitted.lists.map(listToArray)).toEqual([
+      [1, 4, 5],
+      [1, 3, 4],
+      [2, 6],
+    ])
   })
 
   it('submits variable-length string matrix rows', async () => {

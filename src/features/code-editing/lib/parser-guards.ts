@@ -18,16 +18,25 @@ import type {
   TSArrayType,
   TSParenthesizedType,
   TSTypeAnnotation,
+  TSTypeParameterInstantiation,
   TSTypeReference,
   TSUnionType,
   VariableDeclaration,
   VariableDeclarator,
 } from '@babel/types'
-import { define } from '@/shared/lib/guards'
+import {
+  and,
+  define,
+  equals,
+  oneOfValues,
+  predicateToRefine,
+  type Guard,
+} from '@/shared/lib/guards'
 
-const LIST_NODE_TYPE_NAME = 'ListNode'
-const TREE_NODE_TYPE_NAME = 'TreeNode'
-const GRAPH_NODE_TYPE_NAMES = new Set(['_Node', 'GraphNode'])
+const isListNodeTypeName = equals('ListNode')
+const isTreeNodeTypeName = equals('TreeNode')
+const isGraphNodeTypeName = oneOfValues('_Node', 'GraphNode')
+const isArrayTypeName = oneOfValues('Array', 'ReadonlyArray')
 
 /**
  * Function declaration with a guaranteed identifier.
@@ -46,6 +55,16 @@ export type TreeNodeTypeReference = TSTypeReference & {
 }
 
 /**
+ * Array or ReadonlyArray type reference with one element type argument.
+ */
+export type ArrayTypeReference = TSTypeReference & {
+  /** Referenced Array type name. */
+  typeName: Identifier
+  /** Single array element type. */
+  typeArguments: TSTypeParameterInstantiation
+}
+
+/**
  * Variable declarator for arrow functions assigned to identifiers.
  */
 export type ArrowFunctionVariableDeclarator = VariableDeclarator & {
@@ -53,6 +72,10 @@ export type ArrowFunctionVariableDeclarator = VariableDeclarator & {
   id: Identifier
   /** Arrow function initializer. */
   init: ArrowFunctionExpression
+}
+
+type NamedVariableDeclarator = VariableDeclarator & {
+  id: Identifier
 }
 
 export const isIdentifierNode = define<Identifier>((value) =>
@@ -85,6 +108,34 @@ const isTSTypeReferenceNode = define<TSTypeReference>(
     isBabelTSTypeReference(value as Node | null | undefined)
 )
 
+const hasIdentifierTypeName = (
+  value: TSTypeReference
+): value is TreeNodeTypeReference => isIdentifierNode(value.typeName)
+
+const isNamedTypeReferenceNode = and(
+  isTSTypeReferenceNode,
+  hasIdentifierTypeName
+)
+
+const hasTypeName = (isTypeName: Guard<string>) =>
+  predicateToRefine<TreeNodeTypeReference>((value) =>
+    isTypeName(value.typeName.name)
+  )
+
+const isArrayNamedTypeReference = and(
+  isNamedTypeReferenceNode,
+  hasTypeName(isArrayTypeName)
+)
+
+const hasSingleTypeArgument = (
+  value: TreeNodeTypeReference
+): value is ArrayTypeReference => value.typeArguments?.params.length === 1
+
+export const isArrayTypeReference = and(
+  isArrayNamedTypeReference,
+  hasSingleTypeArgument
+)
+
 export const isTSUnionTypeNode = define<TSUnionType>((value) =>
   isBabelTSUnionType(value as Node | null | undefined)
 )
@@ -97,56 +148,52 @@ export const isTypeAnnotationNode = define<TSTypeAnnotation>((value) =>
   isBabelTSTypeAnnotation(value as Node | null | undefined)
 )
 
-export const isTreeNodeTypeReference = define<TreeNodeTypeReference>(
-  (value) => {
-    return (
-      isTSTypeReferenceNode(value) &&
-      isIdentifierNode(value.typeName) &&
-      value.typeName.name === TREE_NODE_TYPE_NAME
-    )
-  }
+export const isTreeNodeTypeReference = and(
+  isNamedTypeReferenceNode,
+  hasTypeName(isTreeNodeTypeName)
 )
 
-export const isListNodeTypeReference = define<TreeNodeTypeReference>(
-  (value) => {
-    return (
-      isTSTypeReferenceNode(value) &&
-      isIdentifierNode(value.typeName) &&
-      value.typeName.name === LIST_NODE_TYPE_NAME
-    )
-  }
+export const isListNodeTypeReference = and(
+  isNamedTypeReferenceNode,
+  hasTypeName(isListNodeTypeName)
 )
 
-export const isGraphNodeTypeReference = define<TreeNodeTypeReference>(
-  (value) => {
-    return (
-      isTSTypeReferenceNode(value) &&
-      isIdentifierNode(value.typeName) &&
-      GRAPH_NODE_TYPE_NAMES.has(value.typeName.name)
-    )
-  }
+export const isGraphNodeTypeReference = and(
+  isNamedTypeReferenceNode,
+  hasTypeName(isGraphNodeTypeName)
 )
 
-export const isNamedFunctionDeclaration = define<NamedFunctionDeclaration>(
-  (value) => {
-    return isFunctionDeclarationNode(value) && isIdentifierNode(value.id)
-  }
+const hasFunctionName = (
+  value: FunctionDeclaration
+): value is NamedFunctionDeclaration => isIdentifierNode(value.id)
+
+export const isNamedFunctionDeclaration = and(
+  isFunctionDeclarationNode,
+  hasFunctionName
 )
 
-export const isArrowFunctionVariableDeclarator =
-  define<ArrowFunctionVariableDeclarator>((value) => {
-    return (
-      isVariableDeclaratorNode(value) &&
-      isIdentifierNode(value.id) &&
-      isArrowFunctionExpressionNode(value.init)
-    )
-  })
+const hasVariableName = (
+  value: VariableDeclarator
+): value is NamedVariableDeclarator => isIdentifierNode(value.id)
 
-export const isArrowFunctionVariableDeclaration = define<VariableDeclaration>(
-  (value) => {
-    return (
-      isVariableDeclarationNode(value) &&
-      value.declarations.some(isArrowFunctionVariableDeclarator)
-    )
-  }
+const isNamedVariableDeclarator = and(
+  isVariableDeclaratorNode,
+  hasVariableName
+)
+
+const hasArrowFunctionInitializer = (
+  value: NamedVariableDeclarator
+): value is ArrowFunctionVariableDeclarator =>
+  isArrowFunctionExpressionNode(value.init)
+
+export const isArrowFunctionVariableDeclarator = and(
+  isNamedVariableDeclarator,
+  hasArrowFunctionInitializer
+)
+
+export const isArrowFunctionVariableDeclaration = and(
+  isVariableDeclarationNode,
+  predicateToRefine<VariableDeclaration>((value) =>
+    value.declarations.some(isArrowFunctionVariableDeclarator)
+  )
 )

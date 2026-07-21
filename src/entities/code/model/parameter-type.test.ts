@@ -4,6 +4,7 @@ import type { FunctionParameter } from './types'
 import {
   isParamTypeArrayLike,
   isParamTypeListNode,
+  isParamTypeListNodeArray,
   isParamTypeMatrix,
   isParamTypeNumber,
   isParamTypeTreeNode,
@@ -20,11 +21,13 @@ describe('parameter type predicates', () => {
     expect(isParamTypeNumber(parameter('number'))).toBe(true)
     expect(isParamTypeTreeNode(parameter('tree-node'))).toBe(true)
     expect(isParamTypeListNode(parameter('tree-node'))).toBe(false)
+    expect(isParamTypeListNodeArray(parameter('list-node-array'))).toBe(true)
   })
 
   it('matches supported array and matrix groups', () => {
     expect(isParamTypeArrayLike(parameter('array'))).toBe(true)
     expect(isParamTypeArrayLike(parameter('boolean-array'))).toBe(true)
+    expect(isParamTypeArrayLike(parameter('list-node-array'))).toBe(true)
     expect(isParamTypeArrayLike(parameter('number-matrix'))).toBe(false)
     expect(isParamTypeMatrix(parameter('string-matrix'))).toBe(true)
     expect(isParamTypeMatrix(parameter('string-array'))).toBe(false)
