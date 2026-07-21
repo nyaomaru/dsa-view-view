@@ -28,6 +28,8 @@ export const isParamTypeBooleanMatrix = isParameterType('boolean-matrix')
 export const isParamTypeTreeNode = isParameterType('tree-node')
 /** Whether a parameter accepts a list node. */
 export const isParamTypeListNode = isParameterType('list-node')
+/** Whether a parameter accepts an array of list nodes. */
+export const isParamTypeListNodeArray = isParameterType('list-node-array')
 /** Whether a parameter accepts a graph node. */
 export const isParamTypeGraphNode = isParameterType('graph-node')
 
@@ -35,7 +37,8 @@ const isArrayType = oneOfValues(
   'array',
   'number-array',
   'string-array',
-  'boolean-array'
+  'boolean-array',
+  'list-node-array'
 )
 
 /** Whether a parameter accepts any supported array representation. */

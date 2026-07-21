@@ -5,6 +5,7 @@ import {
   isParamTypeBoolean,
   isParamTypeGraphNode,
   isParamTypeListNode,
+  isParamTypeListNodeArray,
   isParamTypeMatrix,
   isParamTypeNumber,
   isParamTypeTreeNode,
@@ -71,6 +72,8 @@ const getPlaceholder = (
         : 'e.g., 2'
     case 'list-node':
       return 'Node value'
+    case 'list-node-array':
+      return 'e.g., [[1,4,5],[1,3,4],[2,6]]'
     case 'graph-node':
       return 'e.g., [[2,4],[1,3],[2,4],[1,3]]'
     default:
@@ -82,6 +85,9 @@ const getHelperText = (
   param: FunctionParameter,
   primaryTreeParamName?: string
 ): string | null => {
+  if (isParamTypeListNodeArray(param)) {
+    return 'Enter each linked list as an array inside a JSON array.'
+  }
   if (isParamTypeArrayLike(param)) {
     return 'Enter a JSON array or values separated by commas'
   }
