@@ -41,6 +41,14 @@ const addDeclarationBindings = (
   )
 }
 
+const isInstrumentedFunctionBody = (
+  path: NodePath<t.BlockStatement>
+): boolean =>
+  path.parentPath.isFunctionDeclaration() ||
+  path.parentPath.isFunctionExpression() ||
+  path.parentPath.isArrowFunctionExpression() ||
+  path.parentPath.isClassMethod()
+
 export const createLoopVisitors = (context: InstrumentationContext) => ({
   WhileStatement: {
     enter(path: NodePath<t.WhileStatement>) {
@@ -130,8 +138,8 @@ export const createLoopVisitors = (context: InstrumentationContext) => ({
     enter() {
       context.pushScope()
     },
-    exit() {
-      context.popScope()
+    exit(path: NodePath<t.BlockStatement>) {
+      context.popScope(isInstrumentedFunctionBody(path))
     },
   },
 })

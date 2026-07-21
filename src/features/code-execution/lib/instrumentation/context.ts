@@ -28,8 +28,12 @@ export class InstrumentationContext {
     this.scopeStack.push([...getUniqueNames(names)])
   }
 
-  popScope(): void {
-    this.scopeStack.pop()
+  popScope(preserveVariablesInParent = false): void {
+    const variables = this.scopeStack.pop()
+
+    if (preserveVariablesInParent && variables) {
+      this.addVariablesToCurrentScope(variables)
+    }
   }
 
   addVariablesToCurrentScope(names: string[]): void {

@@ -11,7 +11,8 @@ function solve(depth: number): number[] {
 
   function dfs(current: number): void {
     if (current > 0) dfs(current - 1);
-    visits.push(current);
+    const total = current * 2;
+    visits.push(total);
   }
 
   dfs(depth);
@@ -23,7 +24,7 @@ function solve(depth: number): number[] {
     const state = executeCode(code, { depth: 2 }, 'solve')
 
     expect(state.error).toBeUndefined()
-    expect(state.returnValue).toEqual([0, 1, 2, 99])
+    expect(state.returnValue).toEqual([0, 2, 4, 99])
 
     const dfsEntries = state.steps.filter(
       (step) =>
@@ -46,6 +47,29 @@ function solve(depth: number): number[] {
     expect(
       dfsReturns.every((step) => step.metadata?.callFrame?.phase === 'return')
     ).toBe(true)
+    expect(
+      dfsReturns.map((step) => ({
+        current: step.variables.current,
+        total: step.variables.total,
+        visibleVariableNames: step.metadata?.callFrame?.visibleVariableNames,
+      }))
+    ).toEqual([
+      {
+        current: 0,
+        total: 0,
+        visibleVariableNames: expect.arrayContaining(['current', 'total']),
+      },
+      {
+        current: 1,
+        total: 2,
+        visibleVariableNames: expect.arrayContaining(['current', 'total']),
+      },
+      {
+        current: 2,
+        total: 4,
+        visibleVariableNames: expect.arrayContaining(['current', 'total']),
+      },
+    ])
 
     const mutationFrames = state.steps
       .filter((step) => step.description.startsWith('visits.push('))
