@@ -1,5 +1,6 @@
 import type { TSTypeAnnotation, TSType, TypeAnnotation } from '@babel/types'
 import {
+  isArrayTypeReference,
   isGraphNodeTypeReference,
   isListNodeTypeReference,
   isTreeNodeTypeReference,
@@ -19,6 +20,7 @@ const PARSED_TYPES = {
   booleanMatrix: 'boolean-matrix',
   graphNode: 'graph-node',
   listNode: 'list-node',
+  listNodeArray: 'list-node-array',
   null: 'null',
   number: 'number',
   numberArray: 'number-array',
@@ -42,6 +44,10 @@ function getArrayTypeName(elementType: TSType): string {
   if (elementType.type === 'TSStringKeyword') return PARSED_TYPES.stringArray
   if (elementType.type === 'TSBooleanKeyword') return PARSED_TYPES.booleanArray
 
+  if (getTypeFromTSType(elementType) === PARSED_TYPES.listNode) {
+    return PARSED_TYPES.listNodeArray
+  }
+
   return PARSED_TYPES.array
 }
 
@@ -64,6 +70,10 @@ function getTypeFromTSType(typeNode: TSType): string {
 
   if (isTSArrayTypeNode(typeNode)) {
     return getArrayTypeName(typeNode.elementType)
+  }
+
+  if (isArrayTypeReference(typeNode)) {
+    return getArrayTypeName(typeNode.typeArguments.params[0])
   }
 
   if (isTreeNodeTypeReference(typeNode)) {

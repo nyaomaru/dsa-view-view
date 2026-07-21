@@ -18,6 +18,7 @@ export {
   isParamTypeBooleanMatrix,
   isParamTypeGraphNode,
   isParamTypeListNode,
+  isParamTypeListNodeArray,
   isParamTypeMatrix,
   isParamTypeNumber,
   isParamTypeNumberArray,

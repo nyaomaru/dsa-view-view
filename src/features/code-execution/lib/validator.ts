@@ -3,10 +3,12 @@ import type { FunctionParameter } from '@/entities/code'
 import {
   arrayOf,
   isBoolean,
+  isNull,
   isNumber,
   isNumericString,
   isString,
   oneOfValues,
+  or,
   safeJsonParse,
 } from '@/shared/lib/guards'
 import { parseTypedArrayInput } from './typed-array-input'
@@ -14,6 +16,7 @@ import { parseTypedArrayInput } from './typed-array-input'
 const isNumberMatrix = arrayOf(arrayOf(isNumber))
 const isStringMatrix = arrayOf(arrayOf(isString))
 const isBooleanMatrix = arrayOf(arrayOf(isBoolean))
+const isListNodeArray = arrayOf(or(isNull, arrayOf(isNumber)))
 const isBooleanLiteral = oneOfValues('true', 'false')
 
 /**
@@ -121,6 +124,15 @@ export function typeToZodSchema(
       break
     case 'list-node':
       schema = z.any()
+      break
+    case 'list-node-array':
+      schema = z.string().refine(
+        (val) => safeJsonParse(val, isListNodeArray).valid,
+        {
+          message:
+            'Must be a JSON array of linked lists (e.g., [[1,4,5],[1,3,4],[2,6]])',
+        }
+      )
       break
     case 'graph-node':
       schema = z.string().refine(

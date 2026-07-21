@@ -187,4 +187,85 @@ function mergeTwoLists(
       1, 1, 2, 3, 4, 4,
     ])
   })
+
+  it('executes mergeKLists with an array of generated linked lists', () => {
+    const code = `
+function mergeKLists(lists: (ListNode | null)[]): ListNode | null {
+  if (!lists.length) return null
+
+  const heap: ListNode[] = []
+  const push = (node: ListNode) => {
+    heap.push(node)
+    bubbleUp(heap.length - 1)
+  }
+
+  const pop = (): ListNode | undefined => {
+    if (heap.length === 0) return undefined
+    const min = heap[0]
+    const last = heap.pop()
+    if (heap.length > 0) {
+      heap[0] = last
+      bubbleDown(0)
+    }
+    return min
+  }
+
+  const bubbleUp = (index: number) => {
+    while (index > 0) {
+      const parent = Math.floor((index - 1) / 2)
+      if (heap[parent].val <= heap[index].val) break
+      ;[heap[parent], heap[index]] = [heap[index], heap[parent]]
+      index = parent
+    }
+  }
+
+  const bubbleDown = (index: number) => {
+    const n = heap.length
+    while (true) {
+      let smallest = index
+      const left = 2 * index + 1
+      const right = 2 * index + 2
+      if (left < n && heap[left].val < heap[smallest].val) smallest = left
+      if (right < n && heap[right].val < heap[smallest].val) smallest = right
+      if (smallest === index) break
+      ;[heap[index], heap[smallest]] = [heap[smallest], heap[index]]
+      index = smallest
+    }
+  }
+
+  for (const node of lists) {
+    if (node) push(node)
+  }
+
+  const dummy = new ListNode()
+  let current = dummy
+  while (heap.length > 0) {
+    const minNode = pop()!
+    current.next = minNode
+    current = current.next
+    if (minNode.next) push(minNode.next)
+  }
+
+  return dummy.next
+}
+`
+
+    const inputs = convertInputValues(
+      [{ name: 'lists', type: 'list-node-array', optional: false }],
+      { lists: '[[1,4,5],[1,3,4],[2,6]]' }
+    ) as { lists: (TestListNode | null)[] }
+
+    expect(inputs.lists.map(listToArray)).toEqual([
+      [1, 4, 5],
+      [1, 3, 4],
+      [2, 6],
+    ])
+
+    const state = executeCode(code, inputs, 'mergeKLists')
+
+    expect(state.error).toBeUndefined()
+    expect(listToArray(state.returnValue as TestListNode | null)).toEqual([
+      1, 1, 2, 3, 4, 4, 5, 6,
+    ])
+  })
 })

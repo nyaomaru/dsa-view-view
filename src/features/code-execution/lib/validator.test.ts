@@ -96,4 +96,26 @@ describe('input validation', () => {
       success: true,
     })
   })
+
+  it('validates arrays of nullable linked-list inputs', () => {
+    const parameters: FunctionParameter[] = [
+      { name: 'lists', type: 'list-node-array', optional: false },
+    ]
+
+    expect(
+      validateInputs(parameters, {
+        lists: '[[1,4,5],null,[],[1,3,4],[2,6]]',
+      })
+    ).toEqual({ success: true })
+
+    expect(
+      validateInputs(parameters, { lists: '[[1,4],"not-a-list"]' })
+    ).toEqual({
+      success: false,
+      errors: {
+        lists:
+          'Must be a JSON array of linked lists (e.g., [[1,4,5],[1,3,4],[2,6]])',
+      },
+    })
+  })
 })
