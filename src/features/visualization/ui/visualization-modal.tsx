@@ -187,6 +187,7 @@ export function VisualizationModal({
       : targetVariable
   const hasCallFrames =
     !isClassDesignTrace && hasCallFrameMetadata(executionState)
+  const showsCallFrameInspector = type === 'tree' && hasCallFrames
   const title = getVisualizationTitle({
     type,
     targetVariable,
@@ -223,7 +224,7 @@ export function VisualizationModal({
         <div
           className={cn(
             'py-4 flex-1 min-h-0 overflow-y-auto overscroll-contain',
-            hasCallFrames && 'lg:overflow-hidden',
+            showsCallFrameInspector && 'lg:overflow-hidden',
             (type === 'matrix' ||
               type === 'expression' ||
               type === 'list-graph' ||
