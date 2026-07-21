@@ -4,6 +4,61 @@ import { FUNCTION_ARGUMENTS_LABEL } from '@/entities/execution'
 import { executeCode } from './runner'
 
 describe('runner - recursive frame snapshots', () => {
+  it('unwinds recursive frames when helpers return by falling through', () => {
+    const code = `
+function solve(depth: number): number[] {
+  const visits: number[] = [];
+
+  function dfs(current: number): void {
+    if (current > 0) dfs(current - 1);
+    visits.push(current);
+  }
+
+  dfs(depth);
+  visits.push(99);
+  return visits;
+}
+`
+
+    const state = executeCode(code, { depth: 2 }, 'solve')
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([0, 1, 2, 99])
+
+    const dfsEntries = state.steps.filter(
+      (step) =>
+        step.type === 'function-entry' &&
+        step.metadata?.callFrame?.functionName === 'dfs'
+    )
+    const dfsFrameIds = dfsEntries.map(
+      (step) => step.metadata?.callFrame?.frameId
+    )
+    const dfsReturns = state.steps.filter(
+      (step) =>
+        step.type === 'return' &&
+        step.metadata?.callFrame?.functionName === 'dfs'
+    )
+
+    expect(dfsReturns).toHaveLength(dfsEntries.length)
+    expect(dfsReturns.map((step) => step.metadata?.callFrame?.frameId)).toEqual(
+      [...dfsFrameIds].reverse()
+    )
+    expect(
+      dfsReturns.every((step) => step.metadata?.callFrame?.phase === 'return')
+    ).toBe(true)
+
+    const mutationFrames = state.steps
+      .filter((step) => step.description.startsWith('visits.push('))
+      .map((step) => step.metadata?.callFrame)
+
+    expect(mutationFrames.map((frame) => frame?.frameId)).toEqual([
+      dfsFrameIds[2],
+      dfsFrameIds[1],
+      dfsFrameIds[0],
+      dfsEntries[0]?.metadata?.callFrame?.parentFrameId,
+    ])
+  })
+
   it('keeps DFS arguments and resumed locals isolated for each invocation', () => {
     const code = `
 type TreeNode = {
