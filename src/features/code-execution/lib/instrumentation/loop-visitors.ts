@@ -47,6 +47,7 @@ const isInstrumentedFunctionBody = (
   path.parentPath.isFunctionDeclaration() ||
   path.parentPath.isFunctionExpression() ||
   path.parentPath.isArrowFunctionExpression() ||
+  path.parentPath.isObjectMethod() ||
   path.parentPath.isClassMethod()
 
 export const createLoopVisitors = (context: InstrumentationContext) => ({

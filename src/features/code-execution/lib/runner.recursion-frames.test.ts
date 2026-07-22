@@ -4,6 +4,70 @@ import { FUNCTION_ARGUMENTS_LABEL } from '@/entities/execution'
 import { executeCode } from './runner'
 
 describe('runner - recursive frame snapshots', () => {
+  it('tracks object-method returns without completing the caller frame', () => {
+    const code = `
+function solve(): number {
+  const helper = {
+    getValue() {
+      const value = 1;
+      return value;
+    },
+  };
+  const result = helper.getValue();
+  const after = result + 1;
+  return after;
+}
+`
+
+    const state = executeCode(code, {}, 'solve')
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(2)
+
+    const solveEntry = state.steps.find(
+      (step) =>
+        step.type === 'function-entry' &&
+        step.metadata?.callFrame?.functionName === 'solve'
+    )
+    const methodEntry = state.steps.find(
+      (step) =>
+        step.type === 'function-entry' &&
+        step.metadata?.callFrame?.functionName === 'getValue'
+    )
+    const methodReturn = state.steps.find(
+      (step) =>
+        step.type === 'return' &&
+        step.metadata?.callFrame?.functionName === 'getValue'
+    )
+
+    expect(methodEntry?.metadata?.callFrame).toEqual(
+      expect.objectContaining({
+        parentFrameId: solveEntry?.metadata?.callFrame?.frameId,
+        phase: 'enter',
+      })
+    )
+    expect(methodReturn?.metadata?.callFrame).toEqual(
+      expect.objectContaining({
+        frameId: methodEntry?.metadata?.callFrame?.frameId,
+        phase: 'return',
+      })
+    )
+
+    const callerStepsAfterMethod = state.steps.filter(
+      (step) =>
+        step.type === 'variable-declaration' &&
+        (step.description.startsWith('const result =') ||
+          step.description.startsWith('const after ='))
+    )
+
+    expect(
+      callerStepsAfterMethod.map((step) => step.metadata?.callFrame?.frameId)
+    ).toEqual([
+      solveEntry?.metadata?.callFrame?.frameId,
+      solveEntry?.metadata?.callFrame?.frameId,
+    ])
+  })
+
   it('unwinds recursive frames when helpers return by falling through', () => {
     const code = `
 function solve(depth: number): number[] {
