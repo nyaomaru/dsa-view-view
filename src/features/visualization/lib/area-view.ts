@@ -177,6 +177,32 @@ function matchesHistogramSpan({
   return matchesStackBoundary && matchesWidth && width > 0
 }
 
+function resolveHistogramCurrentIndex(
+  data: number[],
+  variables: Record<string, unknown>,
+  stackIndices: number[]
+): number | null {
+  const rectangleVariables = readHistogramRectangleVariables(variables)
+  const finalFlushIndex = data.length
+  const stackTop = stackIndices[stackIndices.length - 1] ?? -1
+  const isFinalFlushRectangle =
+    !isNull(rectangleVariables) &&
+    matchesPoppedBar(data, rectangleVariables) &&
+    matchesHistogramSpan({
+      rectangleVariables,
+      currentIndex: finalFlushIndex,
+      stackTop,
+    })
+
+  if (isFinalFlushRectangle) return finalFlushIndex
+
+  const currentIndex = variables.i
+  if (!isInteger(currentIndex)) return null
+  if (currentIndex < 0 || currentIndex > data.length) return null
+
+  return currentIndex
+}
+
 function getHistogramRectangle(
   data: number[],
   variables: Record<string, unknown>,
@@ -219,23 +245,22 @@ export function getHistogramPointerState(
   data: number[],
   variables: Record<string, unknown>
 ): HistogramPointerState | null {
-  const currentIndex = variables.i
   const rawStack = variables.stack
   const bestArea = readNumberVariable(variables, ['ans', 'maxArea'])
 
-  if (
-    !isInteger(currentIndex) ||
-    !isIntegerArray(rawStack) ||
-    isUndefined(bestArea) ||
-    currentIndex < 0 ||
-    currentIndex > data.length ||
-    data.some((height) => height < 0) ||
-    rawStack.some((index) => index < 0 || index >= data.length)
-  ) {
-    return null
-  }
+  if (!isIntegerArray(rawStack)) return null
+  if (isUndefined(bestArea)) return null
+  if (data.some((height) => height < 0)) return null
+  if (rawStack.some((index) => index < 0 || index >= data.length)) return null
 
   const stackIndices = [...rawStack]
+  const currentIndex = resolveHistogramCurrentIndex(
+    data,
+    variables,
+    stackIndices
+  )
+  if (isNull(currentIndex)) return null
+
   const isMonotonic = stackIndices.every((index, position) => {
     if (index > currentIndex) return false
     if (position === 0) return true

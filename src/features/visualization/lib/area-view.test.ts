@@ -83,6 +83,41 @@ describe('histogram area view', () => {
     })
   })
 
+  it('derives a final-flush cursor when the loop index is unavailable or stale', () => {
+    const flushVariables = {
+      stack: [],
+      ans: 3,
+      mid: 1,
+      h: 1,
+      leftSmallIndex: -1,
+      width: 3,
+    }
+    const expectedState = {
+      mode: 'histogram',
+      currentIndex: 3,
+      stackIndices: [],
+      bestArea: 3,
+      rectangle: {
+        poppedIndex: 1,
+        leftIndex: 0,
+        rightIndex: 2,
+        height: 1,
+        width: 3,
+        area: 3,
+      },
+    }
+
+    expect(getHistogramPointerState([2, 1, 2], flushVariables)).toEqual(
+      expectedState
+    )
+    expect(
+      getHistogramPointerState([2, 1, 2], {
+        ...flushVariables,
+        i: 2,
+      })
+    ).toEqual(expectedState)
+  })
+
   it('still rejects out-of-range stack entries during a final flush', () => {
     expect(
       getHistogramPointerState([2, 1, 2], {
@@ -116,7 +151,6 @@ describe('histogram area view', () => {
           variables: {
             heights,
             stack: [],
-            i: heights.length,
             ans: 3,
             mid: 1,
             h: 1,
@@ -133,7 +167,6 @@ describe('histogram area view', () => {
           variables: {
             heights,
             stack: [],
-            i: heights.length,
             ans: 3,
           },
           timestamp: 2,
