@@ -129,32 +129,76 @@ function readNumberVariable(
   return undefined
 }
 
+type HistogramRectangleVariables = {
+  poppedIndex: number
+  height: number
+  leftSmallIndex: number
+  width: number
+}
+
+function readHistogramRectangleVariables(
+  variables: Record<string, unknown>
+): HistogramRectangleVariables | null {
+  const poppedIndex = variables.mid
+  const height = variables.h
+  const leftSmallIndex = variables.leftSmallIndex
+  const width = variables.width
+
+  if (!isInteger(poppedIndex)) return null
+  if (!isNumber(height)) return null
+  if (!isInteger(leftSmallIndex)) return null
+  if (!isInteger(width)) return null
+
+  return { poppedIndex, height, leftSmallIndex, width }
+}
+
+function matchesPoppedBar(
+  data: number[],
+  { poppedIndex, height }: HistogramRectangleVariables
+): boolean {
+  const isInBounds = poppedIndex >= 0 && poppedIndex < data.length
+  return isInBounds && height === data[poppedIndex]
+}
+
+function matchesHistogramSpan({
+  rectangleVariables,
+  currentIndex,
+  stackTop,
+}: {
+  rectangleVariables: HistogramRectangleVariables
+  currentIndex: number
+  stackTop: number
+}): boolean {
+  const { leftSmallIndex, width } = rectangleVariables
+  const expectedWidth = currentIndex - leftSmallIndex - 1
+  const matchesStackBoundary = leftSmallIndex === stackTop
+  const matchesWidth = width === expectedWidth
+
+  return matchesStackBoundary && matchesWidth && width > 0
+}
+
 function getHistogramRectangle(
   data: number[],
   variables: Record<string, unknown>,
   currentIndex: number,
   stackIndices: number[]
 ): HistogramRectangle | undefined {
-  const poppedIndex = variables.mid
-  const height = variables.h
-  const leftSmallIndex = variables.leftSmallIndex
-  const width = variables.width
-  const stackTop = stackIndices[stackIndices.length - 1] ?? -1
+  const rectangleVariables = readHistogramRectangleVariables(variables)
+  if (isNull(rectangleVariables)) return undefined
 
+  const stackTop = stackIndices[stackIndices.length - 1] ?? -1
+  if (!matchesPoppedBar(data, rectangleVariables)) return undefined
   if (
-    !isInteger(poppedIndex) ||
-    !isNumber(height) ||
-    !isInteger(leftSmallIndex) ||
-    !isInteger(width) ||
-    poppedIndex < 0 ||
-    poppedIndex >= data.length ||
-    height !== data[poppedIndex] ||
-    leftSmallIndex !== stackTop ||
-    width !== currentIndex - leftSmallIndex - 1 ||
-    width <= 0
+    !matchesHistogramSpan({
+      rectangleVariables,
+      currentIndex,
+      stackTop,
+    })
   ) {
     return undefined
   }
+
+  const { poppedIndex, height, leftSmallIndex, width } = rectangleVariables
 
   const leftIndex = leftSmallIndex + 1
   const rightIndex = currentIndex - 1
@@ -184,7 +228,7 @@ export function getHistogramPointerState(
     !isIntegerArray(rawStack) ||
     isUndefined(bestArea) ||
     currentIndex < 0 ||
-    currentIndex >= data.length ||
+    currentIndex > data.length ||
     data.some((height) => height < 0) ||
     rawStack.some((index) => index < 0 || index >= data.length)
   ) {
