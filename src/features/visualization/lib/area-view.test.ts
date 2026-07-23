@@ -36,6 +36,52 @@ describe('histogram area view', () => {
     })
   })
 
+  it('accepts a leading -1 stack sentinel as a histogram boundary', () => {
+    const data = [2, 1, 2]
+    const variables = {
+      i: 1,
+      stack: [-1],
+      ans: 2,
+      mid: 0,
+      h: 2,
+      leftSmallIndex: -1,
+      width: 1,
+    }
+
+    expect(getHistogramPointerState(data, variables)).toEqual({
+      mode: 'histogram',
+      currentIndex: 1,
+      stackIndices: [-1],
+      bestArea: 2,
+      rectangle: {
+        poppedIndex: 0,
+        leftIndex: 0,
+        rightIndex: 0,
+        height: 2,
+        width: 1,
+        area: 2,
+      },
+    })
+    expect(isHistogramAreaCandidate('heights', data, variables)).toBe(true)
+  })
+
+  it('rejects invalid or misplaced negative stack indexes', () => {
+    const variables = { i: 1, ans: 0 }
+
+    expect(
+      getHistogramPointerState([2, 1, 2], {
+        ...variables,
+        stack: [-2],
+      })
+    ).toBeNull()
+    expect(
+      getHistogramPointerState([2, 1, 2], {
+        ...variables,
+        stack: [0, -1],
+      })
+    ).toBeNull()
+  })
+
   it('rejects stale rectangle locals while keeping valid stack state', () => {
     expect(
       getHistogramPointerState([2, 1, 5, 6, 2, 3, 0], {

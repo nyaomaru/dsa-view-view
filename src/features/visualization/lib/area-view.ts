@@ -18,6 +18,7 @@ const isHistogramVariableName = oneOfValues(
   'hs'
 )
 const isIntegerArray = arrayOf(isInteger)
+const HISTOGRAM_STACK_SENTINEL = -1
 
 /** Pointer-derived area metrics for a two-pointer execution step. */
 export type AreaPointerState = {
@@ -77,7 +78,7 @@ export type HistogramPointerState = {
   mode: 'histogram'
   /** Index currently being processed. */
   currentIndex: number
-  /** Bar indexes currently held by the monotonic stack. */
+  /** Bar indexes currently held by the monotonic stack, optionally prefixed by -1. */
   stackIndices: number[]
   /** Best rectangle area recorded by the algorithm. */
   bestArea: number
@@ -240,6 +241,35 @@ function getHistogramRectangle(
   }
 }
 
+function isValidHistogramStackIndex(
+  index: number,
+  dataLength: number
+): boolean {
+  return (
+    index === HISTOGRAM_STACK_SENTINEL || (index >= 0 && index < dataLength)
+  )
+}
+
+function isMonotonicHistogramStack(
+  data: number[],
+  stackIndices: number[],
+  currentIndex: number
+): boolean {
+  return stackIndices.every((index, position) => {
+    if (index === HISTOGRAM_STACK_SENTINEL) return position === 0
+    if (index > currentIndex) return false
+    if (position === 0) return true
+
+    const previousIndex = stackIndices[position - 1]
+    const followsPreviousIndex = previousIndex < index
+    const followsPreviousHeight =
+      previousIndex === HISTOGRAM_STACK_SENTINEL ||
+      data[previousIndex] <= data[index]
+
+    return followsPreviousIndex && followsPreviousHeight
+  })
+}
+
 /** Derives monotonic-stack state for largest-rectangle-in-histogram code. */
 export function getHistogramPointerState(
   data: number[],
@@ -251,7 +281,11 @@ export function getHistogramPointerState(
   if (!isIntegerArray(rawStack)) return null
   if (isUndefined(bestArea)) return null
   if (data.some((height) => height < 0)) return null
-  if (rawStack.some((index) => index < 0 || index >= data.length)) return null
+  if (
+    rawStack.some((index) => !isValidHistogramStackIndex(index, data.length))
+  ) {
+    return null
+  }
 
   const stackIndices = [...rawStack]
   const currentIndex = resolveHistogramCurrentIndex(
@@ -261,14 +295,7 @@ export function getHistogramPointerState(
   )
   if (isNull(currentIndex)) return null
 
-  const isMonotonic = stackIndices.every((index, position) => {
-    if (index > currentIndex) return false
-    if (position === 0) return true
-
-    const previousIndex = stackIndices[position - 1]
-    return previousIndex < index && data[previousIndex] <= data[index]
-  })
-  if (!isMonotonic) return null
+  if (!isMonotonicHistogramStack(data, stackIndices, currentIndex)) return null
 
   return {
     mode: 'histogram',
