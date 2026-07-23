@@ -773,14 +773,7 @@ describe('external algorithms use cases', () => {
     expect(state.error).toBeUndefined()
     expect(state.returnValue).toBe(10)
 
-    const currentStep = state.steps.findIndex(
-      (step) =>
-        step.description.startsWith('ans = Math.max') &&
-        step.variables.i === 4 &&
-        step.variables.mid === 2
-    )
-    expect(currentStep).toBeGreaterThanOrEqual(0)
-    renderVisualizer(completeAtStep(state, currentStep))
+    renderVisualizer(completeAtStep(state, state.steps.length - 1))
 
     fireEvent.click(screen.getByText('Area View'))
 
@@ -792,6 +785,7 @@ describe('external algorithms use cases', () => {
     ).toBeInTheDocument()
     expect(screen.getByText('stack=[1]')).toBeInTheDocument()
     expect(screen.getByText('area=10')).toBeInTheDocument()
+    expect(screen.getByText('best=10')).toBeInTheDocument()
   })
 
   it('runs integer square root and shows only the return value view', () => {

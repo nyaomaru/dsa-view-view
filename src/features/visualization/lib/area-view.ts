@@ -387,6 +387,53 @@ export function getBestAreaPointerState(
 }
 
 /**
+ * Finds the highest recorded histogram result through a target step.
+ *
+ * When multiple snapshots have the same best area, the snapshot that shows
+ * the rectangle producing that area is preferred over a later stack-only step.
+ */
+export function getBestHistogramPointerState(
+  executionState: ExecutionState,
+  variableName: string,
+  targetStepIndex?: number
+): HistogramPointerState | null {
+  const endStepIndex = Math.min(
+    targetStepIndex ?? executionState.currentStep,
+    executionState.steps.length - 1
+  )
+  let bestState: HistogramPointerState | null = null
+
+  for (let index = 0; index <= endStepIndex; index += 1) {
+    const step = executionState.steps[index]
+    const data = step?.variables[variableName]
+
+    if (!isNumericArray(data)) continue
+
+    const histogramState = getHistogramPointerState(
+      data.map(Number),
+      step.variables
+    )
+    if (isNull(histogramState)) continue
+
+    const showsBestRectangle =
+      histogramState.rectangle?.area === histogramState.bestArea
+    const previousShowsBestRectangle =
+      bestState?.rectangle?.area === bestState?.bestArea
+
+    if (
+      isNull(bestState) ||
+      histogramState.bestArea > bestState.bestArea ||
+      (histogramState.bestArea === bestState.bestArea &&
+        (showsBestRectangle || !previousShowsBestRectangle))
+    ) {
+      bestState = histogramState
+    }
+  }
+
+  return bestState
+}
+
+/**
  * Resolves the data and pointer state displayed by the area visualization.
  *
  * @param options Execution state, source variable name, and optional target step.
@@ -426,6 +473,19 @@ export function getAreaVisualizationState({
   if (!isNumericArray(data)) return null
 
   const numericData = data.map(Number)
+  const shouldUseBestAreaState =
+    executionState.isComplete || currentStep?.type === 'return'
+  const bestHistogramState = shouldUseBestAreaState
+    ? getBestHistogramPointerState(
+        executionState,
+        variableName,
+        executionState.currentStep
+      )
+    : null
+  if (!isNull(bestHistogramState)) {
+    return { data: numericData, areaState: bestHistogramState }
+  }
+
   const histogramState = areaStep
     ? getHistogramPointerState(numericData, areaStep.variables)
     : null
@@ -440,8 +500,6 @@ export function getAreaVisualizationState({
     return { data: numericData, areaState: rainWaterState }
   }
 
-  const shouldUseBestAreaState =
-    executionState.isComplete || currentStep?.type === 'return'
   const areaState = shouldUseBestAreaState
     ? getBestAreaPointerState(
         executionState,
