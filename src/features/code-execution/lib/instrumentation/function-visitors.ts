@@ -2,12 +2,48 @@ import { type NodePath } from '@babel/traverse'
 import * as t from '@babel/types'
 
 import {
+  RETURN_LOCATION_LABEL,
+  RETURN_VALUE_LABEL,
+  STEP_TYPES,
+} from '@/entities/execution'
+import {
   isSkippedArrayCallback,
   skipArrayCallbackTraversal,
 } from './array-methods'
 import { getLineNumber } from './ast-utils'
 import { getParameterNames } from './binding-names'
 import { InstrumentationContext } from './context'
+import { createRecordStepStatement } from './step-factory'
+
+const getMethodName = (method: t.ClassMethod | t.ObjectMethod): string =>
+  t.isIdentifier(method.key) ? method.key.name : 'method'
+
+const addImplicitReturnStep = (
+  context: InstrumentationContext,
+  body: t.BlockStatement,
+  functionName: string,
+  line: number
+): void => {
+  const returnLocation = `${functionName} line ${line}`
+
+  body.body.push(
+    createRecordStepStatement(
+      STEP_TYPES.RETURN,
+      line,
+      `implicit return from ${returnLocation}: undefined`,
+      context.createScopeProperties([
+        t.objectProperty(
+          t.stringLiteral(RETURN_VALUE_LABEL),
+          t.identifier('undefined')
+        ),
+        t.objectProperty(
+          t.stringLiteral(RETURN_LOCATION_LABEL),
+          t.stringLiteral(returnLocation)
+        ),
+      ])
+    )
+  )
+}
 
 export const createFunctionVisitors = (context: InstrumentationContext) => ({
   FunctionDeclaration: {
@@ -21,7 +57,14 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
         getParameterNames(path.node.params)
       )
     },
-    exit() {
+    exit(path: NodePath<t.FunctionDeclaration>) {
+      const functionName = path.node.id?.name ?? 'anonymous'
+      addImplicitReturnStep(
+        context,
+        path.node.body,
+        functionName,
+        path.node.loc?.end.line ?? getLineNumber(path.node)
+      )
       context.exitFunction()
     },
   },
@@ -46,6 +89,12 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
       if (context.isInstrumented(path.node) || isSkippedArrayCallback(path)) {
         return
       }
+      addImplicitReturnStep(
+        context,
+        path.node.body,
+        'anonymous function',
+        path.node.loc?.end.line ?? getLineNumber(path.node)
+      )
       context.exitFunction()
     },
   },
@@ -75,15 +124,42 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
       if (context.isInstrumented(path.node) || isSkippedArrayCallback(path)) {
         return
       }
+      addImplicitReturnStep(
+        context,
+        path.node.body as t.BlockStatement,
+        'arrow function',
+        path.node.loc?.end.line ?? getLineNumber(path.node)
+      )
+      context.exitFunction()
+    },
+  },
+
+  ObjectMethod: {
+    enter(path: NodePath<t.ObjectMethod>) {
+      const methodName = getMethodName(path.node)
+      context.enterFunction(
+        path.node.body,
+        methodName,
+        getLineNumber(path.node),
+        `Entering method: ${methodName}`,
+        getParameterNames(path.node.params)
+      )
+    },
+    exit(path: NodePath<t.ObjectMethod>) {
+      const methodName = getMethodName(path.node)
+      addImplicitReturnStep(
+        context,
+        path.node.body,
+        methodName,
+        path.node.loc?.end.line ?? getLineNumber(path.node)
+      )
       context.exitFunction()
     },
   },
 
   ClassMethod: {
     enter(path: NodePath<t.ClassMethod>) {
-      const methodName = t.isIdentifier(path.node.key)
-        ? path.node.key.name
-        : 'method'
+      const methodName = getMethodName(path.node)
       const classNode = path.parentPath.parentPath?.node
       const isDerivedConstructor =
         path.node.kind === 'constructor' &&
@@ -100,7 +176,14 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
         !isDerivedConstructor
       )
     },
-    exit() {
+    exit(path: NodePath<t.ClassMethod>) {
+      const methodName = getMethodName(path.node)
+      addImplicitReturnStep(
+        context,
+        path.node.body,
+        methodName,
+        path.node.loc?.end.line ?? getLineNumber(path.node)
+      )
       context.exitFunction()
     },
   },

@@ -3,6 +3,7 @@ import * as t from '@babel/types'
 import {
   CLASS_RECEIVER_LABEL,
   FUNCTION_ARGUMENTS_LABEL,
+  FUNCTION_NAME_LABEL,
   STEP_TYPES,
 } from '@/entities/execution'
 import { getUniqueNames } from './binding-names'
@@ -27,8 +28,12 @@ export class InstrumentationContext {
     this.scopeStack.push([...getUniqueNames(names)])
   }
 
-  popScope(): void {
-    this.scopeStack.pop()
+  popScope(preserveVariablesInParent = false): void {
+    const variables = this.scopeStack.pop()
+
+    if (preserveVariablesInParent && variables) {
+      this.addVariablesToCurrentScope(variables)
+    }
   }
 
   addVariablesToCurrentScope(names: string[]): void {
@@ -79,6 +84,10 @@ export class InstrumentationContext {
         line,
         description,
         this.createScopeProperties([
+          t.objectProperty(
+            t.stringLiteral(FUNCTION_NAME_LABEL),
+            t.stringLiteral(functionName)
+          ),
           t.objectProperty(
             t.stringLiteral(FUNCTION_ARGUMENTS_LABEL),
             t.objectExpression(

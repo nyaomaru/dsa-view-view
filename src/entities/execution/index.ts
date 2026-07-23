@@ -1,5 +1,6 @@
 export {
   FUNCTION_ARGUMENTS_LABEL,
+  FUNCTION_NAME_LABEL,
   CLASS_RECEIVER_LABEL,
   RETURN_LOCATION_LABEL,
   RETURN_VALUE_LABEL,
@@ -8,6 +9,8 @@ export {
 export type {
   ExecutionState,
   ExecutionStep,
+  CallFramePhase,
+  CallFrameStepMetadata,
   HeapKind,
   HeapSnapshot,
   HeapTraceSnapshot,

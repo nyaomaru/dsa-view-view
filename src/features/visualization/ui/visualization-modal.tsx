@@ -17,6 +17,7 @@ import { Grid3X3 } from 'lucide-react'
 import { PlaybackControls } from './playback-controls'
 import { ReturnValueCard } from './return-value-card'
 import type { VisualizationType } from '../model/types'
+import { hasCallFrameMetadata } from '../lib/call-frame-inspector'
 
 /**
  * Props for VisualizationModal component
@@ -57,6 +58,7 @@ function getVisualizationTitle({
   targetVariable,
   treeGraphDisplayName,
   isClassDesignTrace,
+  hasCallFrames,
 }: {
   /** Type of visualization title to render. */
   type: VisualizationType
@@ -66,6 +68,8 @@ function getVisualizationTitle({
   treeGraphDisplayName?: string
   /** Whether tree visualization represents class-design operation calls. */
   isClassDesignTrace: boolean
+  /** Whether the trace supports per-invocation call-frame inspection. */
+  hasCallFrames: boolean
 }): ReactNode {
   switch (type) {
     case 'expression':
@@ -73,7 +77,11 @@ function getVisualizationTitle({
     case 'stack':
       return `Stack Visualization: ${targetVariable}`
     case 'tree':
-      return isClassDesignTrace ? 'Call Stack View' : 'Recursion Tree'
+      return isClassDesignTrace
+        ? 'Call Stack View'
+        : hasCallFrames
+          ? 'Call Frame Inspector'
+          : 'Recursion Tree'
     case 'tree-graph':
       return `Tree Graph: ${treeGraphDisplayName}`
     case 'list-graph':
@@ -110,7 +118,8 @@ function getVisualizationTitle({
 
 function getVisualizationDescription(
   type: VisualizationType,
-  isClassDesignTrace: boolean
+  isClassDesignTrace: boolean,
+  hasCallFrames: boolean
 ): string {
   switch (type) {
     case 'expression':
@@ -120,7 +129,9 @@ function getVisualizationDescription(
     case 'tree':
       return isClassDesignTrace
         ? 'Visualize class operation calls as a tree.'
-        : 'Visualize recursion call stack as a tree.'
+        : hasCallFrames
+          ? 'Inspect recursive call frames, parameters, local variables, and return values.'
+          : 'Visualize recursion call stack as a tree.'
     case 'tree-graph':
       return 'Visualize binary tree node structure as a graph.'
     case 'list-graph':
@@ -174,13 +185,21 @@ export function VisualizationModal({
     isTreeNodeShape(executionState.returnValue)
       ? RETURN_VALUE_LABEL
       : targetVariable
+  const hasCallFrames =
+    !isClassDesignTrace && hasCallFrameMetadata(executionState)
+  const showsCallFrameInspector = type === 'tree' && hasCallFrames
   const title = getVisualizationTitle({
     type,
     targetVariable,
     treeGraphDisplayName,
     isClassDesignTrace,
+    hasCallFrames,
   })
-  const description = getVisualizationDescription(type, isClassDesignTrace)
+  const description = getVisualizationDescription(
+    type,
+    isClassDesignTrace,
+    hasCallFrames
+  )
   const currentStep = executionState.steps[executionState.currentStep]
   const content = (
     <VisualizationModalContent
@@ -190,6 +209,7 @@ export function VisualizationModal({
       executionState={executionState}
       currentStep={currentStep}
       treeGraphDisplayName={treeGraphDisplayName}
+      isClassDesignTrace={isClassDesignTrace}
     />
   )
 
@@ -204,6 +224,7 @@ export function VisualizationModal({
         <div
           className={cn(
             'py-4 flex-1 min-h-0 overflow-y-auto overscroll-contain',
+            showsCallFrameInspector && 'lg:overflow-hidden',
             (type === 'matrix' ||
               type === 'expression' ||
               type === 'list-graph' ||

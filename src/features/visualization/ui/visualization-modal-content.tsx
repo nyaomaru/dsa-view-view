@@ -28,6 +28,7 @@ import { getExecutionStepSearchOrder } from '../lib/execution-step-search'
 import { getHeapVisualizationState } from '../lib/heap-view'
 import { getWordLadderVisualizationState } from '../lib/word-ladder-view'
 import { getExpressionVisualizationState } from '../lib/expression-view'
+import { hasCallFrameMetadata } from '../lib/call-frame-inspector'
 import type { VisualizationType } from '../model/types'
 import { StackVisualizer } from './stack-visualizer'
 import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
@@ -44,6 +45,7 @@ import { ListGraphVisualizer } from './list-graph-visualizer'
 import { HeapVisualizer } from './heap-visualizer'
 import { WordLadderVisualizer } from './word-ladder-visualizer'
 import { ExpressionVisualizer } from './expression-visualizer'
+import { CallFrameInspector } from './call-frame-inspector'
 
 type ExecutionStepSnapshot = ExecutionState['steps'][number]
 
@@ -60,6 +62,8 @@ type VisualizationContentProps = {
   currentStep: ExecutionStepSnapshot | undefined
   /** Display name for tree graphs when visualizing the return value. */
   treeGraphDisplayName?: string
+  /** Whether the tree modal represents class-design operation calls. */
+  isClassDesignTrace?: boolean
 }
 
 function findNumericArrayStep({
@@ -172,10 +176,15 @@ export function VisualizationModalContent({
   executionState,
   currentStep,
   treeGraphDisplayName,
+  isClassDesignTrace = false,
 }: VisualizationContentProps): ReactNode {
   const getCurrentStepVariable = (name: string) => currentStep?.variables[name]
 
   if (type === 'tree') {
+    if (!isClassDesignTrace && hasCallFrameMetadata(executionState)) {
+      return <CallFrameInspector executionState={executionState} />
+    }
+
     return <RecursionTreeVisualizer state={executionState} />
   }
 
