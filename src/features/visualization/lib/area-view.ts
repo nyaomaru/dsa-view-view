@@ -1,14 +1,23 @@
 import {
+  arrayOf,
   equals,
   isInteger,
   isNull,
   isNumber,
   isNumericArray,
   isUndefined,
+  oneOfValues,
 } from '@/shared/lib/guards'
 import type { ExecutionState } from '@/entities/execution'
 
 const isHeightVariableName = equals('height')
+const isHistogramVariableName = oneOfValues(
+  'height',
+  'heights',
+  'histogram',
+  'hs'
+)
+const isIntegerArray = arrayOf(isInteger)
 
 /** Pointer-derived area metrics for a two-pointer execution step. */
 export type AreaPointerState = {
@@ -46,8 +55,41 @@ export type RainWaterPointerState = {
   waterDepths: number[]
 }
 
-/** Area-view state supported by the container and rain-water modes. */
-export type AreaViewPointerState = AreaPointerState | RainWaterPointerState
+/** Rectangle evaluated after popping one bar from a monotonic stack. */
+export type HistogramRectangle = {
+  /** Index popped from the monotonic stack. */
+  poppedIndex: number
+  /** Inclusive left edge of the rectangle. */
+  leftIndex: number
+  /** Inclusive right edge of the rectangle. */
+  rightIndex: number
+  /** Height of the popped bar. */
+  height: number
+  /** Number of bars covered by the rectangle. */
+  width: number
+  /** Area of the evaluated rectangle. */
+  area: number
+}
+
+/** Monotonic-stack metrics for a largest-rectangle execution step. */
+export type HistogramPointerState = {
+  /** Largest-rectangle-in-histogram visualization mode. */
+  mode: 'histogram'
+  /** Index currently being processed. */
+  currentIndex: number
+  /** Bar indexes currently held by the monotonic stack. */
+  stackIndices: number[]
+  /** Best rectangle area recorded by the algorithm. */
+  bestArea: number
+  /** Rectangle currently being evaluated after a pop. */
+  rectangle?: HistogramRectangle
+}
+
+/** Area-view state supported by container, rain-water, and histogram modes. */
+export type AreaViewPointerState =
+  | AreaPointerState
+  | RainWaterPointerState
+  | HistogramPointerState
 
 /** Data and pointer metrics required by the area visualization. */
 export type AreaVisualizationState = {
@@ -85,6 +127,92 @@ function readNumberVariable(
   }
 
   return undefined
+}
+
+function getHistogramRectangle(
+  data: number[],
+  variables: Record<string, unknown>,
+  currentIndex: number,
+  stackIndices: number[]
+): HistogramRectangle | undefined {
+  const poppedIndex = variables.mid
+  const height = variables.h
+  const leftSmallIndex = variables.leftSmallIndex
+  const width = variables.width
+  const stackTop = stackIndices[stackIndices.length - 1] ?? -1
+
+  if (
+    !isInteger(poppedIndex) ||
+    !isNumber(height) ||
+    !isInteger(leftSmallIndex) ||
+    !isInteger(width) ||
+    poppedIndex < 0 ||
+    poppedIndex >= data.length ||
+    height !== data[poppedIndex] ||
+    leftSmallIndex !== stackTop ||
+    width !== currentIndex - leftSmallIndex - 1 ||
+    width <= 0
+  ) {
+    return undefined
+  }
+
+  const leftIndex = leftSmallIndex + 1
+  const rightIndex = currentIndex - 1
+  if (poppedIndex < leftIndex || poppedIndex > rightIndex) return undefined
+
+  return {
+    poppedIndex,
+    leftIndex,
+    rightIndex,
+    height,
+    width,
+    area: height * width,
+  }
+}
+
+/** Derives monotonic-stack state for largest-rectangle-in-histogram code. */
+export function getHistogramPointerState(
+  data: number[],
+  variables: Record<string, unknown>
+): HistogramPointerState | null {
+  const currentIndex = variables.i
+  const rawStack = variables.stack
+  const bestArea = readNumberVariable(variables, ['ans', 'maxArea'])
+
+  if (
+    !isInteger(currentIndex) ||
+    !isIntegerArray(rawStack) ||
+    isUndefined(bestArea) ||
+    currentIndex < 0 ||
+    currentIndex >= data.length ||
+    data.some((height) => height < 0) ||
+    rawStack.some((index) => index < 0 || index >= data.length)
+  ) {
+    return null
+  }
+
+  const stackIndices = [...rawStack]
+  const isMonotonic = stackIndices.every((index, position) => {
+    if (index > currentIndex) return false
+    if (position === 0) return true
+
+    const previousIndex = stackIndices[position - 1]
+    return previousIndex < index && data[previousIndex] <= data[index]
+  })
+  if (!isMonotonic) return null
+
+  return {
+    mode: 'histogram',
+    currentIndex,
+    stackIndices,
+    bestArea,
+    rectangle: getHistogramRectangle(
+      data,
+      variables,
+      currentIndex,
+      stackIndices
+    ),
+  }
 }
 
 /**
@@ -277,6 +405,10 @@ export function getAreaVisualizationState({
   const fallbackStep =
     executionState.steps[targetStepIndex ?? executionState.currentStep]
   const currentData = currentStep?.variables[variableName]
+  const currentHistogramState =
+    isNumericArray(currentData) && currentStep
+      ? getHistogramPointerState(currentData.map(Number), currentStep.variables)
+      : null
   const currentRainWaterState =
     isNumericArray(currentData) && currentStep
       ? getRainWaterPointerState(currentData.map(Number), currentStep.variables)
@@ -286,12 +418,21 @@ export function getAreaVisualizationState({
       ? getAreaPointerState(currentData.map(Number), currentStep.variables)
       : null
   const areaStep =
-    currentAreaState || currentRainWaterState ? currentStep : fallbackStep
+    currentAreaState || currentRainWaterState || currentHistogramState
+      ? currentStep
+      : fallbackStep
   const data = areaStep?.variables[variableName]
 
   if (!isNumericArray(data)) return null
 
   const numericData = data.map(Number)
+  const histogramState = areaStep
+    ? getHistogramPointerState(numericData, areaStep.variables)
+    : null
+  if (!isNull(histogramState)) {
+    return { data: numericData, areaState: histogramState }
+  }
+
   const rainWaterState = areaStep
     ? getRainWaterPointerState(numericData, areaStep.variables)
     : null
@@ -314,19 +455,37 @@ export function getAreaVisualizationState({
   return isNull(areaState) ? null : { data: numericData, areaState }
 }
 
+/** Checks whether a runtime value represents largest-rectangle stack state. */
+export function isHistogramAreaCandidate(
+  variableName: string,
+  value: unknown,
+  variables: Record<string, unknown>
+): boolean {
+  if (
+    !isHistogramVariableName(variableName.toLowerCase()) ||
+    !isNumericArray(value) ||
+    value.length === 0
+  ) {
+    return false
+  }
+
+  return !isNull(getHistogramPointerState(value.map(Number), variables))
+}
+
 /**
- * Checks whether a runtime value represents a two-pointer area problem.
+ * Checks whether a runtime value represents a supported area problem.
  *
  * @param variableName Candidate source variable name.
  * @param value Candidate runtime value.
  * @param variables Variables captured for the same execution step.
- * @returns Whether the value has compatible data, pointers, and area metadata.
+ * @returns Whether the value has compatible area or histogram metadata.
  */
 export function isAreaViewCandidate(
   variableName: string,
   value: unknown,
   variables: Record<string, unknown>
 ): boolean {
+  if (isHistogramAreaCandidate(variableName, value, variables)) return true
   if (!isNumericArray(value) || value.length < 2) return false
   if (!isHeightVariableName(variableName.toLowerCase())) return false
   const numericValue = value.map(Number)

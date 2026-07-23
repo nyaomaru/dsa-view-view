@@ -298,6 +298,26 @@ function maxArea(height: number[]): number {
   return best
 }
 `
+const largestRectangleAreaCode = `
+function largestRectangleArea(heights: number[]): number {
+  const hs = [...heights, 0];
+  const stack: number[] = [];
+  let ans = 0;
+
+  for (let i = 0; i < hs.length; i++) {
+    while (stack.length > 0 && hs[stack[stack.length - 1]] > hs[i]) {
+      const mid = stack.pop()!;
+      const h = hs[mid];
+      const leftSmallIndex = stack.length > 0 ? stack[stack.length - 1] : -1;
+      const width = i - leftSmallIndex - 1;
+      ans = Math.max(ans, h * width);
+    }
+    stack.push(i);
+  }
+
+  return ans;
+}
+`
 const minWindowCode = `
 function minWindow(s: string, t: string): string {
   if (t.length === 0 || s.length === 0) return ''
@@ -734,6 +754,44 @@ describe('external algorithms use cases', () => {
     expect(screen.getByText('L=1')).toBeInTheDocument()
     expect(screen.getByText('R=8')).toBeInTheDocument()
     expect(screen.getByText('area=49')).toBeInTheDocument()
+  })
+
+  it('runs largest rectangle and exposes the histogram area view', () => {
+    const parameters: FunctionParameter[] = [
+      { name: 'heights', type: 'number-array', optional: false },
+    ]
+    const inputs = convertInputValues(parameters, {
+      heights: '2,1,5,6,2,3',
+    })
+
+    const state = executeCode(
+      largestRectangleAreaCode,
+      inputs,
+      'largestRectangleArea'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(10)
+
+    const currentStep = state.steps.findIndex(
+      (step) =>
+        step.description.startsWith('ans = Math.max') &&
+        step.variables.i === 4 &&
+        step.variables.mid === 2
+    )
+    expect(currentStep).toBeGreaterThanOrEqual(0)
+    renderVisualizer(completeAtStep(state, currentStep))
+
+    fireEvent.click(screen.getByText('Area View'))
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Area View: hs' })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Rectangle Area View: hs' })
+    ).toBeInTheDocument()
+    expect(screen.getByText('stack=[1]')).toBeInTheDocument()
+    expect(screen.getByText('area=10')).toBeInTheDocument()
   })
 
   it('runs integer square root and shows only the return value view', () => {

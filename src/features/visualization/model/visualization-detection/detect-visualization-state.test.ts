@@ -236,6 +236,32 @@ describe('detectVisualizationState', () => {
     expect(detectVisualizationState(state).primaryAreaArrayName).toBe('height')
   })
 
+  it('prefers the sentinel histogram for a largest-rectangle area view', () => {
+    const state = createExecutionState([
+      createStep(0, 'Function called', {
+        heights: [2, 1, 5, 6, 2, 3],
+      }),
+      createStep(1, 'ans = Math.max(ans, h * width)', {
+        heights: [2, 1, 5, 6, 2, 3],
+        hs: [2, 1, 5, 6, 2, 3, 0],
+        stack: [1],
+        i: 4,
+        ans: 10,
+        mid: 2,
+        h: 5,
+        leftSmallIndex: 1,
+        width: 2,
+      }),
+    ])
+
+    expect(detectVisualizationState(state)).toEqual(
+      expect.objectContaining({
+        primaryAreaArrayName: 'hs',
+        primaryAreaStepIndex: 1,
+      })
+    )
+  })
+
   it('selects mutated numeric dp arrays for DP View', () => {
     const coinChangeState = createExecutionState([
       createStep(0, 'Initialized dp', { dp: [0, 12, 12, 12] }),

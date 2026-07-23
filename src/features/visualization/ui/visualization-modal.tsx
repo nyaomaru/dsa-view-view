@@ -132,7 +132,7 @@ function getVisualizationDescription(
     case 'bar-chart':
       return 'Visualize numeric array as a bar chart.'
     case 'area':
-      return 'Visualize the current two-pointer area or trapped water.'
+      return 'Visualize the current container, histogram rectangle, or trapped water.'
     case 'binary-search':
       return 'Visualize the current binary-search range and mid index.'
     case 'sliding-window':
