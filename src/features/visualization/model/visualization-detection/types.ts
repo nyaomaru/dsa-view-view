@@ -19,7 +19,7 @@ export type VisualizationDetection = {
   primaryStackName: string | undefined
   /** Primary numeric array to show as a bar chart. */
   primaryArrayName: string | undefined
-  /** Primary height source to show in area or rain-water view. */
+  /** Primary height source to show in container, histogram, or rain-water view. */
   primaryAreaArrayName: string | undefined
   /** Step index where area pointers are available. */
   primaryAreaStepIndex: number | undefined

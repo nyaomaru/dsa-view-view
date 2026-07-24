@@ -50,7 +50,7 @@ type VariablesCardProps = {
   primaryExpressionStepIndex?: number
   /** Primary array variable detected for chart visualization. */
   primaryArrayName?: string
-  /** Primary numeric array detected for container-area visualization. */
+  /** Primary numeric array detected for an area visualization. */
   primaryAreaArrayName?: string
   /** Step index where area pointers are available. */
   primaryAreaStepIndex?: number

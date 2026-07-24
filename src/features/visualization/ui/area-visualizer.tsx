@@ -10,6 +10,8 @@ const LABEL_CELL_CLASS =
   'min-w-8 text-center font-mono text-xs text-muted-foreground'
 const BOUNDARY_LABEL_CELL_CLASS =
   'h-6 min-w-8 text-center font-mono text-xs font-bold text-primary'
+const STACK_LABEL_CELL_CLASS =
+  'h-6 min-w-8 text-center font-mono text-xs font-bold text-amber-600 dark:text-amber-400'
 const INDEX_LABEL_CELL_CLASS =
   'h-6 min-w-8 text-center font-mono text-xs text-muted-foreground'
 
@@ -26,17 +28,49 @@ function getMarkerLabel(
   index: number,
   areaState: AreaViewPointerState
 ): string {
+  if (areaState.mode === 'histogram') {
+    if (index === areaState.currentIndex) return 'I'
+    if (index === areaState.rectangle?.poppedIndex) return 'M'
+
+    const stackPosition = areaState.stackIndices.indexOf(index)
+    return stackPosition >= 0 ? `S${stackPosition}` : String(index)
+  }
+
   if (index === areaState.leftIndex) return 'L'
   if (index === areaState.rightIndex) return 'R'
 
   return String(index)
 }
 
-function isBoundaryIndex(
+function isPrimaryIndex(
   index: number,
   areaState: AreaViewPointerState
 ): boolean {
+  if (areaState.mode === 'histogram') {
+    return (
+      index === areaState.currentIndex ||
+      index === areaState.rectangle?.poppedIndex
+    )
+  }
+
   return index === areaState.leftIndex || index === areaState.rightIndex
+}
+
+function isStackIndex(index: number, areaState: AreaViewPointerState): boolean {
+  return (
+    areaState.mode === 'histogram' && areaState.stackIndices.includes(index)
+  )
+}
+
+function getViewTitle(areaState: AreaViewPointerState): string {
+  switch (areaState.mode) {
+    case 'rain-water':
+      return 'Rain Water View'
+    case 'histogram':
+      return 'Rectangle Area View'
+    case 'container':
+      return 'Area View'
+  }
 }
 
 function AreaStat({
@@ -82,13 +116,22 @@ function AreaGridLabels({
 
 export function AreaVisualizer({ data, name, areaState }: AreaVisualizerProps) {
   const maxValue = Math.max(...data, 1)
-  const leftPercent = (areaState.leftIndex / data.length) * 100
-  const rightPercent =
-    ((data.length - areaState.rightIndex - 1) / data.length) * 100
-  const areaHeightPercent =
+  const rectangle =
     areaState.mode === 'container'
-      ? (areaState.currentHeight / maxValue) * 100
-      : 0
+      ? {
+          leftIndex: areaState.leftIndex,
+          rightIndex: areaState.rightIndex,
+          height: areaState.currentHeight,
+          area: areaState.currentArea,
+        }
+      : areaState.mode === 'histogram'
+        ? areaState.rectangle
+        : undefined
+  const leftPercent = rectangle ? (rectangle.leftIndex / data.length) * 100 : 0
+  const rightPercent = rectangle
+    ? ((data.length - rectangle.rightIndex - 1) / data.length) * 100
+    : 0
+  const areaHeightPercent = rectangle ? (rectangle.height / maxValue) * 100 : 0
   const columnTemplate = `repeat(${data.length}, ${CHART_COLUMN_TEMPLATE_MIN})`
   const markerLabels = data.map((_, index) => getMarkerLabel(index, areaState))
 
@@ -96,25 +139,48 @@ export function AreaVisualizer({ data, name, areaState }: AreaVisualizerProps) {
     <Card className="h-full border-0 shadow-none">
       <div className="flex h-full flex-col gap-4 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-mono text-lg font-semibold text-muted-foreground">
-            {areaState.mode === 'rain-water' ? 'Rain Water View' : 'Area View'}:{' '}
-            {name}
-          </h3>
+          <div>
+            <h3 className="font-mono text-lg font-semibold text-muted-foreground">
+              {getViewTitle(areaState)}: {name}
+            </h3>
+            {areaState.mode === 'histogram' && (
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
+                I=current · S=stack position · M=popped bar
+              </p>
+            )}
+          </div>
           <div className="flex flex-wrap gap-2 font-mono text-xs">
-            <AreaStat>L={areaState.leftIndex}</AreaStat>
-            <AreaStat>R={areaState.rightIndex}</AreaStat>
             {areaState.mode === 'container' ? (
               <>
+                <AreaStat>L={areaState.leftIndex}</AreaStat>
+                <AreaStat>R={areaState.rightIndex}</AreaStat>
                 <AreaStat emphasized>area={areaState.currentArea}</AreaStat>
                 {areaState.bestArea !== undefined && (
                   <AreaStat>best={areaState.bestArea}</AreaStat>
                 )}
               </>
-            ) : (
+            ) : areaState.mode === 'rain-water' ? (
               <>
+                <AreaStat>L={areaState.leftIndex}</AreaStat>
+                <AreaStat>R={areaState.rightIndex}</AreaStat>
                 <AreaStat>leftMax={areaState.leftMax}</AreaStat>
                 <AreaStat>rightMax={areaState.rightMax}</AreaStat>
                 <AreaStat emphasized>water={areaState.totalWater}</AreaStat>
+              </>
+            ) : (
+              <>
+                <AreaStat>i={areaState.currentIndex}</AreaStat>
+                <AreaStat>stack=[{areaState.stackIndices.join(', ')}]</AreaStat>
+                {areaState.rectangle && (
+                  <>
+                    <AreaStat>mid={areaState.rectangle.poppedIndex}</AreaStat>
+                    <AreaStat>width={areaState.rectangle.width}</AreaStat>
+                    <AreaStat emphasized>
+                      area={areaState.rectangle.area}
+                    </AreaStat>
+                  </>
+                )}
+                <AreaStat>best={areaState.bestArea}</AreaStat>
               </>
             )}
           </div>
@@ -132,9 +198,19 @@ export function AreaVisualizer({ data, name, areaState }: AreaVisualizerProps) {
                 gridTemplateColumns: columnTemplate,
               }}
             >
-              {areaState.mode === 'container' && (
+              {rectangle && (
                 <div
-                  className="pointer-events-none absolute bottom-0 border-2 border-primary/80 bg-primary/20"
+                  aria-label={
+                    areaState.mode === 'histogram'
+                      ? `Current rectangle: indexes ${rectangle.leftIndex} through ${rectangle.rightIndex}, height ${rectangle.height}, area ${rectangle.area}`
+                      : `Current area: ${rectangle.area}`
+                  }
+                  className={[
+                    'pointer-events-none absolute bottom-0 border-2',
+                    areaState.mode === 'histogram'
+                      ? 'border-amber-500/90 bg-amber-400/20'
+                      : 'border-primary/80 bg-primary/20',
+                  ].join(' ')}
                   style={{
                     left: `${leftPercent}%`,
                     right: `${rightPercent}%`,
@@ -148,7 +224,8 @@ export function AreaVisualizer({ data, name, areaState }: AreaVisualizerProps) {
                   areaState.mode === 'rain-water'
                     ? (areaState.waterDepths[index] / maxValue) * 100
                     : 0
-                const isBoundary = isBoundaryIndex(index, areaState)
+                const isPrimary = isPrimaryIndex(index, areaState)
+                const isStacked = isStackIndex(index, areaState)
 
                 return (
                   <div
@@ -158,9 +235,11 @@ export function AreaVisualizer({ data, name, areaState }: AreaVisualizerProps) {
                     <div
                       className={[
                         'w-full rounded-t-sm border transition-colors',
-                        isBoundary
+                        isPrimary
                           ? 'border-primary bg-primary'
-                          : 'border-primary/20 bg-primary/70',
+                          : isStacked
+                            ? 'border-amber-500 bg-amber-400/80'
+                            : 'border-primary/20 bg-primary/70',
                       ].join(' ')}
                       style={{
                         height: `${Math.max(barHeightPercent, MIN_BAR_HEIGHT)}%`,
@@ -188,9 +267,11 @@ export function AreaVisualizer({ data, name, areaState }: AreaVisualizerProps) {
                 <div
                   key={index}
                   className={
-                    isBoundaryIndex(index, areaState)
+                    isPrimaryIndex(index, areaState)
                       ? BOUNDARY_LABEL_CELL_CLASS
-                      : INDEX_LABEL_CELL_CLASS
+                      : isStackIndex(index, areaState)
+                        ? STACK_LABEL_CELL_CLASS
+                        : INDEX_LABEL_CELL_CLASS
                   }
                 >
                   {label}
