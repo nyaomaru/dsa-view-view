@@ -36,6 +36,61 @@ describe('histogram area view', () => {
     })
   })
 
+  it('accepts common aliases for popped histogram locals', () => {
+    const data = [2, 1, 2]
+    const variables = {
+      i: 1,
+      stack: [-1],
+      maxArea: 2,
+      top: 0,
+      height: 2,
+      left: -1,
+      w: 1,
+    }
+
+    expect(getHistogramPointerState(data, variables)).toEqual({
+      mode: 'histogram',
+      currentIndex: 1,
+      stackIndices: [-1],
+      bestArea: 2,
+      rectangle: {
+        poppedIndex: 0,
+        leftIndex: 0,
+        rightIndex: 0,
+        height: 2,
+        width: 1,
+        area: 2,
+      },
+    })
+    expect(isHistogramAreaCandidate('heights', data, variables)).toBe(true)
+  })
+
+  it('derives the left boundary from the remaining stack', () => {
+    expect(
+      getHistogramPointerState([1, 2, 1], {
+        i: 2,
+        stack: [-1, 0],
+        maxArea: 2,
+        top: 1,
+        height: 2,
+        width: 1,
+      })
+    ).toEqual({
+      mode: 'histogram',
+      currentIndex: 2,
+      stackIndices: [-1, 0],
+      bestArea: 2,
+      rectangle: {
+        poppedIndex: 1,
+        leftIndex: 1,
+        rightIndex: 1,
+        height: 2,
+        width: 1,
+        area: 2,
+      },
+    })
+  })
+
   it('accepts a leading -1 stack sentinel as a histogram boundary', () => {
     const data = [2, 1, 2]
     const variables = {

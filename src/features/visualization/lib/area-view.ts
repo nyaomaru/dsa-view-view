@@ -138,17 +138,24 @@ type HistogramRectangleVariables = {
 }
 
 function readHistogramRectangleVariables(
-  variables: Record<string, unknown>
+  variables: Record<string, unknown>,
+  stackTop: number
 ): HistogramRectangleVariables | null {
-  const poppedIndex = variables.mid
-  const height = variables.h
-  const leftSmallIndex = variables.leftSmallIndex
-  const width = variables.width
+  const poppedIndex = readIntegerVariable(variables, ['mid', 'top'])
+  const height = readNumberVariable(variables, ['h', 'height'])
+  const recordedLeftSmallIndex = readIntegerVariable(variables, [
+    'leftSmallIndex',
+    'left',
+  ])
+  const width = readIntegerVariable(variables, ['width', 'w'])
 
-  if (!isInteger(poppedIndex)) return null
-  if (!isNumber(height)) return null
-  if (!isInteger(leftSmallIndex)) return null
-  if (!isInteger(width)) return null
+  if (isNull(poppedIndex)) return null
+  if (isUndefined(height)) return null
+  if (isNull(width)) return null
+
+  const leftSmallIndex = isNull(recordedLeftSmallIndex)
+    ? stackTop
+    : recordedLeftSmallIndex
 
   return { poppedIndex, height, leftSmallIndex, width }
 }
@@ -183,9 +190,12 @@ function resolveHistogramCurrentIndex(
   variables: Record<string, unknown>,
   stackIndices: number[]
 ): number | null {
-  const rectangleVariables = readHistogramRectangleVariables(variables)
   const finalFlushIndex = data.length
   const stackTop = stackIndices[stackIndices.length - 1] ?? -1
+  const rectangleVariables = readHistogramRectangleVariables(
+    variables,
+    stackTop
+  )
   const isFinalFlushRectangle =
     !isNull(rectangleVariables) &&
     matchesPoppedBar(data, rectangleVariables) &&
@@ -210,10 +220,13 @@ function getHistogramRectangle(
   currentIndex: number,
   stackIndices: number[]
 ): HistogramRectangle | undefined {
-  const rectangleVariables = readHistogramRectangleVariables(variables)
+  const stackTop = stackIndices[stackIndices.length - 1] ?? -1
+  const rectangleVariables = readHistogramRectangleVariables(
+    variables,
+    stackTop
+  )
   if (isNull(rectangleVariables)) return undefined
 
-  const stackTop = stackIndices[stackIndices.length - 1] ?? -1
   if (!matchesPoppedBar(data, rectangleVariables)) return undefined
   if (
     !matchesHistogramSpan({
