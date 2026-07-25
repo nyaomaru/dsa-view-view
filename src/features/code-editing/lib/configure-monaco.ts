@@ -1,11 +1,11 @@
 import { loader } from '@monaco-editor/react'
 import type { Monaco } from '@monaco-editor/react'
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
-import * as monacoTypeScript from 'monaco-editor/esm/vs/language/typescript/monaco.contribution'
-import 'monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution'
-import 'monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution'
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
+import * as monaco from 'monaco-editor/editor'
+import * as monacoTypeScript from 'monaco-editor/language/typescript/monaco.contribution'
+import 'monaco-editor/languages/definitions/javascript/register'
+import 'monaco-editor/languages/definitions/typescript/register'
+import editorWorker from 'monaco-editor/editor/editor.worker?worker'
+import tsWorker from 'monaco-editor/language/typescript/ts.worker?worker'
 
 const bundledMonaco = {
   ...monaco,
