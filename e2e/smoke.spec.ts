@@ -6,6 +6,21 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
+test('formats TypeScript with Ctrl+S', async ({ page }) => {
+  await page.goto('/')
+
+  const editor = page.locator('.monaco-editor')
+  await expect(editor).toBeVisible()
+  await editor.click()
+  await page.keyboard.press('Control+A')
+  await page.keyboard.type('function  foo( ){return  1}')
+
+  await page.keyboard.press('Control+S')
+
+  await expect(page.locator('.view-lines')).toContainText('function foo() {')
+  await expect(page.locator('.view-lines')).toContainText('return 1')
+})
+
 test('loads, compiles, runs a demo, and opens core dialogs', async ({
   page,
   isMobile,
