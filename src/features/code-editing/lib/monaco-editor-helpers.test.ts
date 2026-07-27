@@ -60,7 +60,10 @@ const createMonacoMock = () => {
     },
   }
 
-  return monaco as typeof monaco & Monaco
+  return {
+    ...monaco,
+    api: monaco as unknown as Monaco,
+  }
 }
 
 const createEditorWithModel = (model: unknown) => {
@@ -114,7 +117,7 @@ describe('monaco editor helpers', () => {
 
     const nextDecorations = updateHighlightedLineDecorations({
       editor,
-      monaco,
+      monaco: monaco.api,
       decorations: ['previous-decoration'],
       highlightedLine: 7,
     })
@@ -165,7 +168,7 @@ describe('monaco editor helpers', () => {
       },
     ]
 
-    setExternalMarkers(editor, monaco, errors)
+    setExternalMarkers(editor, monaco.api, errors)
 
     expect(getModel).toHaveBeenCalled()
     expect(monaco.editor.setModelMarkers).toHaveBeenCalledWith(model, 'owner', [
@@ -211,9 +214,13 @@ describe('monaco editor helpers', () => {
     ])
     monaco.editor.onDidChangeMarkers.mockReturnValue(disposable)
 
-    const returnedDisposable = subscribeToValidationMarkers(editor, monaco, {
-      current: onValidate,
-    })
+    const returnedDisposable = subscribeToValidationMarkers(
+      editor,
+      monaco.api,
+      {
+        current: onValidate,
+      }
+    )
 
     const handleMarkersChanged = getMarkerChangeHandler(monaco)
     handleMarkersChanged()
@@ -242,14 +249,18 @@ describe('monaco editor helpers', () => {
     const monaco = createMonacoMock()
     monaco.editor.onDidChangeMarkers.mockReturnValue({ dispose: vi.fn() })
 
-    subscribeToValidationMarkers(createEditorWithModel(null).editor, monaco, {
-      current: vi.fn(),
-    })
+    subscribeToValidationMarkers(
+      createEditorWithModel(null).editor,
+      monaco.api,
+      {
+        current: vi.fn(),
+      }
+    )
     getMarkerChangeHandler(monaco)()
 
     subscribeToValidationMarkers(
       createEditorWithModel({ uri: 'file:///source.ts' }).editor,
-      monaco,
+      monaco.api,
       { current: undefined }
     )
     getMarkerChangeHandler(monaco, 1)()
@@ -261,7 +272,7 @@ describe('monaco editor helpers', () => {
     const monaco = createMonacoMock()
 
     const content = setPreparedClassesLib(
-      monaco,
+      monaco.api,
       'function search(root: TreeNode | null) { return root?.val ?? 0 }'
     )
 
@@ -284,7 +295,7 @@ describe('monaco editor helpers', () => {
     monaco.typescript.typescriptDefaults.setExtraLibs.mockClear()
 
     const nextContent = syncPreparedClassesLib({
-      monaco,
+      monaco: monaco.api,
       code,
       currentContent,
     })
