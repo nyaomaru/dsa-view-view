@@ -83,11 +83,7 @@ function parseListNodeArrayInput(
   value: unknown
 ): ReturnType<typeof parseListInput>[] {
   const parsed = isString(value) ? safeJsonParse(value, isArray) : null
-  const listValues = parsed?.valid
-    ? parsed.value
-    : isArray(value)
-      ? value
-      : []
+  const listValues = parsed?.valid ? parsed.value : isArray(value) ? value : []
 
   return listValues.map(parseListInput)
 }

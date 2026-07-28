@@ -38,9 +38,7 @@ describe('HeapVisualizer', () => {
       <HeapVisualizer
         state={{
           snapshot: {
-            heaps: [
-              { name: 'minHeap', kind: 'min', values: [2, 4, 8, 5] },
-            ],
+            heaps: [{ name: 'minHeap', kind: 'min', values: [2, 4, 8, 5] }],
           },
           action: {
             description: 'Reordered minHeap',

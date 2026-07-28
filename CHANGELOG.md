@@ -76,7 +76,7 @@ Thanks for using DSA View View! 👀👀
 
 ### New Contributors
 
-* @github-actions[bot] made their first contribution in https://github.com/nyaomaru/dsa-view-view/pull/11
+- @github-actions[bot] made their first contribution in https://github.com/nyaomaru/dsa-view-view/pull/11
 
 **Full Changelog**: https://github.com/nyaomaru/dsa-view-view/compare/v1.0.0...v1.1.0
 
@@ -121,10 +121,9 @@ If algorithms are hard to picture, let’s make them visible. 👀👀
 
 ### New Contributors
 
-* @nyaomaru made their first contribution in https://github.com/nyaomaru/dsa-view-view/pull/1
-* @dependabot[bot] made their first contribution in https://github.com/nyaomaru/dsa-view-view/pull/6
+- @nyaomaru made their first contribution in https://github.com/nyaomaru/dsa-view-view/pull/1
+- @dependabot[bot] made their first contribution in https://github.com/nyaomaru/dsa-view-view/pull/6
 
 **Full Changelog**: https://github.com/nyaomaru/dsa-view-view/commits/v1.0.0
 
 [vv1.0.0]: https://github.com/nyaomaru/dsa-view-view/compare/5f998b205396326dba271dffdb9788b7df30afb7...v1.0.0
-

@@ -176,10 +176,7 @@ const hasVariableName = (
   value: VariableDeclarator
 ): value is NamedVariableDeclarator => isIdentifierNode(value.id)
 
-const isNamedVariableDeclarator = and(
-  isVariableDeclaratorNode,
-  hasVariableName
-)
+const isNamedVariableDeclarator = and(isVariableDeclaratorNode, hasVariableName)
 
 const hasArrowFunctionInitializer = (
   value: NamedVariableDeclarator

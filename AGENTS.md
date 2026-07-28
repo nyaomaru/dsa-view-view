@@ -46,6 +46,7 @@ Recent history uses short subjects such as `update` and `re-architecture`. Keep 
 PRs should include a concise description, testing notes (`pnpm lint`, `pnpm test`), and screenshots or recordings for UI changes. Link related issues when applicable.
 
 <!-- is-kit-agent-rules:start -->
+
 # is-kit Agent Rules
 
 Use these rules when generating or reviewing code that uses `is-kit`.
@@ -82,34 +83,35 @@ import {
   isString,
   nullish,
   or,
-  predicateToRefine
-} from 'is-kit';
+  predicateToRefine,
+} from 'is-kit'
 
-const isId = or(isString, isNumber);
-const isMaybeName = nullish(isString);
+const isId = or(isString, isNumber)
+const isMaybeName = nullish(isString)
 const isSlug = define<string>(
   (value) => isString(value) && /^[a-z0-9-]+$/.test(value)
-);
+)
 const isPositiveNumber = and(
   isNumber,
   predicateToRefine<number>((value) => value > 0)
-);
+)
 
-declare const value: unknown;
+declare const value: unknown
 
 if (isNil(value)) {
-  return;
+  return
 }
 ```
 
 ## Avoid
 
 ```ts
-declare const value: unknown;
+declare const value: unknown
 
-const isId = (value: unknown) => isString(value) || isNumber(value);
-const isMaybeName = (value: unknown) => value == null || isString(value);
+const isId = (value: unknown) => isString(value) || isNumber(value)
+const isMaybeName = (value: unknown) => value == null || isString(value)
 const isSlug = (value: unknown): value is string =>
-  isString(value) && /^[a-z0-9-]+$/.test(value);
+  isString(value) && /^[a-z0-9-]+$/.test(value)
 ```
+
 <!-- is-kit-agent-rules:end -->
