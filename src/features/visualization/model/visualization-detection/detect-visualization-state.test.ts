@@ -79,6 +79,22 @@ describe('detectVisualizationState', () => {
     expect(detectVisualizationState(state).primaryHeapStepIndex).toBe(2)
   })
 
+  it('detects a single local heap when no heap pair exists', () => {
+    const state = createExecutionState([
+      createStep(0, 'Initialized', {}),
+      {
+        ...createStep(1, 'Reordered minHeap', {}),
+        metadata: {
+          heapTrace: {
+            heaps: [{ name: 'minHeap', kind: 'min', values: [2, 4, 8, 5] }],
+          },
+        },
+      },
+    ])
+
+    expect(detectVisualizationState(state).primaryHeapStepIndex).toBe(1)
+  })
+
   it('detects Basic Calculator state before its generic sign stack', () => {
     const state = createExecutionState([
       createStep(0, 'Initialized calculator', {

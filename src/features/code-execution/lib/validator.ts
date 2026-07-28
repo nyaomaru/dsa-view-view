@@ -126,13 +126,12 @@ export function typeToZodSchema(
       schema = z.any()
       break
     case 'list-node-array':
-      schema = z.string().refine(
-        (val) => safeJsonParse(val, isListNodeArray).valid,
-        {
+      schema = z
+        .string()
+        .refine((val) => safeJsonParse(val, isListNodeArray).valid, {
           message:
             'Must be a JSON array of linked lists (e.g., [[1,4,5],[1,3,4],[2,6]])',
-        }
-      )
+        })
       break
     case 'graph-node':
       schema = z.string().refine(

@@ -52,13 +52,18 @@ export function detectVisualizationState(
   const isClassDesignTrace = hasClassDesignTrace(executionState)
   const primaryWordLadderStepIndex = getWordLadderStepIndex(executionState)
   const primaryExpressionStepIndex = getExpressionStepIndex(executionState)
-  const primaryHeapStepIndex = executionState.steps.findIndex((step) => {
+  const dualHeapStepIndex = executionState.steps.findIndex((step) => {
     const heaps = step.metadata?.heapTrace?.heaps ?? []
     return (
       heaps.some((heap) => heap.kind === 'min') &&
       heaps.some((heap) => heap.kind === 'max')
     )
   })
+  const singleHeapStepIndex = executionState.steps.findIndex(
+    (step) => (step.metadata?.heapTrace?.heaps.length ?? 0) > 0
+  )
+  const primaryHeapStepIndex =
+    dualHeapStepIndex >= 0 ? dualHeapStepIndex : singleHeapStepIndex
   const { initialVariableStepNumber, initialVariableNames } =
     getInitialVariableContext(executionState)
   const metadata = collectVisualizationMutationMetadata(executionState)

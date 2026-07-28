@@ -9,7 +9,7 @@ export type VisualizationDetection = {
   hasRecursion: boolean
   /** Whether the trace represents class-design operation calls. */
   isClassDesignTrace: boolean
-  /** First step index containing both prepared MinHeap and MaxHeap state. */
+  /** Preferred step index containing one heap or a MinHeap/MaxHeap pair. */
   primaryHeapStepIndex: number | undefined
   /** First step index containing Word Ladder inputs. */
   primaryWordLadderStepIndex: number | undefined

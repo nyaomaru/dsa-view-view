@@ -28,6 +28,12 @@ const isNumberArray = arrayOf(isNumber)
 const hasPreparedHeapKeys = hasKeys(PREPARED_HEAP_KIND_LABEL, 'values')
 const hasPreparedHeapKind = hasKeys(PREPARED_HEAP_KIND_LABEL)
 
+type RegisteredHeap = {
+  instance: Record<PropertyKey, unknown>
+  name: string
+  kind: HeapKind
+}
+
 function getHeapKind(
   value: Record<PropertyKey, unknown>
 ): HeapKind | undefined {
@@ -63,28 +69,68 @@ function getHeapValues(
   return storage ? [...storage[1]] : undefined
 }
 
+function getDefaultHeapName(kind: HeapKind): string {
+  return kind === 'min' ? 'minHeap' : 'maxHeap'
+}
+
+function getRegisteredHeap(
+  instance: Record<PropertyKey, unknown>,
+  name: string
+): RegisteredHeap | undefined {
+  const kind = getHeapKind(instance)
+  const values = getHeapValues(instance)
+  if (isUndefined(kind) || isUndefined(values)) return undefined
+
+  return { instance, name, kind }
+}
+
+function createHeapTraceSnapshot(
+  heaps: RegisteredHeap[]
+): HeapTraceSnapshot | undefined {
+  const snapshots = heaps.flatMap(({ instance, name, kind }) => {
+    const values = getHeapValues(instance)
+    return isUndefined(values) ? [] : [{ name, kind, values }]
+  })
+
+  return snapshots.length > 0 ? { heaps: snapshots } : undefined
+}
+
 function getHeapTraceSnapshot(
+  context: ExecutionContext,
   receiver: unknown
 ): HeapTraceSnapshot | undefined {
   if (!isNonArrayObject(receiver)) return undefined
 
-  const heaps = Object.entries(receiver).flatMap(([name, value]) => {
+  const ownedHeaps = Object.entries(receiver).flatMap(([name, value]) => {
     if (!isNonArrayObject(value)) return []
 
-    const kind = getHeapKind(value)
-    const values = getHeapValues(value)
-    if (isUndefined(kind) || isUndefined(values)) return []
-
-    return [
-      {
-        name,
-        kind,
-        values: [...values],
-      },
-    ]
+    const heap = getRegisteredHeap(value, name)
+    return isUndefined(heap) ? [] : [heap]
   })
 
-  return heaps.length > 0 ? { heaps } : undefined
+  if (ownedHeaps.length > 0) {
+    ownedHeaps.forEach(({ instance }) => {
+      context.heapGroups.set(instance, ownedHeaps)
+    })
+    return createHeapTraceSnapshot(ownedHeaps)
+  }
+
+  const receiverKind = getHeapKind(receiver)
+  if (isUndefined(receiverKind) || isUndefined(getHeapValues(receiver))) {
+    return undefined
+  }
+
+  const registeredHeaps = context.heapGroups.get(receiver)
+  if (registeredHeaps) return createHeapTraceSnapshot(registeredHeaps)
+
+  const receiverHeap: RegisteredHeap = {
+    instance: receiver,
+    name: getDefaultHeapName(receiverKind),
+    kind: receiverKind,
+  }
+  const receiverGroup = [receiverHeap]
+  context.heapGroups.set(receiver, receiverGroup)
+  return createHeapTraceSnapshot(receiverGroup)
 }
 
 /**
@@ -111,6 +157,8 @@ export type ExecutionContext = {
     functionName: string
     parentFrameId?: number
   }>
+  /** Heap instances grouped by the class receiver that owns them. */
+  heapGroups: WeakMap<object, RegisteredHeap[]>
 }
 
 export function createExecutionContext(inputs: InputValues): ExecutionContext {
@@ -123,6 +171,7 @@ export function createExecutionContext(inputs: InputValues): ExecutionContext {
     callStack: ['root'],
     nextFrameId: 1,
     frameStack: [],
+    heapGroups: new WeakMap(),
   }
 }
 
@@ -221,7 +270,10 @@ export function recordExecutionStep(
     throw new StepLimitError(MAX_STEPS)
   }
 
-  const heapTrace = getHeapTraceSnapshot(stepVariables[CLASS_RECEIVER_LABEL])
+  const heapTrace = getHeapTraceSnapshot(
+    context,
+    stepVariables[CLASS_RECEIVER_LABEL]
+  )
   const visibleStepVariables = { ...stepVariables }
   delete visibleStepVariables[CLASS_RECEIVER_LABEL]
   const functionName = visibleStepVariables[FUNCTION_NAME_LABEL]

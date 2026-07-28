@@ -62,10 +62,7 @@ export type CallFrameInspectorState = {
   currentFrameId?: number
 }
 
-type MutableCallFrame = Omit<
-  InspectedCallFrame,
-  'status' | 'hasReturnValue'
->
+type MutableCallFrame = Omit<InspectedCallFrame, 'status' | 'hasReturnValue'>
 
 const SPECIAL_VARIABLE_NAMES = new Set([
   FUNCTION_ARGUMENTS_LABEL,
@@ -156,11 +153,7 @@ export function getCallFrameDetails(
 
   return {
     parameters,
-    locals: getLocals(
-      executionState,
-      frame,
-      new Set(Object.keys(parameters))
-    ),
+    locals: getLocals(executionState, frame, new Set(Object.keys(parameters))),
     returnValue: returnVariables?.[RETURN_VALUE_LABEL],
     returnLocation: returnVariables?.[RETURN_LOCATION_LABEL],
   }
@@ -180,9 +173,9 @@ export function getCallerFrameContext(
     currentStep: frame.startStepIndex - 1,
     isComplete: false,
   }
-  const callerFrame = getCallFrameInspectorState(
-    stateBeforeCall
-  ).frames.find((candidate) => candidate.id === frame.parentId)
+  const callerFrame = getCallFrameInspectorState(stateBeforeCall).frames.find(
+    (candidate) => candidate.id === frame.parentId
+  )
 
   if (!callerFrame) return undefined
 

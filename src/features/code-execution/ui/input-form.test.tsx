@@ -18,9 +18,7 @@ const listSignature: FunctionSignature = {
 
 const listArraySignature: FunctionSignature = {
   name: 'mergeKLists',
-  parameters: [
-    { name: 'lists', type: 'list-node-array', optional: false },
-  ],
+  parameters: [{ name: 'lists', type: 'list-node-array', optional: false }],
   returnType: 'list-node',
 }
 

@@ -596,7 +596,7 @@ describe('Visualizer return value display', () => {
     expect(screen.getByLabelText('Max Heap maxHeap')).toBeInTheDocument()
     expect(screen.getByLabelText('Min Heap minHeap')).toBeInTheDocument()
     expect(
-      screen.queryByText('Prepared heap state is not available at this step.')
+      screen.queryByText('Heap state is not available at this step.')
     ).not.toBeInTheDocument()
   })
 

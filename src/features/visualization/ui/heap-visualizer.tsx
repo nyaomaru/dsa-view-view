@@ -4,7 +4,7 @@ import { cn } from '@/shared/lib/class-names'
 import type { HeapVisualizationState } from '../lib/heap-view'
 
 type HeapVisualizerProps = {
-  /** Current normalized dual-heap state. */
+  /** Current normalized heap state. */
   state: HeapVisualizationState
 }
 
@@ -72,17 +72,22 @@ export function HeapVisualizer({ state }: HeapVisualizerProps) {
   const heaps = [...state.snapshot.heaps].sort((left, right) =>
     left.kind === right.kind ? 0 : left.kind === 'max' ? -1 : 1
   )
+  const hasMinHeap = heaps.some((heap) => heap.kind === 'min')
+  const hasMaxHeap = heaps.some((heap) => heap.kind === 'max')
+  const showsMedian = hasMinHeap && hasMaxHeap
+  const root = heaps[0]?.values[0]
 
   return (
     <Card className="h-full w-full border-0 p-4 shadow-none">
       <div className="mb-4 flex min-h-10 items-center justify-between gap-4 rounded-md bg-secondary px-4 py-2 text-sm">
         <span>{state.action?.description ?? 'Heap state initialized'}</span>
         <span className="shrink-0 font-mono font-semibold">
-          Median: {state.median ?? '—'}
+          {showsMedian ? 'Median' : 'Root'}:{' '}
+          {(showsMedian ? state.median : root) ?? '—'}
         </span>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={cn('grid gap-4', heaps.length > 1 && 'sm:grid-cols-2')}>
         {heaps.map((heap) => (
           <HeapTree
             key={heap.name}

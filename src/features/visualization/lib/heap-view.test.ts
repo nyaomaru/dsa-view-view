@@ -25,6 +25,25 @@ function createHeapStep(
   }
 }
 
+function createSingleHeapStep(
+  stepNumber: number,
+  values: number[]
+): ExecutionStep {
+  return {
+    stepNumber,
+    type: 'assignment',
+    line: stepNumber + 1,
+    description: 'heap reordered',
+    variables: {},
+    timestamp: stepNumber,
+    metadata: {
+      heapTrace: {
+        heaps: [{ name: 'minHeap', kind: 'min', values }],
+      },
+    },
+  }
+}
+
 function createState(
   currentStep: number,
   steps: ExecutionStep[]
@@ -89,5 +108,22 @@ describe('getHeapVisualizationState', () => {
     expect(getHeapVisualizationState(state, 1)?.snapshot).toEqual(
       state.steps[1].metadata?.heapTrace
     )
+  })
+
+  it('describes a single heap reorder without treating its root as a median', () => {
+    const state = createState(1, [
+      createSingleHeapStep(0, [4, 2, 8, 5]),
+      createSingleHeapStep(1, [2, 4, 8, 5]),
+    ])
+
+    expect(getHeapVisualizationState(state)).toEqual({
+      snapshot: state.steps[1].metadata?.heapTrace,
+      action: {
+        description: 'Reordered minHeap',
+        value: 2,
+        targetHeapName: 'minHeap',
+      },
+      median: null,
+    })
   })
 })

@@ -2,7 +2,7 @@ import type { ExecutionStepType } from './constants'
 
 export type HeapKind = 'min' | 'max'
 
-/** Normalized snapshot of one prepared heap owned by a class instance. */
+/** Normalized snapshot of one heap owned by or active as a class instance. */
 export type HeapSnapshot = {
   /** Property name on the owning class, such as minHeap. */
   name: string
@@ -12,9 +12,9 @@ export type HeapSnapshot = {
   values: number[]
 }
 
-/** Prepared heap state captured from the active class receiver. */
+/** Heap state captured from the active class receiver. */
 export type HeapTraceSnapshot = {
-  /** Prepared heaps found directly on the class instance. */
+  /** Heaps associated with the active class instance. */
   heaps: HeapSnapshot[]
 }
 
@@ -65,7 +65,7 @@ export type ExecutionStep = {
     conditionResult?: boolean
     /** Related function name. */
     functionName?: string
-    /** Normalized state for prepared MinHeap and MaxHeap instances. */
+    /** Normalized state for MinHeap and MaxHeap instances. */
     heapTrace?: HeapTraceSnapshot
     /** Logical call-frame event associated with this step. */
     callFrame?: CallFrameStepMetadata

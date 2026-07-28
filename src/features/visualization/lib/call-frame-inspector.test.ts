@@ -248,12 +248,8 @@ describe('call-frame inspector', () => {
     const childFrame = state.frames.find((frame) => frame.id === 2)
 
     expect(state.activeFrameIds).toEqual([1])
-    expect(parentFrame).toEqual(
-      expect.objectContaining({ status: 'current' })
-    )
-    expect(childFrame).toEqual(
-      expect.objectContaining({ status: 'completed' })
-    )
+    expect(parentFrame).toEqual(expect.objectContaining({ status: 'current' }))
+    expect(childFrame).toEqual(expect.objectContaining({ status: 'completed' }))
     expect(getCallFrameDetails(createState(5), parentFrame!).locals).toEqual({
       total: 1,
     })
