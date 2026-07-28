@@ -194,7 +194,7 @@ export function VisualizationModalContent({
     return heapState ? (
       <HeapVisualizer state={heapState} />
     ) : (
-      <div>Prepared heap state is not available at this step.</div>
+      <div>Heap state is not available at this step.</div>
     )
   }
 

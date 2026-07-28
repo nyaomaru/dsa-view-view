@@ -89,6 +89,16 @@ function getHeapTraceAction(
     }
   }
 
+  if (removedChange && addedChange && removedChange === addedChange) {
+    const removedValue = removedChange.removed[0]
+    const addedValue = addedChange.added[0]
+    return {
+      description: `Replaced ${removedValue} with ${addedValue} in ${addedChange.heap.name}`,
+      value: addedValue,
+      targetHeapName: addedChange.heap.name,
+    }
+  }
+
   if (addedChange) {
     const value = addedChange.added[0]
     return {
@@ -106,6 +116,32 @@ function getHeapTraceAction(
     }
   }
 
+  const reorderedHeap = current.heaps.find((heap) => {
+    const previousHeap = previous.heaps.find(
+      (candidate) => candidate.name === heap.name
+    )
+    return (
+      previousHeap &&
+      previousHeap.values.some((value, index) => value !== heap.values[index])
+    )
+  })
+
+  if (reorderedHeap) {
+    const previousHeap = previous.heaps.find(
+      (candidate) => candidate.name === reorderedHeap.name
+    )
+    const changedIndex = reorderedHeap.values.findIndex(
+      (value, index) => value !== previousHeap?.values[index]
+    )
+    const value = reorderedHeap.values[changedIndex]
+
+    return {
+      description: `Reordered ${reorderedHeap.name}`,
+      value,
+      targetHeapName: reorderedHeap.name,
+    }
+  }
+
   return null
 }
 
@@ -117,6 +153,7 @@ function getMedian(snapshot: HeapTraceSnapshot): number | null {
   const minSize = minHeap?.values.length ?? 0
   const maxSize = maxHeap?.values.length ?? 0
 
+  if (!minHeap || !maxHeap) return null
   if (isUndefined(minTop) && isUndefined(maxTop)) return null
   if (isUndefined(minTop)) return maxTop ?? null
   if (isUndefined(maxTop)) return minTop
@@ -125,7 +162,7 @@ function getMedian(snapshot: HeapTraceSnapshot): number | null {
   return (minTop + maxTop) / 2
 }
 
-/** Resolves the prepared heap pair active at the selected timeline step. */
+/** Resolves the heap state active at the selected timeline step. */
 export function getHeapVisualizationState(
   executionState: ExecutionState,
   fallbackStepIndex?: number

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vite-plus/test'
+
 import { HeapVisualizer } from './heap-visualizer'
 
 describe('HeapVisualizer', () => {
@@ -30,5 +31,29 @@ describe('HeapVisualizer', () => {
     expect(screen.getByText('Median: 2.5').closest('.pixel-panel')).toHaveClass(
       'w-full'
     )
+  })
+
+  it('shows the root for a single heap', () => {
+    render(
+      <HeapVisualizer
+        state={{
+          snapshot: {
+            heaps: [
+              { name: 'minHeap', kind: 'min', values: [2, 4, 8, 5] },
+            ],
+          },
+          action: {
+            description: 'Reordered minHeap',
+            value: 2,
+            targetHeapName: 'minHeap',
+          },
+          median: null,
+        }}
+      />
+    )
+
+    expect(screen.getByText('Reordered minHeap')).toBeInTheDocument()
+    expect(screen.getByText(/Root:\s*2/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Min Heap minHeap')).toBeInTheDocument()
   })
 })
