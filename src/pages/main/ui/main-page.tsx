@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useViewViewAnimationState } from '@/features/visualization'
+import { useViewViewAnimationState } from '@/features/view-view-animation'
 import { AppHeader, MobileHeader } from '@/widgets/header'
 import { ControlPanel } from '@/widgets/control-panel'
 import { EditorPanel } from '@/widgets/editor-panel'
