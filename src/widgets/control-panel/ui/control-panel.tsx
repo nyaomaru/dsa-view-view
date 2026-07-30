@@ -1,4 +1,4 @@
-import { ViewViewMonitor } from '@/features/visualization'
+import { ViewViewMonitor } from '@/features/view-view-animation'
 import { oneOfValues } from '@/shared/lib/guards'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui'
 import type { ControlPanelProps } from '../model/types'

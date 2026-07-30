@@ -1,7 +1,7 @@
 import { Button, Heading, Paragraph } from '@/shared/ui'
 import { cn } from '@/shared/lib/class-names'
 import type { AppMode } from '@/shared/model'
-import { ViewViewMonitor } from '@/features/visualization'
+import { ViewViewMonitor } from '@/features/view-view-animation'
 
 /** Props for the mobile mode switcher shown above the editor on small screens. */
 type MobileHeaderProps = {
