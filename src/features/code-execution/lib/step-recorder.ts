@@ -10,6 +10,7 @@ import {
 import { deepClone } from '@/shared/lib/deep-clone'
 import {
   arrayOf,
+  define,
   hasKeys,
   isFunction,
   isNonArrayObject,
@@ -22,9 +23,19 @@ import { MAX_STEPS, StepLimitError } from './execution-errors'
 
 const PREPARED_HEAP_KIND_LABEL = '__algorithmVisualizerHeapKind'
 const isPreparedHeapKind = oneOfValues('min', 'max')
-const isLocalHeapClassName = oneOfValues('MinHeap', 'MaxHeap')
+const isLocalMinHeapClassName = define<string>(
+  (value) => isString(value) && /^MinHeap(?:$|[A-Z0-9_])/.test(value)
+)
+const isLocalMaxHeapClassName = define<string>(
+  (value) => isString(value) && /^MaxHeap(?:$|[A-Z0-9_])/.test(value)
+)
 const isHeapStorageName = oneOfValues('heap', 'values')
 const isNumberArray = arrayOf(isNumber)
+const isSummedHeapItem = define<{ sum: number }>(
+  (value) =>
+    isNonArrayObject(value) && hasKeys('sum')(value) && isNumber(value.sum)
+)
+const isSummedHeapItemArray = arrayOf(isSummedHeapItem)
 const hasPreparedHeapKeys = hasKeys(PREPARED_HEAP_KIND_LABEL, 'values')
 const hasPreparedHeapKind = hasKeys(PREPARED_HEAP_KIND_LABEL)
 
@@ -47,26 +58,37 @@ function getHeapKind(
   if (!isFunction(value.constructor)) return undefined
 
   const className = value.constructor.name
-  if (!isLocalHeapClassName(className)) return undefined
+  if (isLocalMinHeapClassName(className)) return 'min'
+  if (isLocalMaxHeapClassName(className)) return 'max'
+  return undefined
+}
 
-  return className === 'MinHeap' ? 'min' : 'max'
+function normalizeHeapValues(value: unknown): number[] | undefined {
+  if (isNumberArray(value)) return [...value]
+  if (isSummedHeapItemArray(value)) {
+    return value.map((item) => item.sum)
+  }
+
+  return undefined
 }
 
 function getHeapValues(
   value: Record<PropertyKey, unknown>
 ): number[] | undefined {
-  if (hasPreparedHeapKeys(value) && isNumberArray(value.values)) {
-    return [...value.values]
+  if (hasPreparedHeapKeys(value)) {
+    const preparedValues = normalizeHeapValues(value.values)
+    if (preparedValues) return preparedValues
   }
 
-  const numericArrays = Object.entries(value).flatMap(([name, candidate]) =>
-    isNumberArray(candidate) ? [[name, candidate] as const] : []
-  )
+  const heapArrays = Object.entries(value).flatMap(([name, candidate]) => {
+    const values = normalizeHeapValues(candidate)
+    return values ? [[name, values] as const] : []
+  })
   const storage =
-    numericArrays.find(([name]) => isHeapStorageName(name)) ??
-    (numericArrays.length === 1 ? numericArrays[0] : undefined)
+    heapArrays.find(([name]) => isHeapStorageName(name)) ??
+    (heapArrays.length === 1 ? heapArrays[0] : undefined)
 
-  return storage ? [...storage[1]] : undefined
+  return storage ? storage[1] : undefined
 }
 
 function getDefaultHeapName(kind: HeapKind): string {
