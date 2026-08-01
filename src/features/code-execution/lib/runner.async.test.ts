@@ -36,6 +36,78 @@ describe('runner - async execution', () => {
     ).toBe(true)
   })
 
+  it('records synchronous operand work before await suspension', async () => {
+    const state = await executeCodeAsync(
+      `function helper(): number {
+  const helperValue = 2
+  return helperValue
+}
+
+async function calculate(): Promise<number> {
+  let value = 0
+  value = await helper()
+  return value
+}`,
+      {},
+      'calculate'
+    )
+    const helperEntryIndex = state.steps.findIndex(
+      (step) => step.description === 'Entering function: helper'
+    )
+    const helperDeclarationIndex = state.steps.findIndex(
+      (step) =>
+        step.type === 'variable-declaration' &&
+        step.description.startsWith('const helperValue =')
+    )
+    const suspendIndex = state.steps.findIndex(
+      (step) => step.type === 'await-suspend'
+    )
+
+    expect(helperEntryIndex).toBeGreaterThan(-1)
+    expect(helperDeclarationIndex).toBeGreaterThan(helperEntryIndex)
+    expect(suspendIndex).toBeGreaterThan(helperDeclarationIndex)
+  })
+
+  it('records a synchronous operand assignment before await suspension', async () => {
+    const state = await executeCodeAsync(
+      `async function assign(): Promise<number> {
+  let value = 0
+  await (value = 1)
+  return value
+}`,
+      {},
+      'assign'
+    )
+    const assignmentIndex = state.steps.findIndex(
+      (step) => step.type === 'assignment'
+    )
+    const suspendIndex = state.steps.findIndex(
+      (step) => step.type === 'await-suspend'
+    )
+
+    expect(assignmentIndex).toBeGreaterThan(-1)
+    expect(suspendIndex).toBeGreaterThan(assignmentIndex)
+  })
+
+  it('does not report suspension when operand evaluation throws', async () => {
+    const state = await executeCodeAsync(
+      `function fail(): never {
+  throw new Error('boom')
+}
+
+async function run(): Promise<void> {
+  await fail()
+}`,
+      {},
+      'run'
+    )
+
+    expect(state.error).toBe('boom')
+    expect(state.steps.some((step) => step.type.startsWith('await-'))).toBe(
+      false
+    )
+  })
+
   it('reports rejected Promises without losing earlier snapshots', async () => {
     const state = await executeCodeAsync(
       `async function fail(): Promise<void> {

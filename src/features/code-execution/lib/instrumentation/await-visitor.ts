@@ -14,16 +14,19 @@ export const createAwaitVisitor = (context: InstrumentationContext) => ({
 
       const line = getLineNumber(path.node)
       const source = safeGenerate(path.node.argument)
+      const operandId = path.scope.generateUidIdentifier(
+        'algorithmVisualizerAwaitOperand'
+      )
       const resultId = path.scope.generateUidIdentifier(
         'algorithmVisualizerAwaitResult'
       )
       const errorId = path.scope.generateUidIdentifier(
         'algorithmVisualizerAwaitError'
       )
-      const wrappedAwait = t.awaitExpression(path.node.argument)
+      const wrappedAwait = t.awaitExpression(operandId)
       const wrapper = context.markInstrumented(
         t.arrowFunctionExpression(
-          [],
+          [operandId],
           t.blockStatement([
             createRecordStepStatement(
               STEP_TYPES.AWAIT_SUSPEND,
@@ -65,7 +68,9 @@ export const createAwaitVisitor = (context: InstrumentationContext) => ({
       path.replaceWith(
         context.markInstrumented(
           t.awaitExpression(
-            context.markInstrumented(t.callExpression(wrapper, []))
+            context.markInstrumented(
+              t.callExpression(wrapper, [path.node.argument])
+            )
           )
         )
       )
