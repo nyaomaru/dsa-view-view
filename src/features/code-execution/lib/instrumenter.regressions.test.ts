@@ -83,6 +83,56 @@ describe('instrumentation regressions', () => {
     })
   })
 
+  it('does not treat awaits in assigned functions as part of the assignment', () => {
+    const state = executeCode(
+      `
+      function configure() {
+        let callback
+        callback = async () => await Promise.resolve(42)
+        return typeof callback
+      }
+      `,
+      {},
+      'configure'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe('function')
+    expect(
+      state.steps.some(
+        (step) =>
+          step.type === 'assignment' &&
+          step.description.startsWith('callback =')
+      )
+    ).toBe(true)
+  })
+
+  it('does not treat awaits in array mutation callbacks as part of the mutation', () => {
+    const state = executeCode(
+      `
+      function configure() {
+        const callbacks = []
+        const length = callbacks.push(
+          async () => await Promise.resolve(42)
+        )
+        return length
+      }
+      `,
+      {},
+      'configure'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(1)
+    expect(
+      state.steps.some(
+        (step) =>
+          step.type === 'array-mutation' &&
+          step.description.startsWith('callbacks.push(')
+      )
+    ).toBe(true)
+  })
+
   it('executes returned functions for LeetCode factory solutions', () => {
     const state = executeCode(
       `

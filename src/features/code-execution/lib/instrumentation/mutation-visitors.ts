@@ -52,6 +52,9 @@ function hasAwaitExpression(path: NodePath): boolean {
   let hasAwait = false
 
   path.traverse({
+    Function(functionPath) {
+      functionPath.skip()
+    },
     AwaitExpression(awaitPath) {
       hasAwait = true
       awaitPath.stop()
