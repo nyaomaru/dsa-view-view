@@ -43,6 +43,12 @@ const numberMatrixSignature: FunctionSignature = {
   returnType: 'number',
 }
 
+const asyncNoInputSignature: FunctionSignature = {
+  name: 'never',
+  parameters: [],
+  returnType: 'any',
+}
+
 const lowestCommonAncestorSignature: FunctionSignature = {
   name: 'lowestCommonAncestor',
   parameters: [
@@ -66,6 +72,31 @@ function listToArray(node: TestListNode | null): number[] {
 }
 
 describe('InputForm ListNode inputs', () => {
+  it('shows pending execution for an async zero-input function', async () => {
+    let finishExecution: (() => void) | undefined
+    const handleSubmit = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          finishExecution = resolve
+        })
+    )
+
+    render(
+      <InputForm signature={asyncNoInputSignature} onSubmit={handleSubmit} />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Run' }))
+
+    expect(handleSubmit).toHaveBeenCalledWith({})
+    expect(screen.getByRole('button', { name: 'Running...' })).toBeDisabled()
+
+    finishExecution?.()
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Run' })).toBeEnabled()
+    })
+  })
+
   it('prefills primitive and array parameters from default input values', () => {
     render(
       <InputForm

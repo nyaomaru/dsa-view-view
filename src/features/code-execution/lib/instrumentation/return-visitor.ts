@@ -22,56 +22,70 @@ const getReturnArgumentDescription = (argument: t.Expression): string => {
   return safeGenerate(argument)
 }
 
-export const createReturnVisitor = (context: InstrumentationContext) => ({
-  ReturnStatement(path: NodePath<t.ReturnStatement>) {
-    if (context.isInstrumented(path.node)) return
+export const createReturnVisitor = (context: InstrumentationContext) => {
+  const argumentDescriptions = new WeakMap<t.ReturnStatement, string>()
 
-    const line = getLineNumber(path.node)
-    const returnLocation = `${context.getCurrentFunctionName()} line ${line}`
+  return {
+    ReturnStatement: {
+      enter(path: NodePath<t.ReturnStatement>) {
+        if (context.isInstrumented(path.node) || !path.node.argument) return
 
-    if (path.node.argument) {
-      const tempId = path.scope.generateUidIdentifier(RETURN_TEMP_NAME)
-      const declaration = context.markInstrumented(
-        t.variableDeclaration('const', [
-          t.variableDeclarator(tempId, path.node.argument),
-        ])
-      )
-      const recordStep = createRecordStepStatement(
-        STEP_TYPES.RETURN,
-        line,
-        `return from ${returnLocation}: ${getReturnArgumentDescription(path.node.argument)}`,
-        context.createScopeProperties([
-          t.objectProperty(t.stringLiteral(RETURN_VALUE_LABEL), tempId),
-          t.objectProperty(
-            t.stringLiteral(RETURN_LOCATION_LABEL),
-            t.stringLiteral(returnLocation)
-          ),
-        ])
-      )
-      const returnStatement = context.markInstrumented(
-        t.returnStatement(tempId)
-      )
-      path.replaceWithMultiple([declaration, recordStep, returnStatement])
-      return
-    }
+        argumentDescriptions.set(
+          path.node,
+          getReturnArgumentDescription(path.node.argument)
+        )
+      },
+      exit(path: NodePath<t.ReturnStatement>) {
+        if (context.isInstrumented(path.node)) return
 
-    path.insertBefore(
-      createRecordStepStatement(
-        STEP_TYPES.RETURN,
-        line,
-        `return from ${returnLocation}: undefined`,
-        context.createScopeProperties([
-          t.objectProperty(
-            t.stringLiteral(RETURN_VALUE_LABEL),
-            t.identifier('undefined')
-          ),
-          t.objectProperty(
-            t.stringLiteral(RETURN_LOCATION_LABEL),
-            t.stringLiteral(returnLocation)
-          ),
-        ])
-      )
-    )
-    context.markInstrumented(path.node)
-  },
-})
+        const line = getLineNumber(path.node)
+        const returnLocation = `${context.getCurrentFunctionName()} line ${line}`
+
+        if (path.node.argument) {
+          const tempId = path.scope.generateUidIdentifier(RETURN_TEMP_NAME)
+          const declaration = context.markInstrumented(
+            t.variableDeclaration('const', [
+              t.variableDeclarator(tempId, path.node.argument),
+            ])
+          )
+          const recordStep = createRecordStepStatement(
+            STEP_TYPES.RETURN,
+            line,
+            `return from ${returnLocation}: ${argumentDescriptions.get(path.node) ?? getReturnArgumentDescription(path.node.argument)}`,
+            context.createScopeProperties([
+              t.objectProperty(t.stringLiteral(RETURN_VALUE_LABEL), tempId),
+              t.objectProperty(
+                t.stringLiteral(RETURN_LOCATION_LABEL),
+                t.stringLiteral(returnLocation)
+              ),
+            ])
+          )
+          const returnStatement = context.markInstrumented(
+            t.returnStatement(tempId)
+          )
+          path.replaceWithMultiple([declaration, recordStep, returnStatement])
+          return
+        }
+
+        path.insertBefore(
+          createRecordStepStatement(
+            STEP_TYPES.RETURN,
+            line,
+            `return from ${returnLocation}: undefined`,
+            context.createScopeProperties([
+              t.objectProperty(
+                t.stringLiteral(RETURN_VALUE_LABEL),
+                t.identifier('undefined')
+              ),
+              t.objectProperty(
+                t.stringLiteral(RETURN_LOCATION_LABEL),
+                t.stringLiteral(returnLocation)
+              ),
+            ])
+          )
+        )
+        context.markInstrumented(path.node)
+      },
+    },
+  }
+}

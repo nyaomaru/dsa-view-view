@@ -150,6 +150,75 @@ export function* createTypeScriptExecutionRunner(
 }
 
 /**
+ * Promise-aware execution engine used by the worker runtime.
+ */
+export async function* createAsyncTypeScriptExecutionRunner(
+  code: string,
+  inputs: InputValues,
+  entryFunctionName?: string
+): AsyncGenerator<ExecutionStep, unknown, undefined> {
+  const context = createExecutionContext(inputs)
+
+  const recordStep = (
+    type: ExecutionStep['type'],
+    line: number,
+    description: string,
+    stepVariables: Record<string, unknown>
+  ): ExecutionStep =>
+    recordExecutionStep(context, type, line, description, stepVariables)
+
+  try {
+    yield recordStep(
+      'function-call',
+      0,
+      `Function called with: ${safeStringify(inputs)}`,
+      {}
+    )
+
+    const preparedExecution = prepareExecution(code, inputs, entryFunctionName)
+    const func = createExecutionFunction(
+      preparedExecution.inputNames,
+      preparedExecution.wrapperCode
+    )
+
+    let result: unknown
+    let stepLimitReached = false
+
+    try {
+      result = await func(...Object.values(inputs), recordStep)
+    } catch (err) {
+      if (isStepLimitError(err)) {
+        stepLimitReached = true
+      } else {
+        throw err
+      }
+    }
+
+    for (let i = 1; i < context.steps.length; i++) {
+      yield context.steps[i]
+    }
+
+    if (stepLimitReached) {
+      yield createStepLimitWarningStep(context)
+      return undefined
+    }
+
+    yield recordStep('return', 0, `Returned: ${safeStringify(result)}`, {
+      result,
+    })
+
+    return result
+  } catch (error) {
+    const errorMessage = isError(error) ? error.message : 'Unknown error'
+    for (let i = 1; i < context.steps.length; i++) {
+      yield context.steps[i]
+    }
+    yield recordStep('return', 0, `Error: ${errorMessage}`, {})
+    throw error
+  }
+}
+
+/**
  * Executes TypeScript/JavaScript code and returns complete execution state.
  */
 export function executeTypeScriptCode(
@@ -172,6 +241,56 @@ export function executeTypeScriptCode(
     while (!result.done) {
       steps.push(result.value)
       result = runner.next()
+    }
+
+    returnValue = result.value
+    const lastStep = steps[steps.length - 1]
+    if (
+      lastStep?.description === `Warning: ${getStepLimitMessage(MAX_STEPS)}`
+    ) {
+      error = getStepLimitMessage(MAX_STEPS)
+    }
+  } catch (err) {
+    if (isStepLimitError(err)) {
+      error = err.message
+    } else {
+      error = isError(err) ? err.message : 'Execution failed'
+    }
+  }
+
+  return {
+    currentStep: 0,
+    totalSteps: steps.length,
+    steps,
+    isComplete: false,
+    returnValue,
+    error,
+  }
+}
+
+/**
+ * Executes TypeScript/JavaScript code and waits for a returned Promise.
+ */
+export async function executeTypeScriptCodeAsync(
+  code: string,
+  inputs: InputValues,
+  entryFunctionName?: string
+): Promise<ExecutionState> {
+  const steps: ExecutionStep[] = []
+  let returnValue: unknown
+  let error: string | undefined
+
+  try {
+    const runner = createAsyncTypeScriptExecutionRunner(
+      code,
+      inputs,
+      entryFunctionName
+    )
+
+    let result = await runner.next()
+    while (!result.done) {
+      steps.push(result.value)
+      result = await runner.next()
     }
 
     returnValue = result.value

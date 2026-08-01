@@ -65,7 +65,7 @@ type InputFormProps = {
   /** Optional initial values used to prefill example inputs. */
   defaultInputValues?: Record<string, unknown>
   /** Callback invoked with converted input values on submit. */
-  onSubmit: (values: Record<string, unknown>) => void
+  onSubmit: (values: Record<string, unknown>) => void | Promise<void>
   /** Callback invoked with raw form values suitable for restoring/share URLs. */
   onRawInputChange?: (values: Record<string, unknown>) => void
 }
@@ -106,6 +106,7 @@ function InputFormContent({
       resolvedDefaultInputValues
     )
   )
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const defaultValues = createDefaultInputValues(
     signature.parameters,
     resolvedDefaultInputValues
@@ -191,7 +192,7 @@ function InputFormContent({
   /**
    * Handles form submission
    */
-  const onFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const onFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const data = getRawFormValues(event.currentTarget)
@@ -212,7 +213,12 @@ function InputFormContent({
     }
 
     onRawInputChange?.(rawInputs)
-    onSubmit(convertInputValues(signature.parameters, rawInputs))
+    setIsSubmitting(true)
+    try {
+      await onSubmit(convertInputValues(signature.parameters, rawInputs))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -295,8 +301,8 @@ function InputFormContent({
               )
             })}
 
-            <Button type="submit" className="w-full">
-              Run
+            <Button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting ? 'Running...' : 'Run'}
             </Button>
           </Stack>
         </form>

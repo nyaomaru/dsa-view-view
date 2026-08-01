@@ -85,4 +85,55 @@ describe('ExecutionTimelineCard', () => {
       'text-timeline-current-foreground'
     )
   })
+
+  it('identifies await suspension, resumption, and rejection steps', () => {
+    render(
+      <ExecutionTimelineCard
+        executionState={{
+          currentStep: 1,
+          totalSteps: 3,
+          steps: [
+            {
+              stepNumber: 0,
+              type: 'await-suspend',
+              line: 2,
+              description: 'Awaiting: loadValue()',
+              variables: {},
+              timestamp: 0,
+            },
+            {
+              stepNumber: 1,
+              type: 'await-resume',
+              line: 2,
+              description: 'Resumed after await: loadValue()',
+              variables: {},
+              timestamp: 1,
+            },
+            {
+              stepNumber: 2,
+              type: 'await-reject',
+              line: 4,
+              description: 'Await rejected: saveValue()',
+              variables: {},
+              timestamp: 2,
+            },
+          ],
+          isComplete: false,
+        }}
+        isRunning={false}
+        timelineRef={createRef()}
+        currentStepRef={createRef()}
+        onPause={vi.fn()}
+        onStart={vi.fn()}
+        onReset={vi.fn()}
+        onStepForward={vi.fn()}
+        onStepBackward={vi.fn()}
+        onSkipToEnd={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('await-suspend')).toBeInTheDocument()
+    expect(screen.getByText('await-resume')).toBeInTheDocument()
+    expect(screen.getByText('await-reject')).toBeInTheDocument()
+  })
 })
