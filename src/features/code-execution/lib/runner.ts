@@ -8,6 +8,7 @@ import type {
 import {
   createTypeScriptExecutionRunner,
   executeTypeScriptCode,
+  executeTypeScriptCodeAsync,
 } from './typescript-runner'
 export {
   resetToStart,
@@ -45,6 +46,24 @@ export function executeCode(
 ): ExecutionState {
   if (language === 'typescript') {
     return executeTypeScriptCode(code, inputs, entryFunctionName)
+  }
+
+  throw new Error(
+    `Language "${String(language)}" does not support execution yet`
+  )
+}
+
+/**
+ * Executes code and waits for asynchronous entry-point completion.
+ */
+export async function executeCodeAsync(
+  code: string,
+  inputs: InputValues,
+  entryFunctionName?: string,
+  language: SupportedLanguage = DEFAULT_LANGUAGE
+): Promise<ExecutionState> {
+  if (language === 'typescript') {
+    return executeTypeScriptCodeAsync(code, inputs, entryFunctionName)
   }
 
   throw new Error(

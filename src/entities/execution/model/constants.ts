@@ -13,6 +13,9 @@ export const STEP_TYPES = {
   ARRAY_MUTATION: 'array-mutation',
   LOOP_ITERATION: 'loop-iteration',
   CONDITION: 'condition',
+  AWAIT_SUSPEND: 'await-suspend',
+  AWAIT_RESUME: 'await-resume',
+  AWAIT_REJECT: 'await-reject',
 } as const
 
 export type ExecutionStepType = (typeof STEP_TYPES)[keyof typeof STEP_TYPES]
