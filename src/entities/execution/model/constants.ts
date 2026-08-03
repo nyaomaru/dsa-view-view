@@ -7,6 +7,7 @@ export const FUNCTION_NAME_LABEL = '__algorithmVisualizerFunctionName'
 export const STEP_TYPES = {
   FUNCTION_CALL: 'function-call',
   FUNCTION_ENTRY: 'function-entry',
+  FUNCTION_THROW: 'function-throw',
   VARIABLE_DECLARATION: 'variable-declaration',
   RETURN: 'return',
   ASSIGNMENT: 'assignment',

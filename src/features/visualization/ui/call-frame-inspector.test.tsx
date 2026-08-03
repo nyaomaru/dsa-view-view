@@ -30,7 +30,9 @@ function createStep({
         ? 'function-entry'
         : phase === 'return'
           ? 'return'
-          : 'assignment',
+          : phase === 'throw'
+            ? 'function-throw'
+            : 'assignment',
     line: 1,
     description: `dfs ${phase}`,
     variables,
@@ -211,6 +213,41 @@ describe('CallFrameInspector', () => {
       .closest('section')
     expect(returnSection).not.toBeNull()
     expect(within(returnSection!).getByText('1')).toBeInTheDocument()
+  })
+
+  it('shows a throwing frame without a return value', () => {
+    const throwingSteps = [
+      createStep({
+        frameId: 1,
+        phase: 'enter',
+        variables: { value: 'before error' },
+      }),
+      createStep({
+        frameId: 1,
+        phase: 'throw',
+        variables: { value: 'before error' },
+      }),
+    ]
+
+    render(
+      <CallFrameInspector
+        executionState={{
+          currentStep: 1,
+          totalSteps: throwingSteps.length,
+          steps: throwingSteps,
+          isComplete: false,
+        }}
+      />
+    )
+
+    const throwingButton = screen.getByRole('button', { name: /dfs #1/i })
+    const details = screen.getByRole('region', {
+      name: 'dfs #1 frame details',
+    })
+
+    expect(throwingButton).toHaveAttribute('aria-current', 'true')
+    expect(throwingButton).toHaveTextContent('Throwing')
+    expect(within(details).queryByText('Return value')).not.toBeInTheDocument()
   })
 
   it('keeps completed calls without repeating the Completed label', () => {

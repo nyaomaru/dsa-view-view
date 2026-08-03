@@ -45,6 +45,49 @@ const addImplicitReturnStep = (
   )
 }
 
+const wrapFunctionBodyWithThrowStep = (
+  context: InstrumentationContext,
+  body: t.BlockStatement,
+  functionName: string,
+  line: number,
+  errorId: t.Identifier
+): void => {
+  const entryStatement = body.body[0]
+  if (!entryStatement) return
+
+  const functionBody = body.body.slice(1)
+  const throwLocation = `${functionName} line ${line}`
+  const throwStep = createRecordStepStatement(
+    STEP_TYPES.FUNCTION_THROW,
+    line,
+    `throw from ${throwLocation}`,
+    context.createFrameIdentityProperties()
+  )
+  const rethrow = context.markInstrumented(
+    t.throwStatement(t.identifier(errorId.name))
+  )
+  const boundary = context.markInstrumented(
+    t.tryStatement(
+      t.blockStatement(functionBody),
+      t.catchClause(errorId, t.blockStatement([throwStep, rethrow]))
+    )
+  )
+
+  body.body = [entryStatement, boundary]
+}
+
+const finishFunction = (
+  context: InstrumentationContext,
+  body: t.BlockStatement,
+  functionName: string,
+  line: number,
+  errorId: t.Identifier
+): void => {
+  addImplicitReturnStep(context, body, functionName, line)
+  wrapFunctionBodyWithThrowStep(context, body, functionName, line, errorId)
+  context.exitFunction()
+}
+
 export const createFunctionVisitors = (context: InstrumentationContext) => ({
   FunctionDeclaration: {
     enter(path: NodePath<t.FunctionDeclaration>) {
@@ -54,18 +97,19 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
         functionName,
         getLineNumber(path.node),
         `Entering function: ${functionName}`,
-        getParameterNames(path.node.params)
+        getParameterNames(path.node.params),
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameId')
       )
     },
     exit(path: NodePath<t.FunctionDeclaration>) {
       const functionName = path.node.id?.name ?? 'anonymous'
-      addImplicitReturnStep(
+      finishFunction(
         context,
         path.node.body,
         functionName,
-        path.node.loc?.end.line ?? getLineNumber(path.node)
+        path.node.loc?.end.line ?? getLineNumber(path.node),
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameError')
       )
-      context.exitFunction()
     },
   },
 
@@ -82,20 +126,21 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
         'anonymous function',
         getLineNumber(path.node),
         'Entering anonymous function',
-        getParameterNames(path.node.params)
+        getParameterNames(path.node.params),
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameId')
       )
     },
     exit(path: NodePath<t.FunctionExpression>) {
       if (context.isInstrumented(path.node) || isSkippedArrayCallback(path)) {
         return
       }
-      addImplicitReturnStep(
+      finishFunction(
         context,
         path.node.body,
         'anonymous function',
-        path.node.loc?.end.line ?? getLineNumber(path.node)
+        path.node.loc?.end.line ?? getLineNumber(path.node),
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameError')
       )
-      context.exitFunction()
     },
   },
 
@@ -117,6 +162,7 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
         getLineNumber(path.node),
         'Entering arrow function',
         getParameterNames(path.node.params),
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameId'),
         context.shouldCaptureClassReceiver()
       )
     },
@@ -124,13 +170,13 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
       if (context.isInstrumented(path.node) || isSkippedArrayCallback(path)) {
         return
       }
-      addImplicitReturnStep(
+      finishFunction(
         context,
         path.node.body as t.BlockStatement,
         'arrow function',
-        path.node.loc?.end.line ?? getLineNumber(path.node)
+        path.node.loc?.end.line ?? getLineNumber(path.node),
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameError')
       )
-      context.exitFunction()
     },
   },
 
@@ -142,18 +188,19 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
         methodName,
         getLineNumber(path.node),
         `Entering method: ${methodName}`,
-        getParameterNames(path.node.params)
+        getParameterNames(path.node.params),
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameId')
       )
     },
     exit(path: NodePath<t.ObjectMethod>) {
       const methodName = getMethodName(path.node)
-      addImplicitReturnStep(
+      finishFunction(
         context,
         path.node.body,
         methodName,
-        path.node.loc?.end.line ?? getLineNumber(path.node)
+        path.node.loc?.end.line ?? getLineNumber(path.node),
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameError')
       )
-      context.exitFunction()
     },
   },
 
@@ -173,18 +220,19 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
         getLineNumber(path.node),
         `Entering method: ${methodName}`,
         getParameterNames(path.node.params),
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameId'),
         !isDerivedConstructor
       )
     },
     exit(path: NodePath<t.ClassMethod>) {
       const methodName = getMethodName(path.node)
-      addImplicitReturnStep(
+      finishFunction(
         context,
         path.node.body,
         methodName,
-        path.node.loc?.end.line ?? getLineNumber(path.node)
+        path.node.loc?.end.line ?? getLineNumber(path.node),
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameError')
       )
-      context.exitFunction()
     },
   },
 })

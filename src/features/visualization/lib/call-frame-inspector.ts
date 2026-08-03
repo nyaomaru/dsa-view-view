@@ -10,6 +10,7 @@ export type CallFrameStatus =
   | 'current'
   | 'suspended'
   | 'returning'
+  | 'throwing'
   | 'completed'
 
 export type InspectedCallFrame = {
@@ -29,10 +30,12 @@ export type InspectedCallFrame = {
   lastObservedStepIndex: number
   /** Binding names visible at the frame's last observed step. */
   visibleVariableNames: string[]
-  /** Step index where the invocation returned. */
+  /** Step index where the invocation returned or threw. */
   endStepIndex?: number
-  /** Whether a return event has been recorded. */
+  /** Whether a successful return event has been recorded. */
   hasReturnValue: boolean
+  /** How this invocation completed, when it has finished. */
+  completionPhase?: 'return' | 'throw'
 }
 
 export type CallFrameDetails = {
@@ -56,9 +59,9 @@ export type CallerFrameContext = {
 export type CallFrameInspectorState = {
   /** All invocations that have started by the selected step. */
   frames: InspectedCallFrame[]
-  /** Active invocation identifiers ordered from caller to callee. */
+  /** Active invocation identifiers in stable entry order. */
   activeFrameIds: number[]
-  /** Currently executing or returning invocation identifier. */
+  /** Currently executing, returning, or throwing invocation identifier. */
   currentFrameId?: number
 }
 
@@ -72,16 +75,20 @@ const SPECIAL_VARIABLE_NAMES = new Set([
 
 function getCallFrameStatus({
   frameId,
-  returningFrameId,
+  terminalFrameId,
+  terminalPhase,
   currentFrameId,
   activeFrameIds,
 }: {
   frameId: number
-  returningFrameId?: number
+  terminalFrameId?: number
+  terminalPhase?: 'return' | 'throw'
   currentFrameId?: number
   activeFrameIds: number[]
 }): CallFrameStatus {
-  if (frameId === returningFrameId) return 'returning'
+  if (frameId === terminalFrameId) {
+    return terminalPhase === 'throw' ? 'throwing' : 'returning'
+  }
   if (frameId === currentFrameId) return 'current'
   if (activeFrameIds.includes(frameId)) return 'suspended'
 
@@ -147,9 +154,10 @@ export function getCallFrameDetails(
   frame: InspectedCallFrame
 ): CallFrameDetails {
   const parameters = getParameters(executionState, frame)
-  const returnVariables = !isUndefined(frame.endStepIndex)
-    ? executionState.steps[frame.endStepIndex]?.variables
-    : undefined
+  const returnVariables =
+    frame.completionPhase === 'return' && !isUndefined(frame.endStepIndex)
+      ? executionState.steps[frame.endStepIndex]?.variables
+      : undefined
 
   return {
     parameters,
@@ -191,7 +199,6 @@ export function getCallFrameInspectorState(
 ): CallFrameInspectorState {
   const frames = new Map<number, MutableCallFrame>()
   const activeFrameIds: number[] = []
-  let returningFrameId: number | undefined
   const lastStepIndex = Math.min(
     executionState.currentStep,
     executionState.steps.length - 1
@@ -203,11 +210,14 @@ export function getCallFrameInspectorState(
     if (!step || !callFrame) continue
 
     if (callFrame.phase === 'enter') {
+      const parentFrame = !isUndefined(callFrame.parentFrameId)
+        ? frames.get(callFrame.parentFrameId)
+        : undefined
       frames.set(callFrame.frameId, {
         id: callFrame.frameId,
         parentId: callFrame.parentFrameId,
         functionName: callFrame.functionName,
-        depth: activeFrameIds.length,
+        depth: parentFrame ? parentFrame.depth + 1 : 0,
         startStepIndex: stepIndex,
         lastObservedStepIndex: stepIndex,
         visibleVariableNames: callFrame.visibleVariableNames,
@@ -218,19 +228,29 @@ export function getCallFrameInspectorState(
 
     const frame = frames.get(callFrame.frameId)
     if (!frame) continue
-    frame.lastObservedStepIndex = stepIndex
-    frame.visibleVariableNames = callFrame.visibleVariableNames
+    if (callFrame.phase !== 'throw') {
+      frame.lastObservedStepIndex = stepIndex
+      frame.visibleVariableNames = callFrame.visibleVariableNames
+    }
 
-    if (callFrame.phase !== 'return') continue
-
-    frame.endStepIndex = stepIndex
-    const activeIndex = activeFrameIds.lastIndexOf(callFrame.frameId)
-    if (activeIndex >= 0) activeFrameIds.splice(activeIndex, 1)
-    if (stepIndex === lastStepIndex) returningFrameId = callFrame.frameId
+    if (callFrame.phase === 'return' || callFrame.phase === 'throw') {
+      frame.endStepIndex = stepIndex
+      frame.completionPhase = callFrame.phase
+      const activeIndex = activeFrameIds.lastIndexOf(callFrame.frameId)
+      if (activeIndex >= 0) activeFrameIds.splice(activeIndex, 1)
+    }
   }
 
+  const selectedCallFrame =
+    executionState.steps[lastStepIndex]?.metadata?.callFrame
+  const terminalPhase =
+    selectedCallFrame?.phase === 'return' ||
+    selectedCallFrame?.phase === 'throw'
+      ? selectedCallFrame.phase
+      : undefined
+  const terminalFrameId = terminalPhase ? selectedCallFrame?.frameId : undefined
   const currentFrameId =
-    returningFrameId ?? activeFrameIds[activeFrameIds.length - 1]
+    selectedCallFrame?.frameId ?? activeFrameIds[activeFrameIds.length - 1]
 
   return {
     activeFrameIds,
@@ -238,7 +258,8 @@ export function getCallFrameInspectorState(
     frames: [...frames.values()].map((frame) => {
       const status = getCallFrameStatus({
         frameId: frame.id,
-        returningFrameId,
+        terminalFrameId,
+        terminalPhase,
         currentFrameId,
         activeFrameIds,
       })
@@ -253,7 +274,8 @@ export function getCallFrameInspectorState(
         lastObservedStepIndex: frame.lastObservedStepIndex,
         visibleVariableNames: frame.visibleVariableNames,
         endStepIndex: frame.endStepIndex,
-        hasReturnValue: !isUndefined(frame.endStepIndex),
+        hasReturnValue: frame.completionPhase === 'return',
+        completionPhase: frame.completionPhase,
       }
     }),
   }

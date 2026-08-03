@@ -20,6 +20,7 @@ const STATUS_LABELS: Record<CallFrameStatus, string> = {
   current: 'Current',
   suspended: 'Suspended',
   returning: 'Returning',
+  throwing: 'Throwing',
   completed: 'Completed',
 }
 
@@ -32,7 +33,10 @@ function FrameButton({
   isSelected: boolean
   onSelect: () => void
 }) {
-  const isExecuting = frame.status === 'current' || frame.status === 'returning'
+  const isExecuting =
+    frame.status === 'current' ||
+    frame.status === 'returning' ||
+    frame.status === 'throwing'
 
   return (
     <button
@@ -160,9 +164,16 @@ export function CallFrameInspector({
   const activeFrameIds = new Set(inspectorState.activeFrameIds)
   const activeFrames = inspectorState.frames
     .filter(
-      (frame) => activeFrameIds.has(frame.id) || frame.status === 'returning'
+      (frame) =>
+        activeFrameIds.has(frame.id) ||
+        frame.status === 'returning' ||
+        frame.status === 'throwing'
     )
-    .reverse()
+    .sort((left, right) => {
+      if (left.id === inspectorState.currentFrameId) return -1
+      if (right.id === inspectorState.currentFrameId) return 1
+      return right.lastObservedStepIndex - left.lastObservedStepIndex
+    })
   const completedFrames = inspectorState.frames
     .filter((frame) => frame.status === 'completed')
     .reverse()
@@ -175,9 +186,9 @@ export function CallFrameInspector({
       >
         <section className="space-y-2 lg:shrink-0">
           <header>
-            <h3 className="text-sm font-semibold">Active stack</h3>
+            <h3 className="text-sm font-semibold">Active frames</h3>
             <p className="text-xs text-muted-foreground">
-              Current call first, followed by its callers.
+              Current call first, followed by suspended invocations.
             </p>
           </header>
           {activeFrames.length > 0 ? (
@@ -241,7 +252,8 @@ export function CallFrameInspector({
             <Badge
               variant={
                 selectedFrame.status === 'current' ||
-                selectedFrame.status === 'returning'
+                selectedFrame.status === 'returning' ||
+                selectedFrame.status === 'throwing'
                   ? 'default'
                   : 'outline'
               }
