@@ -7,12 +7,14 @@ import {
   STEP_TYPES,
 } from '@/entities/execution'
 import { getUniqueNames } from './binding-names'
-import { createRecordStepStatement } from './step-factory'
+import { CALL_FRAME_ID_LABEL } from '../frame-identity'
+import { createRecordStepCall } from './step-factory'
 
 export class InstrumentationContext {
   private readonly scopeStack: string[][] = []
   private readonly functionStack: string[] = []
   private readonly classReceiverStack: boolean[] = []
+  private readonly frameIdentifierStack: t.Identifier[] = []
   private readonly instrumentedNodes = new WeakSet<t.Node>()
 
   isInstrumented(node: t.Node): boolean {
@@ -49,7 +51,8 @@ export class InstrumentationContext {
   }
 
   createScopeProperties(
-    extraProperties: t.ObjectProperty[] = []
+    extraProperties: t.ObjectProperty[] = [],
+    includeFrameIdentity = true
   ): t.ObjectProperty[] {
     const visibleVariables = getUniqueNames(this.scopeStack.flat())
     return [
@@ -65,6 +68,19 @@ export class InstrumentationContext {
             ),
           ]
         : []),
+      ...(includeFrameIdentity ? this.createFrameIdentityProperties() : []),
+    ]
+  }
+
+  createFrameIdentityProperties(): t.ObjectProperty[] {
+    const frameIdentifier = this.frameIdentifierStack.at(-1)
+    if (!frameIdentifier) return []
+
+    return [
+      t.objectProperty(
+        t.stringLiteral(CALL_FRAME_ID_LABEL),
+        t.identifier(frameIdentifier.name)
+      ),
     ]
   }
 
@@ -74,16 +90,17 @@ export class InstrumentationContext {
     line: number,
     description: string,
     parameterNames: string[],
+    frameIdentifier: t.Identifier,
     captureClassReceiver = false
   ): void {
     this.pushScope(parameterNames)
     this.classReceiverStack.push(captureClassReceiver)
-    body.body.unshift(
-      createRecordStepStatement(
-        STEP_TYPES.FUNCTION_ENTRY,
-        line,
-        description,
-        this.createScopeProperties([
+    const entryStep = createRecordStepCall(
+      STEP_TYPES.FUNCTION_ENTRY,
+      line,
+      description,
+      this.createScopeProperties(
+        [
           t.objectProperty(
             t.stringLiteral(FUNCTION_NAME_LABEL),
             t.stringLiteral(functionName)
@@ -96,14 +113,31 @@ export class InstrumentationContext {
               )
             )
           ),
+        ],
+        false
+      )
+    )
+    const frameId = t.memberExpression(
+      t.memberExpression(
+        t.memberExpression(entryStep, t.identifier('metadata')),
+        t.identifier('callFrame')
+      ),
+      t.identifier('frameId')
+    )
+    body.body.unshift(
+      this.markInstrumented(
+        t.variableDeclaration('const', [
+          t.variableDeclarator(frameIdentifier, frameId),
         ])
       )
     )
+    this.frameIdentifierStack.push(frameIdentifier)
     this.functionStack.push(functionName)
   }
 
   exitFunction(): void {
     this.functionStack.pop()
+    this.frameIdentifierStack.pop()
     this.classReceiverStack.pop()
     this.popScope()
   }

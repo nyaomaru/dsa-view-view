@@ -76,7 +76,7 @@ function createStepLimitWarningStep(
     description: `Warning: ${message}`,
     variables: lastStep ? lastStep.variables : {},
     timestamp: Date.now(),
-    callStack: [...context.callStack],
+    callStack: lastStep?.callStack ?? ['root'],
   }
 }
 

@@ -133,6 +133,49 @@ describe('instrumentation regressions', () => {
     ).toBe(true)
   })
 
+  it('restores the caller frame after a caught synchronous throw', () => {
+    const state = executeCode(
+      `
+      function fail(): never {
+        throw new Error('boom')
+      }
+
+      function recover(): boolean {
+        let recovered = false
+        try {
+          fail()
+        } catch {
+          recovered = true
+        }
+        return recovered
+      }
+      `,
+      {},
+      'recover'
+    )
+    const recoverEntry = state.steps.find(
+      (step) =>
+        step.metadata?.callFrame?.phase === 'enter' &&
+        step.metadata.callFrame.functionName === 'recover'
+    )
+    const failThrow = state.steps.find(
+      (step) =>
+        step.metadata?.callFrame?.phase === 'throw' &&
+        step.metadata.callFrame.functionName === 'fail'
+    )
+    const recoveredAssignment = state.steps.find(
+      (step) =>
+        step.type === 'assignment' && step.description.startsWith('recovered =')
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(true)
+    expect(failThrow?.type).toBe('function-throw')
+    expect(recoveredAssignment?.metadata?.callFrame?.frameId).toBe(
+      recoverEntry?.metadata?.callFrame?.frameId
+    )
+  })
+
   it('executes returned functions for LeetCode factory solutions', () => {
     const state = executeCode(
       `

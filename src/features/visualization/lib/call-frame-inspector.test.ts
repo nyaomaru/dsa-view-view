@@ -36,7 +36,9 @@ function createStep({
         ? 'function-entry'
         : phase === 'return'
           ? 'return'
-          : 'assignment',
+          : phase === 'throw'
+            ? 'function-throw'
+            : 'assignment',
     line: 1,
     description: `${functionName} ${phase}`,
     variables,
@@ -254,6 +256,164 @@ describe('call-frame inspector', () => {
       total: 1,
     })
     expect(getCallFrameDetails(createState(5), childFrame!).returnValue).toBe(1)
+  })
+
+  it('reconstructs concurrent sibling frames across timeline steps', () => {
+    const concurrentSteps = [
+      createStep({
+        frameId: 1,
+        functionName: 'run',
+        phase: 'enter',
+        variables: {},
+      }),
+      createStep({
+        frameId: 2,
+        parentFrameId: 1,
+        functionName: 'fast',
+        phase: 'enter',
+        variables: { branch: 'fast' },
+      }),
+      createStep({
+        frameId: 2,
+        parentFrameId: 1,
+        functionName: 'fast',
+        phase: 'update',
+        variables: { branch: 'fast', state: 'suspended' },
+      }),
+      createStep({
+        frameId: 3,
+        parentFrameId: 1,
+        functionName: 'slow',
+        phase: 'enter',
+        variables: { branch: 'slow' },
+      }),
+      createStep({
+        frameId: 3,
+        parentFrameId: 1,
+        functionName: 'slow',
+        phase: 'update',
+        variables: { branch: 'slow', state: 'suspended' },
+      }),
+      createStep({
+        frameId: 2,
+        parentFrameId: 1,
+        functionName: 'fast',
+        phase: 'update',
+        variables: { branch: 'fast', state: 'resumed' },
+      }),
+      createStep({
+        frameId: 2,
+        parentFrameId: 1,
+        functionName: 'fast',
+        phase: 'return',
+        variables: { branch: 'fast', [RETURN_VALUE_LABEL]: 'fast' },
+      }),
+      createStep({
+        frameId: 3,
+        parentFrameId: 1,
+        functionName: 'slow',
+        phase: 'update',
+        variables: { branch: 'slow', state: 'resumed' },
+      }),
+    ]
+    const createConcurrentState = (currentStep: number): ExecutionState => ({
+      currentStep,
+      totalSteps: concurrentSteps.length,
+      steps: concurrentSteps,
+      isComplete: false,
+    })
+    const atSlowSuspend = getCallFrameInspectorState(createConcurrentState(4))
+    const atFastResume = getCallFrameInspectorState(createConcurrentState(5))
+    const atFastReturn = getCallFrameInspectorState(createConcurrentState(6))
+    const afterFastReturn = getCallFrameInspectorState(createConcurrentState(7))
+
+    expect(atSlowSuspend.activeFrameIds).toEqual([1, 2, 3])
+    expect(atSlowSuspend.currentFrameId).toBe(3)
+    expect(
+      atSlowSuspend.frames.map((frame) => ({
+        id: frame.id,
+        depth: frame.depth,
+        status: frame.status,
+      }))
+    ).toEqual([
+      { id: 1, depth: 0, status: 'suspended' },
+      { id: 2, depth: 1, status: 'suspended' },
+      { id: 3, depth: 1, status: 'current' },
+    ])
+    expect(atFastResume.currentFrameId).toBe(2)
+    expect(atFastResume.frames.find((frame) => frame.id === 3)?.status).toBe(
+      'suspended'
+    )
+    expect(atFastReturn.activeFrameIds).toEqual([1, 3])
+    expect(atFastReturn.frames.find((frame) => frame.id === 2)?.status).toBe(
+      'returning'
+    )
+    expect(afterFastReturn.currentFrameId).toBe(3)
+    expect(afterFastReturn.frames.find((frame) => frame.id === 2)?.status).toBe(
+      'completed'
+    )
+  })
+
+  it('completes a throwing frame without removing its active sibling', () => {
+    const throwingSteps = [
+      createStep({
+        frameId: 1,
+        functionName: 'run',
+        phase: 'enter',
+        variables: {},
+      }),
+      createStep({
+        frameId: 2,
+        parentFrameId: 1,
+        functionName: 'rejectBranch',
+        phase: 'enter',
+        variables: { branch: 'reject' },
+      }),
+      createStep({
+        frameId: 3,
+        parentFrameId: 1,
+        functionName: 'completeBranch',
+        phase: 'enter',
+        variables: { branch: 'complete' },
+      }),
+      createStep({
+        frameId: 2,
+        parentFrameId: 1,
+        functionName: 'rejectBranch',
+        phase: 'throw',
+        variables: { branch: 'reject' },
+      }),
+      createStep({
+        frameId: 3,
+        parentFrameId: 1,
+        functionName: 'completeBranch',
+        phase: 'update',
+        variables: { branch: 'complete', state: 'resumed' },
+      }),
+    ]
+    const createThrowingState = (currentStep: number): ExecutionState => ({
+      currentStep,
+      totalSteps: throwingSteps.length,
+      steps: throwingSteps,
+      isComplete: false,
+    })
+    const atThrow = getCallFrameInspectorState(createThrowingState(3))
+    const afterThrow = getCallFrameInspectorState(createThrowingState(4))
+
+    expect(atThrow.activeFrameIds).toEqual([1, 3])
+    expect(atThrow.currentFrameId).toBe(2)
+    expect(atThrow.frames.find((frame) => frame.id === 2)).toEqual(
+      expect.objectContaining({
+        status: 'throwing',
+        completionPhase: 'throw',
+        hasReturnValue: false,
+      })
+    )
+    expect(afterThrow.currentFrameId).toBe(3)
+    expect(afterThrow.activeFrameIds).toEqual([1, 3])
+    expect(afterThrow.frames.find((frame) => frame.id === 2)?.status).toBe(
+      'completed'
+    )
   })
 
   it('reconstructs only frames that exist at an earlier timeline step', () => {

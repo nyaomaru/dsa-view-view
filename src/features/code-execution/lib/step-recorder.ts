@@ -1,14 +1,23 @@
 import {
   CLASS_RECEIVER_LABEL,
   FUNCTION_NAME_LABEL,
+  STEP_TYPES,
   type CallFrameStepMetadata,
   type ExecutionStep,
   type InputValues,
 } from '@/entities/execution'
 import { deepClone } from '@/shared/lib/deep-clone'
-import { isString } from '@/shared/lib/guards'
+import { isInteger, isString } from '@/shared/lib/guards'
 import { MAX_STEPS, StepLimitError } from './execution-errors'
+import { CALL_FRAME_ID_LABEL } from './frame-identity'
 import { createHeapTraceCollector, type HeapTraceCollector } from './heap-trace'
+
+type RuntimeCallFrame = {
+  frameId: number
+  functionName: string
+  parentFrameId?: number
+  visibleVariableNames: string[]
+}
 
 /**
  * Mutable execution context used while instrumented code records steps.
@@ -24,16 +33,12 @@ export type ExecutionContext = {
   variableSnapshotCache: Array<Record<string, unknown> | undefined>
   /** Recorded execution steps. */
   steps: ExecutionStep[]
-  /** Current logical call stack. */
-  callStack: string[]
   /** Next stable identifier assigned to a function invocation. */
   nextFrameId: number
-  /** Active runtime invocations ordered from caller to callee. */
-  frameStack: Array<{
-    frameId: number
-    functionName: string
-    parentFrameId?: number
-  }>
+  /** Runtime invocations addressable independently of completion order. */
+  frames: Map<number, RuntimeCallFrame>
+  /** Invocation currently executing synchronous work. */
+  activeFrameId?: number
   /** Execution-scoped heap snapshot collector. */
   heapTraceCollector: HeapTraceCollector
 }
@@ -45,9 +50,9 @@ export function createExecutionContext(inputs: InputValues): ExecutionContext {
     variableDeltas: [],
     variableSnapshotCache: [],
     steps: [],
-    callStack: ['root'],
     nextFrameId: 1,
-    frameStack: [],
+    frames: new Map(),
+    activeFrameId: undefined,
     heapTraceCollector: createHeapTraceCollector(),
   }
 }
@@ -56,21 +61,26 @@ function getCallFrameMetadata({
   context,
   type,
   functionName,
+  frameId,
   visibleVariableNames,
 }: {
   context: ExecutionContext
   type: ExecutionStep['type']
   functionName: unknown
+  frameId: unknown
   visibleVariableNames: string[]
 }): CallFrameStepMetadata | undefined {
   if (type === 'function-entry') {
-    const parentFrame = context.frameStack[context.frameStack.length - 1]
+    const parentFrame = isInteger(context.activeFrameId)
+      ? context.frames.get(context.activeFrameId)
+      : undefined
     const frame = {
       frameId: context.nextFrameId++,
       functionName: isString(functionName) ? functionName : 'anonymous',
       parentFrameId: parentFrame?.frameId,
+      visibleVariableNames,
     }
-    context.frameStack.push(frame)
+    context.frames.set(frame.frameId, frame)
 
     return {
       ...frame,
@@ -79,14 +89,70 @@ function getCallFrameMetadata({
     }
   }
 
-  const frame = context.frameStack[context.frameStack.length - 1]
+  const frame = isInteger(frameId)
+    ? context.frames.get(frameId)
+    : isInteger(context.activeFrameId)
+      ? context.frames.get(context.activeFrameId)
+      : undefined
   if (!frame) return undefined
+
+  const retainedVariableNames =
+    type === STEP_TYPES.FUNCTION_THROW && visibleVariableNames.length === 0
+      ? frame.visibleVariableNames
+      : visibleVariableNames
+  if (visibleVariableNames.length > 0) {
+    frame.visibleVariableNames = visibleVariableNames
+  }
 
   return {
     ...frame,
-    phase: type === 'return' ? 'return' : 'update',
-    visibleVariableNames,
+    phase:
+      type === STEP_TYPES.RETURN
+        ? 'return'
+        : type === STEP_TYPES.FUNCTION_THROW
+          ? 'throw'
+          : 'update',
+    visibleVariableNames: retainedVariableNames,
   }
+}
+
+function updateActiveFrame(
+  context: ExecutionContext,
+  type: ExecutionStep['type'],
+  callFrame: CallFrameStepMetadata | undefined
+): void {
+  if (!callFrame) return
+
+  if (
+    type === STEP_TYPES.AWAIT_SUSPEND ||
+    type === STEP_TYPES.RETURN ||
+    type === STEP_TYPES.FUNCTION_THROW
+  ) {
+    context.activeFrameId = callFrame.parentFrameId
+    return
+  }
+
+  context.activeFrameId = callFrame.frameId
+}
+
+function getFrameCallStack(
+  context: ExecutionContext,
+  frameId: number | undefined
+): string[] {
+  const functionNames: string[] = []
+  const visitedFrameIds = new Set<number>()
+  let currentFrameId = frameId
+
+  while (isInteger(currentFrameId) && !visitedFrameIds.has(currentFrameId)) {
+    visitedFrameIds.add(currentFrameId)
+    const frame = context.frames.get(currentFrameId)
+    if (!frame) break
+
+    functionNames.push(frame.functionName)
+    currentFrameId = frame.parentFrameId
+  }
+
+  return ['root', ...functionNames.reverse()]
 }
 
 function getVariableSnapshot(
@@ -154,10 +220,13 @@ export function recordExecutionStep(
   delete visibleStepVariables[CLASS_RECEIVER_LABEL]
   const functionName = visibleStepVariables[FUNCTION_NAME_LABEL]
   delete visibleStepVariables[FUNCTION_NAME_LABEL]
+  const frameId = visibleStepVariables[CALL_FRAME_ID_LABEL]
+  delete visibleStepVariables[CALL_FRAME_ID_LABEL]
   const callFrame = getCallFrameMetadata({
     context,
     type,
     functionName,
+    frameId,
     visibleVariableNames: Object.keys(visibleStepVariables),
   })
 
@@ -166,12 +235,11 @@ export function recordExecutionStep(
     context.stepNumber === 0 ? context.variables : visibleStepVariables
   const variableDelta = deepClone(variablesForStep)
 
-  if (type === 'function-entry') {
-    context.callStack.push(callFrame?.functionName ?? 'anonymous')
-  } else if (type === 'return' && context.callStack.length > 1) {
-    context.callStack.pop()
-    context.frameStack.pop()
-  }
+  updateActiveFrame(context, type, callFrame)
+  const callStackFrameId =
+    type === STEP_TYPES.RETURN || type === STEP_TYPES.FUNCTION_THROW
+      ? callFrame?.parentFrameId
+      : (callFrame?.frameId ?? context.activeFrameId)
 
   const stepIndex = context.stepNumber++
   context.variableDeltas[stepIndex] = variableDelta
@@ -183,7 +251,7 @@ export function recordExecutionStep(
       line,
       description,
       timestamp: Date.now(),
-      callStack: [...context.callStack],
+      callStack: getFrameCallStack(context, callStackFrameId),
       metadata:
         heapTrace || callFrame
           ? {

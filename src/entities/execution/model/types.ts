@@ -18,7 +18,7 @@ export type HeapTraceSnapshot = {
   heaps: HeapSnapshot[]
 }
 
-export type CallFramePhase = 'enter' | 'update' | 'return'
+export type CallFramePhase = 'enter' | 'update' | 'return' | 'throw'
 
 /** Runtime identity and visible binding names for one logical call frame. */
 export type CallFrameStepMetadata = {
