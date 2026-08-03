@@ -17,6 +17,7 @@ type RuntimeCallFrame = {
   functionName: string
   parentFrameId?: number
   visibleVariableNames: string[]
+  status: 'active' | 'suspended' | 'completed'
 }
 
 /**
@@ -74,16 +75,19 @@ function getCallFrameMetadata({
     const parentFrame = isInteger(context.activeFrameId)
       ? context.frames.get(context.activeFrameId)
       : undefined
-    const frame = {
+    const frame: RuntimeCallFrame = {
       frameId: context.nextFrameId++,
       functionName: isString(functionName) ? functionName : 'anonymous',
       parentFrameId: parentFrame?.frameId,
       visibleVariableNames,
+      status: 'active',
     }
     context.frames.set(frame.frameId, frame)
 
     return {
-      ...frame,
+      frameId: frame.frameId,
+      functionName: frame.functionName,
+      parentFrameId: frame.parentFrameId,
       phase: 'enter',
       visibleVariableNames,
     }
@@ -105,7 +109,9 @@ function getCallFrameMetadata({
   }
 
   return {
-    ...frame,
+    frameId: frame.frameId,
+    functionName: frame.functionName,
+    parentFrameId: frame.parentFrameId,
     phase:
       type === STEP_TYPES.RETURN
         ? 'return'
@@ -123,16 +129,31 @@ function updateActiveFrame(
 ): void {
   if (!callFrame) return
 
-  if (
-    type === STEP_TYPES.AWAIT_SUSPEND ||
-    type === STEP_TYPES.RETURN ||
-    type === STEP_TYPES.FUNCTION_THROW
-  ) {
-    context.activeFrameId = callFrame.parentFrameId
+  const frame = context.frames.get(callFrame.frameId)
+  if (!frame) return
+
+  if (type === STEP_TYPES.AWAIT_SUSPEND) {
+    frame.status = 'suspended'
+    const parentFrame = isInteger(frame.parentFrameId)
+      ? context.frames.get(frame.parentFrameId)
+      : undefined
+    context.activeFrameId =
+      parentFrame?.status === 'active' ? parentFrame.frameId : undefined
     return
   }
 
-  context.activeFrameId = callFrame.frameId
+  if (type === STEP_TYPES.RETURN || type === STEP_TYPES.FUNCTION_THROW) {
+    frame.status = 'completed'
+    const parentFrame = isInteger(frame.parentFrameId)
+      ? context.frames.get(frame.parentFrameId)
+      : undefined
+    context.activeFrameId =
+      parentFrame?.status === 'active' ? parentFrame.frameId : undefined
+    return
+  }
+
+  frame.status = 'active'
+  context.activeFrameId = frame.frameId
 }
 
 function getFrameCallStack(

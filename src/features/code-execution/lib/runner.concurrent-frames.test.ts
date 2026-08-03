@@ -244,4 +244,47 @@ async function run(): Promise<string> {
     )
     expect(completedReturn?.variables.after).toBe('complete:after')
   })
+
+  it('does not reactivate a suspended parent when a child completes', async () => {
+    for (const shouldThrow of [false, true]) {
+      const state = await executeCodeAsync(
+        `function queuedCallback(): void {
+  const callbackState = 'ran'
+}
+
+async function child(shouldThrow: boolean): Promise<void> {
+  await Promise.resolve()
+  Promise.resolve().then(queuedCallback)
+  if (shouldThrow) throw new Error('boom')
+}
+
+async function run(shouldThrow: boolean): Promise<string> {
+  try {
+    await child(shouldThrow)
+  } catch {}
+  const after = 'parent:resumed'
+  return after
+}`,
+        { shouldThrow },
+        'run'
+      )
+      const runEntry = getFrameEntries(state, 'run')[0]
+      const callbackEntry = getFrameEntries(state, 'queuedCallback')[0]
+      const runFrameId = runEntry?.metadata?.callFrame?.frameId
+      const continuationType = shouldThrow ? 'await-reject' : 'await-resume'
+      const callbackIndex = state.steps.indexOf(callbackEntry!)
+      const parentContinuationIndex = state.steps.findIndex(
+        (step) =>
+          step.type === continuationType &&
+          step.metadata?.callFrame?.frameId === runFrameId
+      )
+
+      expect(state.error).toBeUndefined()
+      expect(state.returnValue).toBe('parent:resumed')
+      expect(callbackEntry?.metadata?.callFrame?.parentFrameId).toBeUndefined()
+      expect(callbackEntry?.callStack).toEqual(['root', 'queuedCallback'])
+      expect(callbackIndex).toBeGreaterThan(-1)
+      expect(parentContinuationIndex).toBeGreaterThan(callbackIndex)
+    }
+  })
 })
