@@ -296,6 +296,45 @@ function run(): unknown[] {
     expect(state.returnValue).toEqual([[0, 1], 'first', 'resume'])
   })
 
+  it('caches a delegated iterator next method with its receiver', () => {
+    const state = executeCode(
+      `function* values(accesses: string[]): Generator<string, string, string> {
+  const iterator = {
+    step: 0,
+    [Symbol.iterator]() {
+      return this
+    },
+  }
+  Object.defineProperty(iterator, 'next', {
+    enumerable: false,
+    get() {
+      const access = accesses.push('get')
+      return function (this: { step: number }, value?: string) {
+        if (access > 1) return { done: true, value: 'replacement' }
+        this.step += 1
+        if (this.step === 1) return { done: false, value: 'first' }
+        return { done: true, value: value ?? 'missing' }
+      }
+    },
+  })
+  return yield* (iterator as Iterable<string>)
+}
+
+function run(): unknown[] {
+  const accesses: string[] = []
+  const iterator = values(accesses)
+  const first = iterator.next()
+  const second = iterator.next('resume')
+  return [accesses, first.value, second.value]
+}`,
+      {},
+      'run'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([['get'], 'first', 'resume'])
+  })
+
   it('keeps nested yield* frames and parent relationships separate', () => {
     const state = executeCode(
       `function* child(): Generator<number, string, void> {

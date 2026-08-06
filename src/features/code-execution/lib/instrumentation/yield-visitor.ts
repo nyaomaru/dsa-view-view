@@ -32,6 +32,9 @@ const createDelegatedYield = (
   const iteratorId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldIterator'
   )
+  const nextMethodId = path.scope.generateUidIdentifier(
+    'algorithmVisualizerYieldNext'
+  )
   const startedId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldStarted'
   )
@@ -111,12 +114,12 @@ const createDelegatedYield = (
         t.conditionalExpression(
           wasStartedId,
           t.callExpression(
-            t.memberExpression(iteratorId, t.identifier('next')),
-            [inputId]
+            t.memberExpression(nextMethodId, t.identifier('call')),
+            [iteratorId, inputId]
           ),
           t.callExpression(
-            t.memberExpression(iteratorId, t.identifier('next')),
-            []
+            t.memberExpression(nextMethodId, t.identifier('call')),
+            [iteratorId]
           )
         )
       ),
@@ -231,6 +234,12 @@ const createDelegatedYield = (
         ]),
         t.variableDeclaration('let', [
           t.variableDeclarator(startedId, t.booleanLiteral(false)),
+        ]),
+        t.variableDeclaration('const', [
+          t.variableDeclarator(
+            nextMethodId,
+            t.memberExpression(iteratorId, t.identifier('next'))
+          ),
         ]),
         t.returnStatement(
           t.objectExpression([
