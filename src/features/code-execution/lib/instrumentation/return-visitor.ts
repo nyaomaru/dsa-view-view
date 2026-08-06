@@ -40,6 +40,19 @@ export const createReturnVisitor = (context: InstrumentationContext) => {
 
         const line = getLineNumber(path.node)
         const returnLocation = `${context.getCurrentFunctionName()} line ${line}`
+        const completionIdentifier =
+          context.getCurrentFrameCompletionIdentifier()
+        const markFrameCompleted = completionIdentifier
+          ? context.markInstrumented(
+              t.expressionStatement(
+                t.assignmentExpression(
+                  '=',
+                  t.identifier(completionIdentifier.name),
+                  t.booleanLiteral(true)
+                )
+              )
+            )
+          : undefined
 
         if (path.node.argument) {
           const tempId = path.scope.generateUidIdentifier(RETURN_TEMP_NAME)
@@ -63,11 +76,17 @@ export const createReturnVisitor = (context: InstrumentationContext) => {
           const returnStatement = context.markInstrumented(
             t.returnStatement(tempId)
           )
-          path.replaceWithMultiple([declaration, recordStep, returnStatement])
+          path.replaceWithMultiple([
+            declaration,
+            ...(markFrameCompleted ? [markFrameCompleted] : []),
+            recordStep,
+            returnStatement,
+          ])
           return
         }
 
-        path.insertBefore(
+        path.insertBefore([
+          ...(markFrameCompleted ? [markFrameCompleted] : []),
           createRecordStepStatement(
             STEP_TYPES.RETURN,
             line,
@@ -82,8 +101,8 @@ export const createReturnVisitor = (context: InstrumentationContext) => {
                 t.stringLiteral(returnLocation)
               ),
             ])
-          )
-        )
+          ),
+        ])
         context.markInstrumented(path.node)
       },
     },

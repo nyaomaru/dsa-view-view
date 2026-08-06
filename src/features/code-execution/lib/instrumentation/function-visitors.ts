@@ -25,8 +25,22 @@ const addImplicitReturnStep = (
   line: number
 ): void => {
   const returnLocation = `${functionName} line ${line}`
+  const completionIdentifier = context.getCurrentFrameCompletionIdentifier()
 
   body.body.push(
+    ...(completionIdentifier
+      ? [
+          context.markInstrumented(
+            t.expressionStatement(
+              t.assignmentExpression(
+                '=',
+                t.identifier(completionIdentifier.name),
+                t.booleanLiteral(true)
+              )
+            )
+          ),
+        ]
+      : []),
     createRecordStepStatement(
       STEP_TYPES.RETURN,
       line,
@@ -52,10 +66,13 @@ const wrapFunctionBodyWithThrowStep = (
   line: number,
   errorId: t.Identifier
 ): void => {
-  const entryStatement = body.body[0]
+  const completionIdentifier = context.getCurrentFrameCompletionIdentifier()
+  const preludeLength = completionIdentifier ? 2 : 1
+  const prelude = body.body.slice(0, preludeLength)
+  const entryStatement = prelude[0]
   if (!entryStatement) return
 
-  const functionBody = body.body.slice(1)
+  const functionBody = body.body.slice(preludeLength)
   const throwLocation = `${functionName} line ${line}`
   const throwStep = createRecordStepStatement(
     STEP_TYPES.FUNCTION_THROW,
@@ -66,14 +83,56 @@ const wrapFunctionBodyWithThrowStep = (
   const rethrow = context.markInstrumented(
     t.throwStatement(t.identifier(errorId.name))
   )
+  const catchBody = [
+    ...(completionIdentifier
+      ? [
+          context.markInstrumented(
+            t.expressionStatement(
+              t.assignmentExpression(
+                '=',
+                t.identifier(completionIdentifier.name),
+                t.booleanLiteral(true)
+              )
+            )
+          ),
+        ]
+      : []),
+    throwStep,
+    rethrow,
+  ]
+  const finalizer = completionIdentifier
+    ? t.blockStatement([
+        t.ifStatement(
+          t.unaryExpression('!', t.identifier(completionIdentifier.name)),
+          t.blockStatement([
+            context.markInstrumented(
+              t.expressionStatement(
+                t.assignmentExpression(
+                  '=',
+                  t.identifier(completionIdentifier.name),
+                  t.booleanLiteral(true)
+                )
+              )
+            ),
+            createRecordStepStatement(
+              STEP_TYPES.GENERATOR_CLOSE,
+              line,
+              `Generator closed: ${functionName}`,
+              context.createFrameIdentityProperties()
+            ),
+          ])
+        ),
+      ])
+    : null
   const boundary = context.markInstrumented(
     t.tryStatement(
       t.blockStatement(functionBody),
-      t.catchClause(errorId, t.blockStatement([throwStep, rethrow]))
+      t.catchClause(errorId, t.blockStatement(catchBody)),
+      finalizer
     )
   )
 
-  body.body = [entryStatement, boundary]
+  body.body = [...prelude, boundary]
 }
 
 const finishFunction = (
@@ -88,17 +147,39 @@ const finishFunction = (
   context.exitFunction()
 }
 
+const getGeneratorOptions = (
+  path: NodePath<
+    | t.FunctionDeclaration
+    | t.FunctionExpression
+    | t.ObjectMethod
+    | t.ClassMethod
+  >
+): [t.Identifier | undefined, boolean] => {
+  const traceGeneratorYields = Boolean(path.node.generator && !path.node.async)
+  return [
+    traceGeneratorYields
+      ? path.scope.generateUidIdentifier('algorithmVisualizerFrameCompleted')
+      : undefined,
+    traceGeneratorYields,
+  ]
+}
+
 export const createFunctionVisitors = (context: InstrumentationContext) => ({
   FunctionDeclaration: {
     enter(path: NodePath<t.FunctionDeclaration>) {
       const functionName = path.node.id?.name ?? 'anonymous'
+      const [completionIdentifier, traceGeneratorYields] =
+        getGeneratorOptions(path)
       context.enterFunction(
         path.node.body,
         functionName,
         getLineNumber(path.node),
         `Entering function: ${functionName}`,
         getParameterNames(path.node.params),
-        path.scope.generateUidIdentifier('algorithmVisualizerFrameId')
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameId'),
+        false,
+        completionIdentifier,
+        traceGeneratorYields
       )
     },
     exit(path: NodePath<t.FunctionDeclaration>) {
@@ -121,13 +202,19 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
       }
       if (skipArrayCallbackTraversal(path)) return
 
+      const [completionIdentifier, traceGeneratorYields] =
+        getGeneratorOptions(path)
+
       context.enterFunction(
         path.node.body,
         'anonymous function',
         getLineNumber(path.node),
         'Entering anonymous function',
         getParameterNames(path.node.params),
-        path.scope.generateUidIdentifier('algorithmVisualizerFrameId')
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameId'),
+        false,
+        completionIdentifier,
+        traceGeneratorYields
       )
     },
     exit(path: NodePath<t.FunctionExpression>) {
@@ -183,13 +270,18 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
   ObjectMethod: {
     enter(path: NodePath<t.ObjectMethod>) {
       const methodName = getMethodName(path.node)
+      const [completionIdentifier, traceGeneratorYields] =
+        getGeneratorOptions(path)
       context.enterFunction(
         path.node.body,
         methodName,
         getLineNumber(path.node),
         `Entering method: ${methodName}`,
         getParameterNames(path.node.params),
-        path.scope.generateUidIdentifier('algorithmVisualizerFrameId')
+        path.scope.generateUidIdentifier('algorithmVisualizerFrameId'),
+        false,
+        completionIdentifier,
+        traceGeneratorYields
       )
     },
     exit(path: NodePath<t.ObjectMethod>) {
@@ -212,6 +304,8 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
         path.node.kind === 'constructor' &&
         (t.isClassDeclaration(classNode) || t.isClassExpression(classNode)) &&
         Boolean(classNode.superClass)
+      const [completionIdentifier, traceGeneratorYields] =
+        getGeneratorOptions(path)
 
       // Any receiver read can throw before a derived constructor reaches super().
       context.enterFunction(
@@ -221,7 +315,9 @@ export const createFunctionVisitors = (context: InstrumentationContext) => ({
         `Entering method: ${methodName}`,
         getParameterNames(path.node.params),
         path.scope.generateUidIdentifier('algorithmVisualizerFrameId'),
-        !isDerivedConstructor
+        !isDerivedConstructor,
+        completionIdentifier,
+        traceGeneratorYields
       )
     },
     exit(path: NodePath<t.ClassMethod>) {

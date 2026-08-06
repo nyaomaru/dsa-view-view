@@ -22,6 +22,10 @@ import {
   buildExecutionWrapperCode,
   createExecutionFunction,
 } from './execution-wrapper'
+import {
+  consumeGenerator,
+  isSyncGeneratorIterator,
+} from './generator-execution'
 
 type PreparedExecution = {
   wrapperCode: string
@@ -116,7 +120,10 @@ export function* createTypeScriptExecutionRunner(
     let stepLimitReached = false
 
     try {
-      result = func(...Object.values(inputs), recordStep)
+      const invocationResult = func(...Object.values(inputs), recordStep)
+      result = isSyncGeneratorIterator(invocationResult)
+        ? consumeGenerator(invocationResult)
+        : invocationResult
     } catch (err) {
       if (isStepLimitError(err)) {
         stepLimitReached = true
@@ -185,7 +192,11 @@ export async function* createAsyncTypeScriptExecutionRunner(
     let stepLimitReached = false
 
     try {
-      result = await func(...Object.values(inputs), recordStep)
+      const invocationResult = func(...Object.values(inputs), recordStep)
+      const awaitedResult = await invocationResult
+      result = isSyncGeneratorIterator(awaitedResult)
+        ? consumeGenerator(awaitedResult)
+        : awaitedResult
     } catch (err) {
       if (isStepLimitError(err)) {
         stepLimitReached = true

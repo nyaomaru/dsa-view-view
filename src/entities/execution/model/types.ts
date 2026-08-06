@@ -18,7 +18,14 @@ export type HeapTraceSnapshot = {
   heaps: HeapSnapshot[]
 }
 
-export type CallFramePhase = 'enter' | 'update' | 'return' | 'throw'
+export type CallFramePhase =
+  | 'enter'
+  | 'update'
+  | 'suspend'
+  | 'resume'
+  | 'return'
+  | 'throw'
+  | 'close'
 
 /** Runtime identity and visible binding names for one logical call frame. */
 export type CallFrameStepMetadata = {
@@ -32,6 +39,8 @@ export type CallFrameStepMetadata = {
   phase: CallFramePhase
   /** Variable names visible while this frame recorded the step. */
   visibleVariableNames: string[]
+  /** Invocation executing after this lifecycle event, when one remains active. */
+  activeFrameIdAfterStep?: number
 }
 
 /** Map of user-provided values for function parameters. */

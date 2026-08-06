@@ -15,6 +15,10 @@ export class InstrumentationContext {
   private readonly functionStack: string[] = []
   private readonly classReceiverStack: boolean[] = []
   private readonly frameIdentifierStack: t.Identifier[] = []
+  private readonly frameCompletionIdentifierStack: Array<
+    t.Identifier | undefined
+  > = []
+  private readonly tracedGeneratorStack: boolean[] = []
   private readonly instrumentedNodes = new WeakSet<t.Node>()
 
   isInstrumented(node: t.Node): boolean {
@@ -91,7 +95,9 @@ export class InstrumentationContext {
     description: string,
     parameterNames: string[],
     frameIdentifier: t.Identifier,
-    captureClassReceiver = false
+    captureClassReceiver = false,
+    frameCompletionIdentifier?: t.Identifier,
+    traceGeneratorYields = false
   ): void {
     this.pushScope(parameterNames)
     this.classReceiverStack.push(captureClassReceiver)
@@ -124,19 +130,36 @@ export class InstrumentationContext {
       ),
       t.identifier('frameId')
     )
-    body.body.unshift(
+    const prelude = [
       this.markInstrumented(
         t.variableDeclaration('const', [
           t.variableDeclarator(frameIdentifier, frameId),
         ])
+      ),
+    ]
+    if (frameCompletionIdentifier) {
+      prelude.push(
+        this.markInstrumented(
+          t.variableDeclaration('let', [
+            t.variableDeclarator(
+              frameCompletionIdentifier,
+              t.booleanLiteral(false)
+            ),
+          ])
+        )
       )
-    )
+    }
+    body.body.unshift(...prelude)
     this.frameIdentifierStack.push(frameIdentifier)
+    this.frameCompletionIdentifierStack.push(frameCompletionIdentifier)
+    this.tracedGeneratorStack.push(traceGeneratorYields)
     this.functionStack.push(functionName)
   }
 
   exitFunction(): void {
     this.functionStack.pop()
+    this.tracedGeneratorStack.pop()
+    this.frameCompletionIdentifierStack.pop()
     this.frameIdentifierStack.pop()
     this.classReceiverStack.pop()
     this.popScope()
@@ -150,5 +173,13 @@ export class InstrumentationContext {
     return (
       this.functionStack[this.functionStack.length - 1] ?? 'current function'
     )
+  }
+
+  getCurrentFrameCompletionIdentifier(): t.Identifier | undefined {
+    return this.frameCompletionIdentifierStack.at(-1)
+  }
+
+  isCurrentFunctionTracedGenerator(): boolean {
+    return this.tracedGeneratorStack.at(-1) ?? false
   }
 }
