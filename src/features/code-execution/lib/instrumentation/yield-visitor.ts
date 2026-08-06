@@ -35,6 +35,9 @@ const createDelegatedYield = (
   const startedId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldStarted'
   )
+  const wasStartedId = path.scope.generateUidIdentifier(
+    'algorithmVisualizerYieldWasStarted'
+  )
   const inputId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldInput'
   )
@@ -90,8 +93,11 @@ const createDelegatedYield = (
     )
   )
   const nextMethod = createIteratorMethod(context, inputId, [
+    t.variableDeclaration('const', [
+      t.variableDeclarator(wasStartedId, startedId),
+    ]),
     t.ifStatement(
-      startedId,
+      wasStartedId,
       t.blockStatement([createResumeStep(inputId)]),
       t.blockStatement([
         t.expressionStatement(
@@ -102,9 +108,17 @@ const createDelegatedYield = (
     t.variableDeclaration('const', [
       t.variableDeclarator(
         nextResultId,
-        t.callExpression(t.memberExpression(iteratorId, t.identifier('next')), [
-          inputId,
-        ])
+        t.conditionalExpression(
+          wasStartedId,
+          t.callExpression(
+            t.memberExpression(iteratorId, t.identifier('next')),
+            [inputId]
+          ),
+          t.callExpression(
+            t.memberExpression(iteratorId, t.identifier('next')),
+            []
+          )
+        )
       ),
     ]),
     recordSuspendWhenPending(nextResultId),

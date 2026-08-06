@@ -257,6 +257,45 @@ function run(): unknown[] {
     expect(yieldedValues).toEqual([1, 2])
   })
 
+  it('calls a delegated iterator first with no argument', () => {
+    const state = executeCode(
+      `function* values(counts: number[]): Generator<string, string, string> {
+  const delegated = {
+    [Symbol.iterator](): Iterator<string, string, string> {
+      let started = false
+      return {
+        next(value?: string): IteratorResult<string, string> {
+          counts.push(arguments.length)
+          if (!started) {
+            started = true
+            return {
+              done: false,
+              value: arguments.length === 0 ? 'first' : 'unexpected',
+            }
+          }
+          return { done: true, value: value ?? 'missing' }
+        },
+      }
+    },
+  }
+  return yield* delegated
+}
+
+function run(): unknown[] {
+  const counts: number[] = []
+  const iterator = values(counts)
+  const first = iterator.next()
+  const second = iterator.next('resume')
+  return [counts, first.value, second.value]
+}`,
+      {},
+      'run'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([[0, 1], 'first', 'resume'])
+  })
+
   it('keeps nested yield* frames and parent relationships separate', () => {
     const state = executeCode(
       `function* child(): Generator<number, string, void> {
