@@ -579,4 +579,32 @@ function* parent(): Generator<number | string, string, void> {
     expect(state.error).toBeUndefined()
     expect(state.returnValue).toBe(42)
   })
+
+  it('consumes a synchronous generator before awaiting inherited then', async () => {
+    const effects: string[] = []
+    const state = await executeCodeAsync(
+      `function* answer(effects: string[]): Generator<number, number, void> {
+  yield 1
+  return 42
+}
+
+Object.defineProperty(answer.prototype, 'then', {
+  value(resolve: (value: string) => void) {
+    effects.push('then')
+    resolve('assimilated')
+  },
+})`,
+      { effects },
+      'answer'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(42)
+    expect(effects).toEqual([])
+    expect(
+      state.steps
+        .filter((step) => step.type === 'yield-suspend')
+        .map((step) => step.variables[YIELD_VALUE_LABEL])
+    ).toEqual([1])
+  })
 })

@@ -200,12 +200,11 @@ export async function* createAsyncTypeScriptExecutionRunner(
 
     try {
       const invocationResult = func(...Object.values(inputs), recordStep)
-      const awaitedResult = await invocationResult
       result =
         preparedExecution.shouldConsumeGenerator &&
-        isSyncGeneratorIterator(awaitedResult)
-        ? consumeGenerator(awaitedResult)
-        : awaitedResult
+        isSyncGeneratorIterator(invocationResult)
+          ? consumeGenerator(invocationResult)
+          : await invocationResult
     } catch (err) {
       if (isStepLimitError(err)) {
         stepLimitReached = true
