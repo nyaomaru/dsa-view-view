@@ -353,6 +353,46 @@ function run(): unknown[] {
     expect(state.returnValue).toEqual([['get'], 'first', 'resume'])
   })
 
+  it('reads delegated iterator-result accessors once', () => {
+    const accesses: string[] = []
+    const iterator: IterableIterator<string> = {
+      [Symbol.iterator]() {
+        return this
+      },
+      next() {
+        let doneReads = 0
+        return {
+          get done() {
+            accesses.push('done')
+            doneReads += 1
+            return doneReads > 1
+          },
+          get value() {
+            accesses.push('value')
+            return 'first'
+          },
+        }
+      },
+    }
+    const state = executeCode(
+      `function* values(iterator: Iterable<string>): Generator<string, void, void> {
+  yield* iterator
+}
+
+function run(delegate: Iterable<string>): unknown[] {
+  const valuesIterator = values(delegate)
+  const first = valuesIterator.next()
+  return [first.done, first.value]
+}`,
+      { iterator },
+      'run'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([false, 'first'])
+    expect(accesses).toEqual(['done', 'value'])
+  })
+
   it('rejects a non-callable delegated iterator return method', () => {
     const state = executeCode(
       `function* values(): Generator<number, void, void> {

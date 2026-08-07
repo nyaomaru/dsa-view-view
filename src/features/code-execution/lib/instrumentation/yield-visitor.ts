@@ -62,16 +62,13 @@ const createDelegatedYield = (
   const returnResultId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldReturnResult'
   )
-  const createSuspendStep = (resultId: t.Identifier) =>
+  const createSuspendStep = (valueId: t.Identifier) =>
     createRecordStepStatement(
       STEP_TYPES.YIELD_SUSPEND,
       line,
       `Yielded from delegate: ${source}`,
       context.createScopeProperties([
-        t.objectProperty(
-          t.stringLiteral(YIELD_VALUE_LABEL),
-          t.memberExpression(resultId, t.identifier('value'))
-        ),
+        t.objectProperty(t.stringLiteral(YIELD_VALUE_LABEL), valueId),
       ])
     )
   const createResumeStep = (valueId: t.Identifier) =>
@@ -83,14 +80,63 @@ const createDelegatedYield = (
         t.objectProperty(t.stringLiteral(YIELD_INPUT_LABEL), valueId),
       ])
     )
-  const recordSuspendWhenPending = (resultId: t.Identifier) =>
-    t.ifStatement(
-      t.unaryExpression(
-        '!',
-        t.memberExpression(resultId, t.identifier('done'))
-      ),
-      t.blockStatement([createSuspendStep(resultId)])
+  const createNormalizedResultStatements = (resultId: t.Identifier) => {
+    const doneId = path.scope.generateUidIdentifier(
+      'algorithmVisualizerYieldDone'
     )
+    const valueId = path.scope.generateUidIdentifier(
+      'algorithmVisualizerYieldValue'
+    )
+
+    return [
+      t.ifStatement(
+        t.logicalExpression(
+          '&&',
+          t.logicalExpression(
+            '||',
+            t.binaryExpression(
+              '!==',
+              t.unaryExpression('typeof', resultId),
+              t.stringLiteral('object')
+            ),
+            t.binaryExpression('===', resultId, t.nullLiteral())
+          ),
+          t.binaryExpression(
+            '!==',
+            t.unaryExpression('typeof', resultId),
+            t.stringLiteral('function')
+          )
+        ),
+        t.blockStatement([
+          t.throwStatement(
+            t.newExpression(t.identifier('TypeError'), [
+              t.stringLiteral('Iterator result is not an object'),
+            ])
+          ),
+        ])
+      ),
+      t.variableDeclaration('const', [
+        t.variableDeclarator(
+          doneId,
+          t.memberExpression(resultId, t.identifier('done'))
+        ),
+        t.variableDeclarator(
+          valueId,
+          t.memberExpression(resultId, t.identifier('value'))
+        ),
+      ]),
+      t.ifStatement(
+        t.unaryExpression('!', doneId),
+        t.blockStatement([createSuspendStep(valueId)])
+      ),
+      t.returnStatement(
+        t.objectExpression([
+          t.objectProperty(t.identifier('done'), doneId),
+          t.objectProperty(t.identifier('value'), valueId),
+        ])
+      ),
+    ]
+  }
   const iteratorMethod = context.markInstrumented(
     t.functionExpression(
       null,
@@ -127,8 +173,7 @@ const createDelegatedYield = (
         )
       ),
     ]),
-    recordSuspendWhenPending(nextResultId),
-    t.returnStatement(nextResultId),
+    ...createNormalizedResultStatements(nextResultId),
   ])
   const throwMethod = createIteratorMethod(context, errorId, [
     createRecordStepStatement(
@@ -181,8 +226,7 @@ const createDelegatedYield = (
         )
       ),
     ]),
-    recordSuspendWhenPending(throwResultId),
-    t.returnStatement(throwResultId),
+    ...createNormalizedResultStatements(throwResultId),
   ])
   const returnMethod = createIteratorMethod(context, returnValueId, [
     t.variableDeclaration('const', [
@@ -235,8 +279,7 @@ const createDelegatedYield = (
         )
       ),
     ]),
-    recordSuspendWhenPending(returnResultId),
-    t.returnStatement(returnResultId),
+    ...createNormalizedResultStatements(returnResultId),
   ])
   const wrapper = context.markInstrumented(
     t.arrowFunctionExpression(
