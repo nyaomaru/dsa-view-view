@@ -50,6 +50,9 @@ const createDelegatedYield = (
   const returnValueId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldReturnValue'
   )
+  const throwMethodId = path.scope.generateUidIdentifier(
+    'algorithmVisualizerYieldThrowMethod'
+  )
   const returnMethodId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldReturnMethod'
   )
@@ -182,14 +185,21 @@ const createDelegatedYield = (
       `Delegated generator resumed with throw: ${source}`,
       context.createScopeProperties()
     ),
+    t.variableDeclaration('const', [
+      t.variableDeclarator(
+        throwMethodId,
+        t.memberExpression(iteratorId, t.identifier('throw'))
+      ),
+    ]),
     t.ifStatement(
-      t.binaryExpression(
-        '!==',
-        t.unaryExpression(
-          'typeof',
-          t.memberExpression(iteratorId, t.identifier('throw'))
+      t.logicalExpression(
+        '||',
+        t.binaryExpression('===', throwMethodId, t.nullLiteral()),
+        t.binaryExpression(
+          '===',
+          throwMethodId,
+          t.unaryExpression('void', t.numericLiteral(0))
         ),
-        t.stringLiteral('function')
       ),
       t.blockStatement([
         t.ifStatement(
@@ -217,12 +227,28 @@ const createDelegatedYield = (
         ),
       ])
     ),
+    t.ifStatement(
+      t.binaryExpression(
+        '!==',
+        t.unaryExpression('typeof', throwMethodId),
+        t.stringLiteral('function')
+      ),
+      t.blockStatement([
+        t.throwStatement(
+          t.newExpression(t.identifier('TypeError'), [
+            t.stringLiteral(
+              'The delegated iterator throw method is not callable'
+            ),
+          ])
+        ),
+      ])
+    ),
     t.variableDeclaration('const', [
       t.variableDeclarator(
         throwResultId,
         t.callExpression(
-          t.memberExpression(iteratorId, t.identifier('throw')),
-          [errorId]
+          t.memberExpression(throwMethodId, t.identifier('call')),
+          [iteratorId, errorId]
         )
       ),
     ]),

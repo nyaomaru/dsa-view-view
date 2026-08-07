@@ -426,6 +426,45 @@ function run(): string {
     expect(state.returnValue).toBe('type-error')
   })
 
+  it('rejects a non-callable delegated throw method without cleanup', () => {
+    const state = executeCode(
+      `function* values(effects: string[]): Generator<number, void, void> {
+  const iterator = {
+    next() {
+      return { done: false, value: 1 }
+    },
+    throw: 1,
+    return() {
+      effects.push('return')
+      return { done: true, value: undefined }
+    },
+    [Symbol.iterator]() {
+      return this
+    },
+  }
+  yield* (iterator as Iterable<number>)
+}
+
+function run(): unknown[] {
+  const effects: string[] = []
+  const iterator = values(effects)
+  iterator.next()
+  try {
+    iterator.throw(new Error('boom'))
+    return ['completed', effects]
+  } catch (error) {
+    const result = error instanceof TypeError ? 'type-error' : 'other-error'
+    return [result, effects]
+  }
+}`,
+      {},
+      'run'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual(['type-error', []])
+  })
+
   it('keeps nested yield* frames and parent relationships separate', () => {
     const state = executeCode(
       `function* child(): Generator<number, string, void> {
