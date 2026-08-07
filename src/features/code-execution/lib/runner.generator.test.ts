@@ -335,6 +335,39 @@ function run(): unknown[] {
     expect(state.returnValue).toEqual([['get'], 'first', 'resume'])
   })
 
+  it('rejects a non-callable delegated iterator return method', () => {
+    const state = executeCode(
+      `function* values(): Generator<number, void, void> {
+  const iterator = {
+    next() {
+      return { done: false, value: 1 }
+    },
+    return: 1,
+    [Symbol.iterator]() {
+      return this
+    },
+  }
+  yield* (iterator as Iterable<number>)
+}
+
+function run(): string {
+  const iterator = values()
+  iterator.next()
+  try {
+    iterator.return()
+    return 'completed'
+  } catch (error) {
+    return error instanceof TypeError ? 'type-error' : 'other-error'
+  }
+}`,
+      {},
+      'run'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe('type-error')
+  })
+
   it('keeps nested yield* frames and parent relationships separate', () => {
     const state = executeCode(
       `function* child(): Generator<number, string, void> {

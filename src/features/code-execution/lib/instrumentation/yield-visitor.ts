@@ -50,6 +50,9 @@ const createDelegatedYield = (
   const returnValueId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldReturnValue'
   )
+  const returnMethodId = path.scope.generateUidIdentifier(
+    'algorithmVisualizerYieldReturnMethod'
+  )
   const nextResultId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldResult'
   )
@@ -182,14 +185,21 @@ const createDelegatedYield = (
     t.returnStatement(throwResultId),
   ])
   const returnMethod = createIteratorMethod(context, returnValueId, [
+    t.variableDeclaration('const', [
+      t.variableDeclarator(
+        returnMethodId,
+        t.memberExpression(iteratorId, t.identifier('return'))
+      ),
+    ]),
     t.ifStatement(
-      t.binaryExpression(
-        '!==',
-        t.unaryExpression(
-          'typeof',
-          t.memberExpression(iteratorId, t.identifier('return'))
-        ),
-        t.stringLiteral('function')
+      t.logicalExpression(
+        '||',
+        t.binaryExpression('===', returnMethodId, t.nullLiteral()),
+        t.binaryExpression(
+          '===',
+          returnMethodId,
+          t.unaryExpression('void', t.numericLiteral(0))
+        )
       ),
       t.blockStatement([
         t.returnStatement(
@@ -200,12 +210,28 @@ const createDelegatedYield = (
         ),
       ])
     ),
+    t.ifStatement(
+      t.binaryExpression(
+        '!==',
+        t.unaryExpression('typeof', returnMethodId),
+        t.stringLiteral('function')
+      ),
+      t.blockStatement([
+        t.throwStatement(
+          t.newExpression(t.identifier('TypeError'), [
+            t.stringLiteral(
+              'The delegated iterator return method is not callable'
+            ),
+          ])
+        ),
+      ])
+    ),
     t.variableDeclaration('const', [
       t.variableDeclarator(
         returnResultId,
         t.callExpression(
-          t.memberExpression(iteratorId, t.identifier('return')),
-          [returnValueId]
+          t.memberExpression(returnMethodId, t.identifier('call')),
+          [iteratorId, returnValueId]
         )
       ),
     ]),
