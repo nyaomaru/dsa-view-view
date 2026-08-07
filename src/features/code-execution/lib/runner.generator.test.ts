@@ -6,6 +6,24 @@ import { executeCode, executeCodeAsync } from './runner'
 import { getCallFrameInspectorState } from '@/features/visualization/lib/call-frame-inspector'
 
 describe('runner - generator execution', () => {
+  it('preserves iterators returned by non-generator entries', async () => {
+    const code = `function values(): IterableIterator<number> {
+  return [1, 2].values()
+}`
+    const states = [
+      executeCode(code, {}, 'values'),
+      await executeCodeAsync(code, {}, 'values'),
+    ]
+
+    for (const state of states) {
+      expect(state.error).toBeUndefined()
+
+      const iterator = state.returnValue as Iterator<number>
+      expect(iterator.next()).toEqual({ value: 1, done: false })
+      expect(iterator.next()).toEqual({ value: 2, done: false })
+    }
+  })
+
   it('drives a generator entry through multiple yields and its final return', () => {
     const state = executeCode(
       `function* count(start: number): Generator<number, string, void> {

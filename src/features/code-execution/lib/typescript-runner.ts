@@ -24,12 +24,14 @@ import {
 } from './execution-wrapper'
 import {
   consumeGenerator,
+  isSyncGeneratorEntry,
   isSyncGeneratorIterator,
 } from './generator-execution'
 
 type PreparedExecution = {
   wrapperCode: string
   inputNames: string[]
+  shouldConsumeGenerator: boolean
 }
 
 const isStepLimitError = isInstanceOf(
@@ -64,6 +66,9 @@ function prepareExecution(
       entryFunctionName
     ),
     inputNames: Object.keys(inputs),
+    shouldConsumeGenerator: entryFunctionName
+      ? isSyncGeneratorEntry(code, entryFunctionName)
+      : false,
   }
 }
 
@@ -121,7 +126,9 @@ export function* createTypeScriptExecutionRunner(
 
     try {
       const invocationResult = func(...Object.values(inputs), recordStep)
-      result = isSyncGeneratorIterator(invocationResult)
+      result =
+        preparedExecution.shouldConsumeGenerator &&
+        isSyncGeneratorIterator(invocationResult)
         ? consumeGenerator(invocationResult)
         : invocationResult
     } catch (err) {
@@ -194,7 +201,9 @@ export async function* createAsyncTypeScriptExecutionRunner(
     try {
       const invocationResult = func(...Object.values(inputs), recordStep)
       const awaitedResult = await invocationResult
-      result = isSyncGeneratorIterator(awaitedResult)
+      result =
+        preparedExecution.shouldConsumeGenerator &&
+        isSyncGeneratorIterator(awaitedResult)
         ? consumeGenerator(awaitedResult)
         : awaitedResult
     } catch (err) {
