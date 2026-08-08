@@ -480,7 +480,15 @@ export const createYieldVisitor = (context: InstrumentationContext) => ({
       path.replaceWith(
         context.markInstrumented(
           t.yieldExpression(
-            context.markInstrumented(t.callExpression(wrapper, [argument])),
+            context.markInstrumented(
+              t.callExpression(
+                t.memberExpression(
+                  t.identifier('Reflect'),
+                  t.identifier('apply')
+                ),
+                [wrapper, t.thisExpression(), t.arrayExpression([argument])]
+              )
+            ),
             true
           )
         )

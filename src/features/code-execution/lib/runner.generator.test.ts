@@ -759,6 +759,51 @@ function* parent(): Generator<number | string, string, void> {
     )
   })
 
+  it('preserves class heap state across yield suspension and resumption', () => {
+    const state = executeCode(
+      `class MinHeapLocal {
+  values: number[] = []
+
+  push(value: number): void {
+    this.values.push(value)
+  }
+}
+
+class GeneratorOwner {
+  *values(): Generator<number, void, void> {
+    this.minHeap.push(2)
+    yield 2
+    this.minHeap.push(1)
+  }
+
+  private minHeap = new MinHeapLocal()
+}
+
+function run(): void {
+  const iterator = new GeneratorOwner().values()
+  iterator.next()
+  iterator.next()
+}`,
+      {},
+      'run'
+    )
+    const yieldSteps = state.steps.filter(
+      (step) =>
+        (step.type === 'yield-suspend' || step.type === 'yield-resume') &&
+        step.metadata?.callFrame?.functionName === 'values'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(yieldSteps.map((step) => step.type)).toEqual([
+      'yield-suspend',
+      'yield-resume',
+    ])
+    expect(yieldSteps.map((step) => step.metadata?.heapTrace?.heaps)).toEqual([
+      [{ name: 'minHeap', kind: 'min', values: [2] }],
+      [{ name: 'minHeap', kind: 'min', values: [2] }],
+    ])
+  })
+
   it('drives a synchronous generator through the async execution path', async () => {
     const state = await executeCodeAsync(
       `function* answer(): Generator<number, number, void> {
