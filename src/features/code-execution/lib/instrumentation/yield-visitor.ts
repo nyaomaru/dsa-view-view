@@ -89,6 +89,14 @@ const createDelegatedYield = (
         t.objectProperty(t.stringLiteral(YIELD_INPUT_LABEL), valueId),
       ])
     )
+  const createDelegatedMethodCall = (
+    methodId: t.Identifier,
+    args: t.Expression[]
+  ) =>
+    t.callExpression(
+      t.memberExpression(t.identifier('Reflect'), t.identifier('apply')),
+      [methodId, iteratorId, t.arrayExpression(args)]
+    )
   const createIteratorResultValidation = (resultId: t.Identifier) =>
     t.ifStatement(
       t.logicalExpression(
@@ -173,14 +181,8 @@ const createDelegatedYield = (
         nextResultId,
         t.conditionalExpression(
           wasStartedId,
-          t.callExpression(
-            t.memberExpression(nextMethodId, t.identifier('call')),
-            [iteratorId, inputId]
-          ),
-          t.callExpression(
-            t.memberExpression(nextMethodId, t.identifier('call')),
-            [iteratorId]
-          )
+          createDelegatedMethodCall(nextMethodId, [inputId]),
+          createDelegatedMethodCall(nextMethodId, [])
         )
       ),
     ]),
@@ -250,13 +252,7 @@ const createDelegatedYield = (
             t.variableDeclaration('const', [
               t.variableDeclarator(
                 fallbackReturnResultId,
-                t.callExpression(
-                  t.memberExpression(
-                    fallbackReturnMethodId,
-                    t.identifier('call')
-                  ),
-                  [iteratorId]
-                )
+                createDelegatedMethodCall(fallbackReturnMethodId, [])
               )
             ]),
             createIteratorResultValidation(fallbackReturnResultId),
@@ -288,10 +284,7 @@ const createDelegatedYield = (
     t.variableDeclaration('const', [
       t.variableDeclarator(
         throwResultId,
-        t.callExpression(
-          t.memberExpression(throwMethodId, t.identifier('call')),
-          [iteratorId, errorId]
-        )
+        createDelegatedMethodCall(throwMethodId, [errorId])
       ),
     ]),
     ...createNormalizedResultStatements(throwResultId),
@@ -341,10 +334,7 @@ const createDelegatedYield = (
     t.variableDeclaration('const', [
       t.variableDeclarator(
         returnResultId,
-        t.callExpression(
-          t.memberExpression(returnMethodId, t.identifier('call')),
-          [iteratorId, returnValueId]
-        )
+        createDelegatedMethodCall(returnMethodId, [returnValueId])
       ),
     ]),
     ...createNormalizedResultStatements(returnResultId),

@@ -353,6 +353,63 @@ function run(): unknown[] {
     expect(state.returnValue).toEqual([['get'], 'first', 'resume'])
   })
 
+  it('invokes delegated methods without reading their call property', () => {
+    const state = executeCode(
+      `function createDelegate(method: 'next' | 'throw' | 'return') {
+  const iterator = {
+    step: 0,
+    next() {
+      this.step += 1
+      return { done: false, value: this.step }
+    },
+    throw(error: Error) {
+      return { done: true, value: String(this.step) + ':' + error.message }
+    },
+    return(value?: string) {
+      return { done: true, value: String(this.step) + ':' + (value ?? 'missing') }
+    },
+    [Symbol.iterator]() {
+      return this
+    },
+  }
+  const selectedMethod =
+    method === 'next'
+      ? iterator.next
+      : method === 'throw'
+        ? iterator.throw
+        : iterator.return
+  Object.defineProperty(selectedMethod, 'call', { value: undefined })
+  return iterator as Iterable<number>
+}
+
+function* values(
+  delegate: Iterable<number>
+): Generator<number, string, string> {
+  return yield* delegate
+}
+
+function run(): unknown[] {
+  const nextIterator = values(createDelegate('next'))
+  const first = nextIterator.next()
+
+  const throwIterator = values(createDelegate('throw'))
+  throwIterator.next()
+  const thrown = throwIterator.throw(new Error('boom'))
+
+  const returnIterator = values(createDelegate('return'))
+  returnIterator.next()
+  const returned = returnIterator.return('closed')
+
+  return [first.value, thrown.value, returned.value]
+}`,
+      {},
+      'run'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([1, '1:boom', '1:closed'])
+  })
+
   it('reads delegated iterator-result accessors once', () => {
     const accesses: string[] = []
     const iterator: IterableIterator<string> = {
