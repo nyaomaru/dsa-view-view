@@ -12,6 +12,7 @@ import { isError, isInstanceOf } from '@/shared/lib/guards'
 import { safeStringify } from '@/shared/lib/safe-stringify'
 
 import { instrumentCode } from './instrumenter'
+import { attachInstrumentationIntrinsics } from './instrumentation/intrinsics'
 import {
   getStepLimitMessage,
   MAX_STEPS,
@@ -22,10 +23,16 @@ import {
   buildExecutionWrapperCode,
   createExecutionFunction,
 } from './execution-wrapper'
+import {
+  consumeGenerator,
+  isSyncGeneratorEntry,
+  isSyncGeneratorIterator,
+} from './generator-execution'
 
 type PreparedExecution = {
   wrapperCode: string
   inputNames: string[]
+  shouldConsumeGenerator: boolean
 }
 
 const isStepLimitError = isInstanceOf(
@@ -60,6 +67,9 @@ function prepareExecution(
       entryFunctionName
     ),
     inputNames: Object.keys(inputs),
+    shouldConsumeGenerator: entryFunctionName
+      ? isSyncGeneratorEntry(code, entryFunctionName)
+      : false,
   }
 }
 
@@ -97,6 +107,7 @@ export function* createTypeScriptExecutionRunner(
     stepVariables: Record<string, unknown>
   ): ExecutionStep =>
     recordExecutionStep(context, type, line, description, stepVariables)
+  attachInstrumentationIntrinsics(recordStep)
 
   try {
     yield recordStep(
@@ -116,7 +127,12 @@ export function* createTypeScriptExecutionRunner(
     let stepLimitReached = false
 
     try {
-      result = func(...Object.values(inputs), recordStep)
+      const invocationResult = func(...Object.values(inputs), recordStep)
+      result =
+        preparedExecution.shouldConsumeGenerator &&
+        isSyncGeneratorIterator(invocationResult)
+        ? consumeGenerator(invocationResult)
+        : invocationResult
     } catch (err) {
       if (isStepLimitError(err)) {
         stepLimitReached = true
@@ -166,6 +182,7 @@ export async function* createAsyncTypeScriptExecutionRunner(
     stepVariables: Record<string, unknown>
   ): ExecutionStep =>
     recordExecutionStep(context, type, line, description, stepVariables)
+  attachInstrumentationIntrinsics(recordStep)
 
   try {
     yield recordStep(
@@ -185,7 +202,12 @@ export async function* createAsyncTypeScriptExecutionRunner(
     let stepLimitReached = false
 
     try {
-      result = await func(...Object.values(inputs), recordStep)
+      const invocationResult = func(...Object.values(inputs), recordStep)
+      result =
+        preparedExecution.shouldConsumeGenerator &&
+        isSyncGeneratorIterator(invocationResult)
+          ? consumeGenerator(invocationResult)
+          : await invocationResult
     } catch (err) {
       if (isStepLimitError(err)) {
         stepLimitReached = true

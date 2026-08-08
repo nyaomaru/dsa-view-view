@@ -11,6 +11,7 @@ import { InstrumentationContext } from './context'
 import { createRecordStepStatement } from './step-factory'
 
 const RETURN_TEMP_NAME = 'algorithmVisualizerReturnValue'
+const RETURN_RECORDER_NAME = 'algorithmVisualizerReturnRecorder'
 
 const getReturnArgumentDescription = (argument: t.Expression): string => {
   if (
@@ -22,8 +23,81 @@ const getReturnArgumentDescription = (argument: t.Expression): string => {
   return safeGenerate(argument)
 }
 
+const getOutermostPendingFinalizer = (
+  path: NodePath<t.ReturnStatement>
+): t.BlockStatement | undefined => {
+  const ancestry = path.getAncestry()
+  const containingNodes = new Set(ancestry.map((ancestor) => ancestor.node))
+  let finalizer: t.BlockStatement | undefined
+
+  for (const ancestor of ancestry) {
+    if (ancestor.isFunction()) break
+    if (!ancestor.isTryStatement()) continue
+
+    const candidate = ancestor.node.finalizer
+    if (!candidate || containingNodes.has(candidate)) continue
+    finalizer = candidate
+  }
+
+  return finalizer
+}
+
+const deferTerminalStepUntilFinalizer = (
+  context: InstrumentationContext,
+  path: NodePath<t.ReturnStatement>,
+  finalizer: t.BlockStatement,
+  finalizerRecorders: WeakMap<t.BlockStatement, t.Identifier>,
+  terminalStatements: t.Statement[]
+): t.Statement[] => {
+  const existingRecorderId = finalizerRecorders.get(finalizer)
+  const recorderId =
+    existingRecorderId ??
+    path.scope.generateUidIdentifier(RETURN_RECORDER_NAME)
+  const setupStatements: t.Statement[] = []
+
+  if (!existingRecorderId) {
+    finalizerRecorders.set(finalizer, recorderId)
+    setupStatements.push(
+      context.markInstrumented(
+        t.variableDeclaration('var', [t.variableDeclarator(recorderId)])
+      )
+    )
+    const invokeRecorder = context.markInstrumented(
+      t.callExpression(recorderId, [])
+    )
+    finalizer.body.push(
+      context.markInstrumented(
+        t.ifStatement(
+          recorderId,
+          t.blockStatement([t.expressionStatement(invokeRecorder)])
+        )
+      )
+    )
+  }
+
+  const recorderAssignment = context.markInstrumented(
+    t.expressionStatement(
+      context.markInstrumented(
+        t.assignmentExpression(
+          '=',
+          recorderId,
+          context.markInstrumented(
+            t.arrowFunctionExpression(
+              [],
+              t.blockStatement(terminalStatements)
+            )
+          )
+        )
+      )
+    )
+  )
+
+  return [...setupStatements, recorderAssignment]
+}
+
 export const createReturnVisitor = (context: InstrumentationContext) => {
   const argumentDescriptions = new WeakMap<t.ReturnStatement, string>()
+  const finalizerRecorders = new WeakMap<t.BlockStatement, t.Identifier>()
 
   return {
     ReturnStatement: {
@@ -40,6 +114,22 @@ export const createReturnVisitor = (context: InstrumentationContext) => {
 
         const line = getLineNumber(path.node)
         const returnLocation = `${context.getCurrentFunctionName()} line ${line}`
+        const completionIdentifier =
+          context.getCurrentFrameCompletionIdentifier()
+        const pendingFinalizer = completionIdentifier
+          ? getOutermostPendingFinalizer(path)
+          : undefined
+        const markFrameCompleted = completionIdentifier
+          ? context.markInstrumented(
+              t.expressionStatement(
+                t.assignmentExpression(
+                  '=',
+                  t.identifier(completionIdentifier.name),
+                  t.booleanLiteral(true)
+                )
+              )
+            )
+          : undefined
 
         if (path.node.argument) {
           const tempId = path.scope.generateUidIdentifier(RETURN_TEMP_NAME)
@@ -63,11 +153,29 @@ export const createReturnVisitor = (context: InstrumentationContext) => {
           const returnStatement = context.markInstrumented(
             t.returnStatement(tempId)
           )
-          path.replaceWithMultiple([declaration, recordStep, returnStatement])
+          const terminalStatements = [
+            ...(markFrameCompleted ? [markFrameCompleted] : []),
+            recordStep,
+          ]
+          const deferredStatements = pendingFinalizer
+            ? deferTerminalStepUntilFinalizer(
+                context,
+                path,
+                pendingFinalizer,
+                finalizerRecorders,
+                terminalStatements
+              )
+            : terminalStatements
+          path.replaceWithMultiple([
+            declaration,
+            ...deferredStatements,
+            returnStatement,
+          ])
           return
         }
 
-        path.insertBefore(
+        const terminalStatements = [
+          ...(markFrameCompleted ? [markFrameCompleted] : []),
           createRecordStepStatement(
             STEP_TYPES.RETURN,
             line,
@@ -82,7 +190,18 @@ export const createReturnVisitor = (context: InstrumentationContext) => {
                 t.stringLiteral(returnLocation)
               ),
             ])
-          )
+          ),
+        ]
+        path.insertBefore(
+          pendingFinalizer
+            ? deferTerminalStepUntilFinalizer(
+                context,
+                path,
+                pendingFinalizer,
+                finalizerRecorders,
+                terminalStatements
+              )
+            : terminalStatements
         )
         context.markInstrumented(path.node)
       },

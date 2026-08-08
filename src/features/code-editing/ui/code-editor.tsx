@@ -23,6 +23,10 @@ import { CodeEditorSpinner } from './code-editor-spinner'
 
 configureMonaco()
 
+// Keep Monaco diagnostics out of the DOM global scope without modifying the
+// source that Babel later executes inside the generated function wrapper.
+const TYPESCRIPT_MODEL_PATH = 'algorithm-visualizer-input.mts'
+
 /** Preloads Monaco so mounting the rich editor does not start from cold. */
 export const prepareCodeEditor = prepareMonaco
 
@@ -195,6 +199,7 @@ export function CodeEditor({
       <Editor
         height="100%"
         language={language}
+        path={language === 'typescript' ? TYPESCRIPT_MODEL_PATH : undefined}
         value={value}
         onChange={handleEditorChange}
         onMount={handleEditorDidMount}

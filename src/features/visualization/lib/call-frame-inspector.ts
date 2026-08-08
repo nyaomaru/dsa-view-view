@@ -2,6 +2,8 @@ import {
   FUNCTION_ARGUMENTS_LABEL,
   RETURN_LOCATION_LABEL,
   RETURN_VALUE_LABEL,
+  YIELD_INPUT_LABEL,
+  YIELD_VALUE_LABEL,
   type ExecutionState,
 } from '@/entities/execution'
 import { isNonArrayObject, isUndefined } from '@/shared/lib/guards'
@@ -11,6 +13,7 @@ export type CallFrameStatus =
   | 'suspended'
   | 'returning'
   | 'throwing'
+  | 'closing'
   | 'completed'
 
 export type InspectedCallFrame = {
@@ -35,7 +38,7 @@ export type InspectedCallFrame = {
   /** Whether a successful return event has been recorded. */
   hasReturnValue: boolean
   /** How this invocation completed, when it has finished. */
-  completionPhase?: 'return' | 'throw'
+  completionPhase?: 'return' | 'throw' | 'close'
 }
 
 export type CallFrameDetails = {
@@ -71,6 +74,8 @@ const SPECIAL_VARIABLE_NAMES = new Set([
   FUNCTION_ARGUMENTS_LABEL,
   RETURN_LOCATION_LABEL,
   RETURN_VALUE_LABEL,
+  YIELD_INPUT_LABEL,
+  YIELD_VALUE_LABEL,
 ])
 
 function getCallFrameStatus({
@@ -82,12 +87,14 @@ function getCallFrameStatus({
 }: {
   frameId: number
   terminalFrameId?: number
-  terminalPhase?: 'return' | 'throw'
+  terminalPhase?: 'return' | 'throw' | 'close'
   currentFrameId?: number
   activeFrameIds: number[]
 }): CallFrameStatus {
   if (frameId === terminalFrameId) {
-    return terminalPhase === 'throw' ? 'throwing' : 'returning'
+    if (terminalPhase === 'throw') return 'throwing'
+    if (terminalPhase === 'close') return 'closing'
+    return 'returning'
   }
   if (frameId === currentFrameId) return 'current'
   if (activeFrameIds.includes(frameId)) return 'suspended'
@@ -228,12 +235,16 @@ export function getCallFrameInspectorState(
 
     const frame = frames.get(callFrame.frameId)
     if (!frame) continue
-    if (callFrame.phase !== 'throw') {
+    if (callFrame.phase !== 'throw' && callFrame.phase !== 'close') {
       frame.lastObservedStepIndex = stepIndex
       frame.visibleVariableNames = callFrame.visibleVariableNames
     }
 
-    if (callFrame.phase === 'return' || callFrame.phase === 'throw') {
+    if (
+      callFrame.phase === 'return' ||
+      callFrame.phase === 'throw' ||
+      callFrame.phase === 'close'
+    ) {
       frame.endStepIndex = stepIndex
       frame.completionPhase = callFrame.phase
       const activeIndex = activeFrameIds.lastIndexOf(callFrame.frameId)
@@ -245,12 +256,18 @@ export function getCallFrameInspectorState(
     executionState.steps[lastStepIndex]?.metadata?.callFrame
   const terminalPhase =
     selectedCallFrame?.phase === 'return' ||
-    selectedCallFrame?.phase === 'throw'
+    selectedCallFrame?.phase === 'throw' ||
+    selectedCallFrame?.phase === 'close'
       ? selectedCallFrame.phase
       : undefined
   const terminalFrameId = terminalPhase ? selectedCallFrame?.frameId : undefined
-  const currentFrameId =
-    selectedCallFrame?.frameId ?? activeFrameIds[activeFrameIds.length - 1]
+  const currentFrameId = terminalFrameId
+    ? terminalFrameId
+    : selectedCallFrame?.phase === 'suspend'
+      ? selectedCallFrame.activeFrameIdAfterStep
+      : (selectedCallFrame?.activeFrameIdAfterStep ??
+        selectedCallFrame?.frameId ??
+        activeFrameIds[activeFrameIds.length - 1])
 
   return {
     activeFrameIds,

@@ -21,6 +21,7 @@ const STATUS_LABELS: Record<CallFrameStatus, string> = {
   suspended: 'Suspended',
   returning: 'Returning',
   throwing: 'Throwing',
+  closing: 'Closing',
   completed: 'Completed',
 }
 
@@ -36,7 +37,8 @@ function FrameButton({
   const isExecuting =
     frame.status === 'current' ||
     frame.status === 'returning' ||
-    frame.status === 'throwing'
+    frame.status === 'throwing' ||
+    frame.status === 'closing'
 
   return (
     <button
@@ -167,7 +169,8 @@ export function CallFrameInspector({
       (frame) =>
         activeFrameIds.has(frame.id) ||
         frame.status === 'returning' ||
-        frame.status === 'throwing'
+        frame.status === 'throwing' ||
+        frame.status === 'closing'
     )
     .sort((left, right) => {
       if (left.id === inspectorState.currentFrameId) return -1

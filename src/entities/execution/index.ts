@@ -4,6 +4,8 @@ export {
   CLASS_RECEIVER_LABEL,
   RETURN_LOCATION_LABEL,
   RETURN_VALUE_LABEL,
+  YIELD_INPUT_LABEL,
+  YIELD_VALUE_LABEL,
   STEP_TYPES,
 } from './model/constants'
 export type {

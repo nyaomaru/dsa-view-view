@@ -21,6 +21,48 @@ test('formats TypeScript with Ctrl+S', async ({ page }) => {
   await expect(page.locator('.view-lines')).toContainText('return 1')
 })
 
+test('allows entry functions that share names with DOM globals', async ({
+  page,
+}) => {
+  await page.goto('/')
+
+  const editor = page.locator('.monaco-editor')
+  await expect(editor).toBeVisible()
+  const sourceCode = `function* parent(): Generator<number | string, string, void> {
+  const childResult = yield* child()
+
+  yield childResult
+  return 'parent done'
+}
+
+function* child(): Generator<number, string, void> {
+  yield 1
+  return 'child done'
+}`
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.evaluate((clipboardValue) => {
+    const clipboardNavigator = navigator as Navigator & {
+      clipboard: { writeText: (value: string) => Promise<void> }
+    }
+    return clipboardNavigator.clipboard.writeText(clipboardValue)
+  }, sourceCode)
+  await editor.click()
+  await page.keyboard.press('Control+A')
+  await page.keyboard.press('Control+V')
+
+  const compileButton = page.getByRole('button', { name: 'Compile Code' })
+  await expect(compileButton).toBeEnabled()
+  await compileButton.click()
+
+  await expect(page.getByText('Input Parameters')).toBeVisible()
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+  await expect(page.getByText('All execution steps')).toBeVisible()
+  await expect(page.getByText('Duplicate identifier')).toHaveCount(0)
+  await expect(
+    page.getByText('Returned: "parent done"', { exact: true })
+  ).toBeVisible()
+})
+
 test('loads, compiles, runs a demo, and opens core dialogs', async ({
   page,
   isMobile,

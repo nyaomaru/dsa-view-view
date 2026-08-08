@@ -101,7 +101,9 @@ function getCallFrameMetadata({
   if (!frame) return undefined
 
   const retainedVariableNames =
-    type === STEP_TYPES.FUNCTION_THROW && visibleVariableNames.length === 0
+    (type === STEP_TYPES.FUNCTION_THROW ||
+      type === STEP_TYPES.GENERATOR_CLOSE) &&
+    visibleVariableNames.length === 0
       ? frame.visibleVariableNames
       : visibleVariableNames
   if (visibleVariableNames.length > 0) {
@@ -117,7 +119,17 @@ function getCallFrameMetadata({
         ? 'return'
         : type === STEP_TYPES.FUNCTION_THROW
           ? 'throw'
-          : 'update',
+          : type === STEP_TYPES.GENERATOR_CLOSE
+            ? 'close'
+            : type === STEP_TYPES.AWAIT_SUSPEND ||
+                type === STEP_TYPES.YIELD_SUSPEND
+              ? 'suspend'
+              : type === STEP_TYPES.AWAIT_RESUME ||
+                  type === STEP_TYPES.AWAIT_REJECT ||
+                  type === STEP_TYPES.YIELD_RESUME ||
+                  type === STEP_TYPES.YIELD_THROW
+                ? 'resume'
+                : 'update',
     visibleVariableNames: retainedVariableNames,
   }
 }
@@ -132,7 +144,7 @@ function updateActiveFrame(
   const frame = context.frames.get(callFrame.frameId)
   if (!frame) return
 
-  if (type === STEP_TYPES.AWAIT_SUSPEND) {
+  if (type === STEP_TYPES.AWAIT_SUSPEND || type === STEP_TYPES.YIELD_SUSPEND) {
     frame.status = 'suspended'
     const parentFrame = isInteger(frame.parentFrameId)
       ? context.frames.get(frame.parentFrameId)
@@ -142,7 +154,11 @@ function updateActiveFrame(
     return
   }
 
-  if (type === STEP_TYPES.RETURN || type === STEP_TYPES.FUNCTION_THROW) {
+  if (
+    type === STEP_TYPES.RETURN ||
+    type === STEP_TYPES.FUNCTION_THROW ||
+    type === STEP_TYPES.GENERATOR_CLOSE
+  ) {
     frame.status = 'completed'
     const parentFrame = isInteger(frame.parentFrameId)
       ? context.frames.get(frame.parentFrameId)
@@ -257,8 +273,13 @@ export function recordExecutionStep(
   const variableDelta = deepClone(variablesForStep)
 
   updateActiveFrame(context, type, callFrame)
+  if (callFrame) {
+    callFrame.activeFrameIdAfterStep = context.activeFrameId
+  }
   const callStackFrameId =
-    type === STEP_TYPES.RETURN || type === STEP_TYPES.FUNCTION_THROW
+    type === STEP_TYPES.RETURN ||
+    type === STEP_TYPES.FUNCTION_THROW ||
+    type === STEP_TYPES.GENERATOR_CLOSE
       ? callFrame?.parentFrameId
       : (callFrame?.frameId ?? context.activeFrameId)
 
