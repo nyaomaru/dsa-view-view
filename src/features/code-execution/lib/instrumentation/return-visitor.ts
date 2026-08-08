@@ -46,12 +46,35 @@ const deferTerminalStepUntilFinalizer = (
   context: InstrumentationContext,
   path: NodePath<t.ReturnStatement>,
   finalizer: t.BlockStatement,
+  finalizerRecorders: WeakMap<t.BlockStatement, t.Identifier>,
   terminalStatements: t.Statement[]
 ): t.Statement[] => {
-  const recorderId = path.scope.generateUidIdentifier(RETURN_RECORDER_NAME)
-  const recorderDeclaration = context.markInstrumented(
-    t.variableDeclaration('var', [t.variableDeclarator(recorderId)])
-  )
+  const existingRecorderId = finalizerRecorders.get(finalizer)
+  const recorderId =
+    existingRecorderId ??
+    path.scope.generateUidIdentifier(RETURN_RECORDER_NAME)
+  const setupStatements: t.Statement[] = []
+
+  if (!existingRecorderId) {
+    finalizerRecorders.set(finalizer, recorderId)
+    setupStatements.push(
+      context.markInstrumented(
+        t.variableDeclaration('var', [t.variableDeclarator(recorderId)])
+      )
+    )
+    const invokeRecorder = context.markInstrumented(
+      t.callExpression(recorderId, [])
+    )
+    finalizer.body.push(
+      context.markInstrumented(
+        t.ifStatement(
+          recorderId,
+          t.blockStatement([t.expressionStatement(invokeRecorder)])
+        )
+      )
+    )
+  }
+
   const recorderAssignment = context.markInstrumented(
     t.expressionStatement(
       context.markInstrumented(
@@ -68,23 +91,13 @@ const deferTerminalStepUntilFinalizer = (
       )
     )
   )
-  const invokeRecorder = context.markInstrumented(
-    t.callExpression(recorderId, [])
-  )
-  finalizer.body.push(
-    context.markInstrumented(
-      t.ifStatement(
-        recorderId,
-        t.blockStatement([t.expressionStatement(invokeRecorder)])
-      )
-    )
-  )
 
-  return [recorderDeclaration, recorderAssignment]
+  return [...setupStatements, recorderAssignment]
 }
 
 export const createReturnVisitor = (context: InstrumentationContext) => {
   const argumentDescriptions = new WeakMap<t.ReturnStatement, string>()
+  const finalizerRecorders = new WeakMap<t.BlockStatement, t.Identifier>()
 
   return {
     ReturnStatement: {
@@ -149,6 +162,7 @@ export const createReturnVisitor = (context: InstrumentationContext) => {
                 context,
                 path,
                 pendingFinalizer,
+                finalizerRecorders,
                 terminalStatements
               )
             : terminalStatements
@@ -184,6 +198,7 @@ export const createReturnVisitor = (context: InstrumentationContext) => {
                 context,
                 path,
                 pendingFinalizer,
+                finalizerRecorders,
                 terminalStatements
               )
             : terminalStatements

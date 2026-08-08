@@ -339,6 +339,39 @@ function run(): unknown[] {
     ).toBe(false)
   })
 
+  it('records only the latest return through an outer yielding finally', () => {
+    const state = executeCode(
+      `function* values(): Generator<number, number, void> {
+  try {
+    try {
+      return 1
+    } finally {
+      return 2
+    }
+  } finally {
+    yield 3
+  }
+}`,
+      {},
+      'values'
+    )
+    const suspendIndex = state.steps.findIndex(
+      (step) => step.type === 'yield-suspend'
+    )
+    const generatorReturns = state.steps.filter(
+      (step) =>
+        step.type === 'return' &&
+        step.metadata?.callFrame?.functionName === 'values'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(2)
+    expect(
+      generatorReturns.map((step) => step.variables[RETURN_VALUE_LABEL])
+    ).toEqual([2])
+    expect(generatorReturns[0]?.stepNumber).toBeGreaterThan(suspendIndex)
+  })
+
   it('reactivates the same frame when iterator.throw is handled', () => {
     const state = executeCode(
       `function* recover(): Generator<number | string, string, void> {
