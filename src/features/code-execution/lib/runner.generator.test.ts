@@ -64,6 +64,28 @@ describe('runner - generator execution', () => {
     ).toEqual([undefined, undefined])
   })
 
+  it('yields intrinsic undefined when the name is shadowed', () => {
+    const state = executeCode(
+      `function* values(undefined: string): Generator<undefined, void, void> {
+  yield
+}
+
+function run(): unknown[] {
+  const yielded = values('shadowed').next().value
+  return [yielded, yielded === void 0]
+}`,
+      {},
+      'run'
+    )
+    const suspend = state.steps.find(
+      (step) => step.type === 'yield-suspend'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([undefined, true])
+    expect(suspend?.variables[YIELD_VALUE_LABEL]).toBeUndefined()
+  })
+
   it('evaluates synchronous yield operand work before suspension', () => {
     const state = executeCode(
       `function helper(): number {

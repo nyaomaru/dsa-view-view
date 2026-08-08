@@ -407,7 +407,9 @@ export const createYieldVisitor = (context: InstrumentationContext) => ({
       }
 
       const line = getLineNumber(path.node)
-      const argument = path.node.argument ?? t.identifier('undefined')
+      const argument =
+        path.node.argument ??
+        t.unaryExpression('void', t.numericLiteral(0), true)
       const source = path.node.argument
         ? safeGenerate(path.node.argument)
         : 'undefined'
