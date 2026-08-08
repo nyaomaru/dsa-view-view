@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test'
 
-import { YIELD_INPUT_LABEL, YIELD_VALUE_LABEL } from '@/entities/execution'
+import {
+  RETURN_VALUE_LABEL,
+  YIELD_INPUT_LABEL,
+  YIELD_VALUE_LABEL,
+} from '@/entities/execution'
 import { stepBackward, stepForward } from './execution-state'
 import { executeCode, executeCodeAsync } from './runner'
 import { getCallFrameInspectorState } from '@/features/visualization/lib/call-frame-inspector'
@@ -175,6 +179,92 @@ function run(): string[] {
     expect(
       afterClose.frames.find((frame) => frame.id === generatorFrameId)?.status
     ).toBe('completed')
+  })
+
+  it('defers generator completion until a yielding finally finishes', () => {
+    const state = executeCode(
+      `function* values(): Generator<number, string, void> {
+  try {
+    return 'original'
+  } finally {
+    yield 1
+  }
+}
+
+function run(): unknown[] {
+  const iterator = values()
+  const suspended = iterator.next()
+  const closed = iterator.return('replacement')
+  return [suspended.value, suspended.done, closed.value, closed.done]
+}`,
+      {},
+      'run'
+    )
+    const generatorEntry = state.steps.find(
+      (step) =>
+        step.type === 'function-entry' &&
+        step.metadata?.callFrame?.functionName === 'values'
+    )
+    const generatorFrameId = generatorEntry?.metadata?.callFrame?.frameId
+    const suspendIndex = state.steps.findIndex(
+      (step) =>
+        step.type === 'yield-suspend' &&
+        step.metadata?.callFrame?.frameId === generatorFrameId
+    )
+    const closeIndex = state.steps.findIndex(
+      (step) =>
+        step.type === 'generator-close' &&
+        step.metadata?.callFrame?.frameId === generatorFrameId
+    )
+    const generatorReturns = state.steps.filter(
+      (step) =>
+        step.type === 'return' &&
+        step.metadata?.callFrame?.frameId === generatorFrameId
+    )
+    const atSuspend = getCallFrameInspectorState({
+      ...state,
+      currentStep: suspendIndex,
+    })
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([1, false, 'replacement', true])
+    expect(generatorReturns).toEqual([])
+    expect(closeIndex).toBeGreaterThan(suspendIndex)
+    expect(
+      atSuspend.frames.find((frame) => frame.id === generatorFrameId)?.status
+    ).toBe('suspended')
+  })
+
+  it('records a pending return after a yielding finally resumes', () => {
+    const state = executeCode(
+      `function* values(): Generator<number, string, void> {
+  try {
+    return 'original'
+  } finally {
+    yield 1
+  }
+}`,
+      {},
+      'values'
+    )
+    const suspendIndex = state.steps.findIndex(
+      (step) => step.type === 'yield-suspend'
+    )
+    const returnIndex = state.steps.findIndex(
+      (step) =>
+        step.type === 'return' &&
+        step.metadata?.callFrame?.functionName === 'values'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe('original')
+    expect(returnIndex).toBeGreaterThan(suspendIndex)
+    expect(state.steps[returnIndex]?.variables[RETURN_VALUE_LABEL]).toBe(
+      'original'
+    )
+    expect(
+      state.steps.some((step) => step.type === 'generator-close')
+    ).toBe(false)
   })
 
   it('reactivates the same frame when iterator.throw is handled', () => {
