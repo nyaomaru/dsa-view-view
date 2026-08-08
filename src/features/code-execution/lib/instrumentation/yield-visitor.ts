@@ -53,6 +53,9 @@ const createDelegatedYield = (
   const throwMethodId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldThrowMethod'
   )
+  const fallbackReturnMethodId = path.scope.generateUidIdentifier(
+    'algorithmVisualizerYieldFallbackReturnMethod'
+  )
   const returnMethodId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldReturnMethod'
   )
@@ -61,6 +64,9 @@ const createDelegatedYield = (
   )
   const throwResultId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldThrowResult'
+  )
+  const fallbackReturnResultId = path.scope.generateUidIdentifier(
+    'algorithmVisualizerYieldFallbackReturnResult'
   )
   const returnResultId = path.scope.generateUidIdentifier(
     'algorithmVisualizerYieldReturnResult'
@@ -83,6 +89,33 @@ const createDelegatedYield = (
         t.objectProperty(t.stringLiteral(YIELD_INPUT_LABEL), valueId),
       ])
     )
+  const createIteratorResultValidation = (resultId: t.Identifier) =>
+    t.ifStatement(
+      t.logicalExpression(
+        '&&',
+        t.logicalExpression(
+          '||',
+          t.binaryExpression(
+            '!==',
+            t.unaryExpression('typeof', resultId),
+            t.stringLiteral('object')
+          ),
+          t.binaryExpression('===', resultId, t.nullLiteral())
+        ),
+        t.binaryExpression(
+          '!==',
+          t.unaryExpression('typeof', resultId),
+          t.stringLiteral('function')
+        )
+      ),
+      t.blockStatement([
+        t.throwStatement(
+          t.newExpression(t.identifier('TypeError'), [
+            t.stringLiteral('Iterator result is not an object'),
+          ])
+        ),
+      ])
+    )
   const createNormalizedResultStatements = (resultId: t.Identifier) => {
     const doneId = path.scope.generateUidIdentifier(
       'algorithmVisualizerYieldDone'
@@ -92,32 +125,7 @@ const createDelegatedYield = (
     )
 
     return [
-      t.ifStatement(
-        t.logicalExpression(
-          '&&',
-          t.logicalExpression(
-            '||',
-            t.binaryExpression(
-              '!==',
-              t.unaryExpression('typeof', resultId),
-              t.stringLiteral('object')
-            ),
-            t.binaryExpression('===', resultId, t.nullLiteral())
-          ),
-          t.binaryExpression(
-            '!==',
-            t.unaryExpression('typeof', resultId),
-            t.stringLiteral('function')
-          )
-        ),
-        t.blockStatement([
-          t.throwStatement(
-            t.newExpression(t.identifier('TypeError'), [
-              t.stringLiteral('Iterator result is not an object'),
-            ])
-          ),
-        ])
-      ),
+      createIteratorResultValidation(resultId),
       t.variableDeclaration('const', [
         t.variableDeclarator(
           doneId,
@@ -202,22 +210,56 @@ const createDelegatedYield = (
         ),
       ),
       t.blockStatement([
+        t.variableDeclaration('const', [
+          t.variableDeclarator(
+            fallbackReturnMethodId,
+            t.memberExpression(iteratorId, t.identifier('return'))
+          ),
+        ]),
         t.ifStatement(
-          t.binaryExpression(
-            '===',
-            t.unaryExpression(
-              'typeof',
-              t.memberExpression(iteratorId, t.identifier('return'))
+          t.logicalExpression(
+            '&&',
+            t.binaryExpression(
+              '!==',
+              fallbackReturnMethodId,
+              t.nullLiteral()
             ),
-            t.stringLiteral('function')
+            t.binaryExpression(
+              '!==',
+              fallbackReturnMethodId,
+              t.unaryExpression('void', t.numericLiteral(0))
+            )
           ),
           t.blockStatement([
-            t.expressionStatement(
-              t.callExpression(
-                t.memberExpression(iteratorId, t.identifier('return')),
-                []
-              )
+            t.ifStatement(
+              t.binaryExpression(
+                '!==',
+                t.unaryExpression('typeof', fallbackReturnMethodId),
+                t.stringLiteral('function')
+              ),
+              t.blockStatement([
+                t.throwStatement(
+                  t.newExpression(t.identifier('TypeError'), [
+                    t.stringLiteral(
+                      'The delegated iterator return method is not callable'
+                    ),
+                  ])
+                ),
+              ])
             ),
+            t.variableDeclaration('const', [
+              t.variableDeclarator(
+                fallbackReturnResultId,
+                t.callExpression(
+                  t.memberExpression(
+                    fallbackReturnMethodId,
+                    t.identifier('call')
+                  ),
+                  [iteratorId]
+                )
+              )
+            ]),
+            createIteratorResultValidation(fallbackReturnResultId),
           ])
         ),
         t.throwStatement(

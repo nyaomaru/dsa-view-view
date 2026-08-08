@@ -465,6 +465,52 @@ function run(): unknown[] {
     expect(state.returnValue).toEqual(['type-error', []])
   })
 
+  it('caches the fallback delegated iterator return method', () => {
+    const state = executeCode(
+      `function* values(accesses: string[]): Generator<number, void, void> {
+  let returnAccesses = 0
+  const iterator = {
+    next() {
+      return { done: false, value: 1 }
+    },
+    [Symbol.iterator]() {
+      return this
+    },
+  }
+  Object.defineProperty(iterator, 'return', {
+    get() {
+      accesses.push('get')
+      returnAccesses += 1
+      if (returnAccesses > 1) throw new Error('second access')
+      return function () {
+        accesses.push('call')
+        return { done: true, value: undefined }
+      }
+    },
+  })
+  yield* (iterator as Iterable<number>)
+}
+
+function run(): unknown[] {
+  const accesses: string[] = []
+  const iterator = values(accesses)
+  iterator.next()
+  try {
+    iterator.throw(new Error('boom'))
+    return ['completed', accesses]
+  } catch (error) {
+    const result = error instanceof TypeError ? 'type-error' : 'other-error'
+    return [result, accesses]
+  }
+}`,
+      {},
+      'run'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual(['type-error', ['get', 'call']])
+  })
+
   it('keeps nested yield* frames and parent relationships separate', () => {
     const state = executeCode(
       `function* child(): Generator<number, string, void> {
