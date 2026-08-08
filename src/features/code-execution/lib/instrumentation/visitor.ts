@@ -6,14 +6,13 @@ import { createMutationVisitors } from './mutation-visitors'
 import { createReturnVisitor } from './return-visitor'
 import { createYieldVisitor } from './yield-visitor'
 
-export const createInstrumentationVisitor = () => {
-  const context = new InstrumentationContext()
-  return {
-    ...createFunctionVisitors(context),
-    ...createAwaitVisitor(context),
-    ...createYieldVisitor(context),
-    ...createMutationVisitors(context),
-    ...createLoopVisitors(context),
-    ...createReturnVisitor(context),
-  }
-}
+export const createInstrumentationVisitor = (
+  context: InstrumentationContext
+) => ({
+  ...createFunctionVisitors(context),
+  ...createAwaitVisitor(context),
+  ...createYieldVisitor(context),
+  ...createMutationVisitors(context),
+  ...createLoopVisitors(context),
+  ...createReturnVisitor(context),
+})

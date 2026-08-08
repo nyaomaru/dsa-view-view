@@ -86,6 +86,56 @@ function run(): unknown[] {
     expect(suspend?.variables[YIELD_VALUE_LABEL]).toBeUndefined()
   })
 
+  it('uses captured intrinsics when global names are shadowed', () => {
+    const state = executeCode(
+      `function* values(
+  Reflect: unknown,
+  Symbol: unknown,
+  TypeError: unknown,
+  __algorithmVisualizerIntrinsics: unknown,
+  delegate: Iterable<number>
+): Generator<number, void, void> {
+  yield 1
+  yield* delegate
+}
+
+function ShadowedTypeError() {}
+
+function run(): unknown[] {
+  const delegate = {
+    next() {
+      return { done: false, value: 2 }
+    },
+    return: 1,
+    [Symbol.iterator]() {
+      return this
+    },
+  }
+  const iterator = values(
+    { apply() { throw new Error('shadowed Reflect') } },
+    { iterator: Symbol('shadowed') },
+    ShadowedTypeError,
+    {},
+    delegate as Iterable<number>
+  )
+  const first = iterator.next()
+  const second = iterator.next()
+
+  try {
+    iterator.return()
+    return [first.value, second.value, false]
+  } catch (error) {
+    return [first.value, second.value, error instanceof TypeError]
+  }
+}`,
+      {},
+      'run'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([1, 2, true])
+  })
+
   it('evaluates synchronous yield operand work before suspension', () => {
     const state = executeCode(
       `function helper(): number {

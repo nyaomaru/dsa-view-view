@@ -12,6 +12,7 @@ import { isError, isInstanceOf } from '@/shared/lib/guards'
 import { safeStringify } from '@/shared/lib/safe-stringify'
 
 import { instrumentCode } from './instrumenter'
+import { attachInstrumentationIntrinsics } from './instrumentation/intrinsics'
 import {
   getStepLimitMessage,
   MAX_STEPS,
@@ -106,6 +107,7 @@ export function* createTypeScriptExecutionRunner(
     stepVariables: Record<string, unknown>
   ): ExecutionStep =>
     recordExecutionStep(context, type, line, description, stepVariables)
+  attachInstrumentationIntrinsics(recordStep)
 
   try {
     yield recordStep(
@@ -180,6 +182,7 @@ export async function* createAsyncTypeScriptExecutionRunner(
     stepVariables: Record<string, unknown>
   ): ExecutionStep =>
     recordExecutionStep(context, type, line, description, stepVariables)
+  attachInstrumentationIntrinsics(recordStep)
 
   try {
     yield recordStep(

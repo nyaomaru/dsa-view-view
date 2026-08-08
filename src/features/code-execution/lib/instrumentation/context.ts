@@ -9,6 +9,7 @@ import {
 import { getUniqueNames } from './binding-names'
 import { CALL_FRAME_ID_LABEL } from '../frame-identity'
 import { createRecordStepCall } from './step-factory'
+import type { InstrumentationIntrinsicName } from './intrinsics'
 
 export class InstrumentationContext {
   private readonly scopeStack: string[][] = []
@@ -20,6 +21,11 @@ export class InstrumentationContext {
   > = []
   private readonly tracedGeneratorStack: boolean[] = []
   private readonly instrumentedNodes = new WeakSet<t.Node>()
+  private readonly intrinsicsIdentifier: t.Identifier
+
+  constructor(intrinsicsIdentifier: t.Identifier) {
+    this.intrinsicsIdentifier = intrinsicsIdentifier
+  }
 
   isInstrumented(node: t.Node): boolean {
     return this.instrumentedNodes.has(node)
@@ -28,6 +34,15 @@ export class InstrumentationContext {
   markInstrumented<T extends t.Node>(node: T): T {
     this.instrumentedNodes.add(node)
     return node
+  }
+
+  createIntrinsicReference(
+    name: InstrumentationIntrinsicName
+  ): t.MemberExpression {
+    return t.memberExpression(
+      t.identifier(this.intrinsicsIdentifier.name),
+      t.identifier(name)
+    )
   }
 
   pushScope(names: string[] = []): void {

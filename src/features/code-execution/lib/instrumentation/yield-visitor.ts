@@ -94,7 +94,7 @@ const createDelegatedYield = (
     args: t.Expression[]
   ) =>
     t.callExpression(
-      t.memberExpression(t.identifier('Reflect'), t.identifier('apply')),
+      context.createIntrinsicReference('apply'),
       [methodId, iteratorId, t.arrayExpression(args)]
     )
   const createIteratorResultValidation = (resultId: t.Identifier) =>
@@ -118,7 +118,7 @@ const createDelegatedYield = (
       ),
       t.blockStatement([
         t.throwStatement(
-          t.newExpression(t.identifier('TypeError'), [
+          t.newExpression(context.createIntrinsicReference('TypeError'), [
             t.stringLiteral('Iterator result is not an object'),
           ])
         ),
@@ -241,11 +241,14 @@ const createDelegatedYield = (
               ),
               t.blockStatement([
                 t.throwStatement(
-                  t.newExpression(t.identifier('TypeError'), [
-                    t.stringLiteral(
-                      'The delegated iterator return method is not callable'
-                    ),
-                  ])
+                  t.newExpression(
+                    context.createIntrinsicReference('TypeError'),
+                    [
+                      t.stringLiteral(
+                        'The delegated iterator return method is not callable'
+                      ),
+                    ]
+                  )
                 ),
               ])
             ),
@@ -259,7 +262,7 @@ const createDelegatedYield = (
           ])
         ),
         t.throwStatement(
-          t.newExpression(t.identifier('TypeError'), [
+          t.newExpression(context.createIntrinsicReference('TypeError'), [
             t.stringLiteral('The delegated iterator has no throw method'),
           ])
         ),
@@ -273,7 +276,7 @@ const createDelegatedYield = (
       ),
       t.blockStatement([
         t.throwStatement(
-          t.newExpression(t.identifier('TypeError'), [
+          t.newExpression(context.createIntrinsicReference('TypeError'), [
             t.stringLiteral(
               'The delegated iterator throw method is not callable'
             ),
@@ -323,7 +326,7 @@ const createDelegatedYield = (
       ),
       t.blockStatement([
         t.throwStatement(
-          t.newExpression(t.identifier('TypeError'), [
+          t.newExpression(context.createIntrinsicReference('TypeError'), [
             t.stringLiteral(
               'The delegated iterator return method is not callable'
             ),
@@ -349,10 +352,7 @@ const createDelegatedYield = (
             t.callExpression(
               t.memberExpression(
                 iterableId,
-                t.memberExpression(
-                  t.identifier('Symbol'),
-                  t.identifier('iterator')
-                ),
+                context.createIntrinsicReference('iterator'),
                 true
               ),
               []
@@ -371,10 +371,7 @@ const createDelegatedYield = (
         t.returnStatement(
           t.objectExpression([
             t.objectProperty(
-              t.memberExpression(
-                t.identifier('Symbol'),
-                t.identifier('iterator')
-              ),
+              context.createIntrinsicReference('iterator'),
               iteratorMethod,
               true
             ),
@@ -484,10 +481,7 @@ export const createYieldVisitor = (context: InstrumentationContext) => ({
           t.yieldExpression(
             context.markInstrumented(
               t.callExpression(
-                t.memberExpression(
-                  t.identifier('Reflect'),
-                  t.identifier('apply')
-                ),
+                context.createIntrinsicReference('apply'),
                 [wrapper, t.thisExpression(), t.arrayExpression([argument])]
               )
             ),
