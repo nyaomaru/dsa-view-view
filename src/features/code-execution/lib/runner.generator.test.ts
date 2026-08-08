@@ -654,6 +654,77 @@ function run(): unknown[] {
     expect(state.returnValue).toEqual([1, '1:boom', '1:closed'])
   })
 
+  it('reactivates a delegated generator before reading its return method', () => {
+    const state = executeCode(
+      `function cleanup(value?: unknown): IteratorResult<number, unknown> {
+  return { done: true, value }
+}
+
+function* values(): Generator<number, unknown, void> {
+  const iterator = {
+    next() {
+      return { done: false, value: 1 }
+    },
+    [Symbol.iterator]() {
+      return this
+    },
+  }
+  Object.defineProperty(iterator, 'return', {
+    get() {
+      return cleanup
+    },
+  })
+  return yield* (iterator as Iterable<number>)
+}
+
+function run(): unknown[] {
+  const iterator = values()
+  const first = iterator.next()
+  const closed = iterator.return('closed')
+  return [first.value, closed.value]
+}`,
+      {},
+      'run'
+    )
+    const generatorEntry = state.steps.find(
+      (step) =>
+        step.type === 'function-entry' &&
+        step.metadata?.callFrame?.functionName === 'values'
+    )
+    const returnGetterEntry = state.steps.find(
+      (step) =>
+        step.type === 'function-entry' &&
+        step.metadata?.callFrame?.functionName === 'get'
+    )
+    const cleanupEntry = state.steps.find(
+      (step) =>
+        step.type === 'function-entry' &&
+        step.metadata?.callFrame?.functionName === 'cleanup'
+    )
+    const returnResumeIndex = state.steps.findIndex(
+      (step) =>
+        step.type === 'yield-resume' &&
+        step.description.startsWith('Delegated generator resumed with return')
+    )
+    const returnGetterIndex = state.steps.findIndex(
+      (step) => step === returnGetterEntry
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([1, 'closed'])
+    expect(generatorEntry).toBeDefined()
+    expect(returnGetterEntry).toBeDefined()
+    expect(cleanupEntry).toBeDefined()
+    expect(returnResumeIndex).toBeGreaterThan(-1)
+    expect(returnGetterIndex).toBeGreaterThan(returnResumeIndex)
+    expect(returnGetterEntry?.metadata?.callFrame?.parentFrameId).toBe(
+      generatorEntry?.metadata?.callFrame?.frameId
+    )
+    expect(cleanupEntry?.metadata?.callFrame?.parentFrameId).toBe(
+      generatorEntry?.metadata?.callFrame?.frameId
+    )
+  })
+
   it('reads delegated iterator-result accessors once', () => {
     const accesses: string[] = []
     const iterator: IterableIterator<string> = {

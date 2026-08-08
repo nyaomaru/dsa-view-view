@@ -293,6 +293,17 @@ const createDelegatedYield = (
     ...createNormalizedResultStatements(throwResultId),
   ])
   const returnMethod = createIteratorMethod(context, returnValueId, [
+    createRecordStepStatement(
+      STEP_TYPES.YIELD_RESUME,
+      line,
+      `Delegated generator resumed with return: ${source}`,
+      context.createScopeProperties([
+        t.objectProperty(
+          t.stringLiteral(YIELD_INPUT_LABEL),
+          returnValueId
+        ),
+      ])
+    ),
     t.variableDeclaration('const', [
       t.variableDeclarator(
         returnMethodId,
