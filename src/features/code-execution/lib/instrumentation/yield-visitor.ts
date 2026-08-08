@@ -426,6 +426,15 @@ export const createYieldVisitor = (context: InstrumentationContext) => ({
       const errorId = path.scope.generateUidIdentifier(
         'algorithmVisualizerYieldError'
       )
+      const handledId = path.scope.generateUidIdentifier(
+        'algorithmVisualizerYieldHandled'
+      )
+      const markYieldHandled = () =>
+        context.markInstrumented(
+          t.expressionStatement(
+            t.assignmentExpression('=', handledId, t.booleanLiteral(true))
+          )
+        )
       const innerYield = context.markInstrumented(t.yieldExpression(operandId))
       const wrapper = context.markInstrumented(
         t.functionExpression(
@@ -440,11 +449,17 @@ export const createYieldVisitor = (context: InstrumentationContext) => ({
                 t.objectProperty(t.stringLiteral(YIELD_VALUE_LABEL), operandId),
               ])
             ),
+            context.markInstrumented(
+              t.variableDeclaration('let', [
+                t.variableDeclarator(handledId, t.booleanLiteral(false)),
+              ])
+            ),
             t.tryStatement(
               t.blockStatement([
                 t.variableDeclaration('const', [
                   t.variableDeclarator(inputId, innerYield),
                 ]),
+                markYieldHandled(),
                 createRecordStepStatement(
                   STEP_TYPES.YIELD_RESUME,
                   line,
@@ -461,6 +476,7 @@ export const createYieldVisitor = (context: InstrumentationContext) => ({
               t.catchClause(
                 errorId,
                 t.blockStatement([
+                  markYieldHandled(),
                   createRecordStepStatement(
                     STEP_TYPES.YIELD_THROW,
                     line,
@@ -469,7 +485,20 @@ export const createYieldVisitor = (context: InstrumentationContext) => ({
                   ),
                   t.throwStatement(errorId),
                 ])
-              )
+              ),
+              t.blockStatement([
+                t.ifStatement(
+                  t.unaryExpression('!', handledId),
+                  t.blockStatement([
+                    createRecordStepStatement(
+                      STEP_TYPES.YIELD_RESUME,
+                      line,
+                      `Generator resumed with return after yield: ${source}`,
+                      context.createScopeProperties()
+                    ),
+                  ])
+                ),
+              ])
             ),
           ]),
           true

@@ -253,6 +253,55 @@ function run(): string[] {
     ).toBe('completed')
   })
 
+  it('reactivates a generator frame before return-driven cleanup', () => {
+    const state = executeCode(
+      `function cleanup(): void {
+  const completed = true
+}
+
+function* values(): Generator<number, void, void> {
+  try {
+    yield 1
+  } finally {
+    cleanup()
+  }
+}
+
+function run(): void {
+  const iterator = values()
+  iterator.next()
+  iterator.return()
+}`,
+      {},
+      'run'
+    )
+    const generatorEntry = state.steps.find(
+      (step) =>
+        step.type === 'function-entry' &&
+        step.metadata?.callFrame?.functionName === 'values'
+    )
+    const cleanupEntry = state.steps.find(
+      (step) =>
+        step.type === 'function-entry' &&
+        step.metadata?.callFrame?.functionName === 'cleanup'
+    )
+    const returnResumeIndex = state.steps.findIndex(
+      (step) =>
+        step.type === 'yield-resume' &&
+        step.description.startsWith('Generator resumed with return')
+    )
+    const cleanupIndex = state.steps.findIndex((step) => step === cleanupEntry)
+
+    expect(state.error).toBeUndefined()
+    expect(generatorEntry).toBeDefined()
+    expect(cleanupEntry).toBeDefined()
+    expect(returnResumeIndex).toBeGreaterThan(-1)
+    expect(cleanupIndex).toBeGreaterThan(returnResumeIndex)
+    expect(cleanupEntry?.metadata?.callFrame?.parentFrameId).toBe(
+      generatorEntry?.metadata?.callFrame?.frameId
+    )
+  })
+
   it('defers generator completion until a yielding finally finishes', () => {
     const state = executeCode(
       `function* values(): Generator<number, string, void> {
