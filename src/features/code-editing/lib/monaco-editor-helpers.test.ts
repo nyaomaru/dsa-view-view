@@ -316,6 +316,54 @@ function helper(): void {
     expect(onValidate).toHaveBeenCalledWith([])
   })
 
+  it('ignores unused hints for every entry function overload', () => {
+    const model = {
+      uri: 'file:///source.ts',
+      getValue: () => `function solve(value: number): number;
+function solve(value: string): string;
+function solve(value: number | string): number | string {
+  return value
+}
+
+function helper(): void {}`,
+    }
+    const { editor } = createEditorWithModel(model)
+    const monaco = createMonacoMock()
+    const onValidate = vi.fn()
+
+    monaco.editor.getModelMarkers.mockReturnValue([
+      ...[1, 2, 3].map((line) => ({
+        startLineNumber: line,
+        startColumn: 10,
+        message: "'solve' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
+      })),
+      {
+        startLineNumber: 7,
+        startColumn: 10,
+        message: "'helper' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
+      },
+    ])
+    monaco.editor.onDidChangeMarkers.mockReturnValue({ dispose: vi.fn() })
+
+    subscribeToValidationMarkers(editor, monaco.api, {
+      current: onValidate,
+    })
+    getMarkerChangeHandler(monaco)()
+
+    expect(onValidate).toHaveBeenCalledWith([
+      {
+        line: 7,
+        column: 10,
+        message: "'helper' is declared but its value is never read.",
+        severity: 'warning',
+      },
+    ])
+  })
+
   it('does not map validation markers without a model or callback', () => {
     const monaco = createMonacoMock()
     monaco.editor.onDidChangeMarkers.mockReturnValue({ dispose: vi.fn() })

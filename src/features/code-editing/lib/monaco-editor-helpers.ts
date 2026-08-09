@@ -63,7 +63,8 @@ const getEntryIdentifier = (
   entryFunctionName: string
 ) => {
   if (
-    declaration.type === 'FunctionDeclaration' &&
+    (declaration.type === 'FunctionDeclaration' ||
+      declaration.type === 'TSDeclareFunction') &&
     declaration.id?.name === entryFunctionName
   ) {
     return declaration.id
@@ -116,7 +117,6 @@ const getEntryFunctionNamePositions = (code: string): ReadonlySet<string> => {
           entryIdentifier.loc.start.column + 1
         )
       )
-      break
     }
   } catch {
     return positions
