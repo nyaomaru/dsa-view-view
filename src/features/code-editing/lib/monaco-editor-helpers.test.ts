@@ -287,6 +287,35 @@ function helper(): void {
     ])
   })
 
+  it('ignores an unused arrow function entry hint', () => {
+    const model = {
+      uri: 'file:///source.ts',
+      getValue: () =>
+        'const canVisit = (value: number): boolean => value > 0',
+    }
+    const { editor } = createEditorWithModel(model)
+    const monaco = createMonacoMock()
+    const onValidate = vi.fn()
+
+    monaco.editor.getModelMarkers.mockReturnValue([
+      {
+        startLineNumber: 1,
+        startColumn: 7,
+        message: "'canVisit' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
+      },
+    ])
+    monaco.editor.onDidChangeMarkers.mockReturnValue({ dispose: vi.fn() })
+
+    subscribeToValidationMarkers(editor, monaco.api, {
+      current: onValidate,
+    })
+    getMarkerChangeHandler(monaco)()
+
+    expect(onValidate).toHaveBeenCalledWith([])
+  })
+
   it('does not map validation markers without a model or callback', () => {
     const monaco = createMonacoMock()
     monaco.editor.onDidChangeMarkers.mockReturnValue({ dispose: vi.fn() })

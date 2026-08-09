@@ -1,5 +1,6 @@
 import type { Monaco, OnMount } from '@monaco-editor/react'
 import { parse } from '@babel/parser'
+import type { Node } from '@babel/types'
 import type { CompilationError } from '@/entities/code'
 import { getPreparedTypeScriptEditorClassSource } from '@/entities/code/compiler'
 import { define, equals, isObject } from '@/shared/lib/guards'
@@ -57,6 +58,30 @@ const mapMarkerToCompilationError = (
 const getPositionKey = (line: number, column: number): string =>
   `${line}:${column}`
 
+const getEntryIdentifier = (
+  declaration: Node,
+  entryFunctionName: string
+) => {
+  if (
+    declaration.type === 'FunctionDeclaration' &&
+    declaration.id?.name === entryFunctionName
+  ) {
+    return declaration.id
+  }
+
+  if (declaration.type !== 'VariableDeclaration') {
+    return undefined
+  }
+
+  return declaration.declarations.find(
+    (declarator) =>
+      declarator.id.type === 'Identifier' &&
+      declarator.id.name === entryFunctionName &&
+      (declarator.init?.type === 'ArrowFunctionExpression' ||
+        declarator.init?.type === 'FunctionExpression')
+  )?.id
+}
+
 const getEntryFunctionNamePositions = (code: string): ReadonlySet<string> => {
   const positions = new Set<string>()
 
@@ -77,19 +102,18 @@ const getEntryFunctionNamePositions = (code: string): ReadonlySet<string> => {
         node.type === 'ExportDefaultDeclaration'
           ? node.declaration
           : node
+      const entryIdentifier = declaration
+        ? getEntryIdentifier(declaration, entryFunctionName)
+        : undefined
 
-      if (
-        declaration?.type !== 'FunctionDeclaration' ||
-        declaration.id?.name !== entryFunctionName ||
-        !declaration.id?.loc
-      ) {
+      if (!entryIdentifier?.loc) {
         continue
       }
 
       positions.add(
         getPositionKey(
-          declaration.id.loc.start.line,
-          declaration.id.loc.start.column + 1
+          entryIdentifier.loc.start.line,
+          entryIdentifier.loc.start.column + 1
         )
       )
       break
@@ -101,7 +125,7 @@ const getEntryFunctionNamePositions = (code: string): ReadonlySet<string> => {
   return positions
 }
 
-const isUnusedTopLevelFunctionHint = (
+const isUnusedEntryFunctionHint = (
   marker: MonacoMarker,
   monaco: Monaco,
   functionNamePositions: ReadonlySet<string>
@@ -181,7 +205,7 @@ export const subscribeToValidationMarkers = (
       markers
         .filter(
           (marker: MonacoMarker) =>
-            !isUnusedTopLevelFunctionHint(
+            !isUnusedEntryFunctionHint(
               marker,
               monaco,
               functionNamePositions
