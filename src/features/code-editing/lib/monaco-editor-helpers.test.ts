@@ -192,11 +192,14 @@ describe('monaco editor helpers', () => {
     ])
   })
 
-  it('ignores unused top-level function hints but keeps unused locals', () => {
+  it('ignores the entry function hint but keeps unused helpers and locals', () => {
     const model = {
       uri: 'file:///source.ts',
-      getValue: () => `function trap(): void {
+      getValue: () => `function solve(): void {
   const unused = 1
+}
+
+function helper(): void {
 }`,
     }
     const { editor } = createEditorWithModel(model)
@@ -220,7 +223,7 @@ describe('monaco editor helpers', () => {
       {
         startLineNumber: 1,
         startColumn: 10,
-        message: "'trap' is declared but its value is never read.",
+        message: "'solve' is declared but its value is never read.",
         severity: monaco.MarkerSeverity.Hint,
         code: '6133',
       },
@@ -228,6 +231,13 @@ describe('monaco editor helpers', () => {
         startLineNumber: 2,
         startColumn: 9,
         message: "'unused' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
+      },
+      {
+        startLineNumber: 5,
+        startColumn: 10,
+        message: "'helper' is declared but its value is never read.",
         severity: monaco.MarkerSeverity.Hint,
         code: '6133',
       },
@@ -266,6 +276,12 @@ describe('monaco editor helpers', () => {
         line: 2,
         column: 9,
         message: "'unused' is declared but its value is never read.",
+        severity: 'warning',
+      },
+      {
+        line: 5,
+        column: 10,
+        message: "'helper' is declared but its value is never read.",
         severity: 'warning',
       },
     ])

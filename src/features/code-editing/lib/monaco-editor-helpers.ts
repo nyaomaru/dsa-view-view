@@ -3,6 +3,7 @@ import { parse } from '@babel/parser'
 import type { CompilationError } from '@/entities/code'
 import { getPreparedTypeScriptEditorClassSource } from '@/entities/code/compiler'
 import { define, equals, isObject } from '@/shared/lib/guards'
+import { extractTypeScriptFunctionSignature } from './typescript-parser'
 
 export type MonacoEditor = Parameters<OnMount>[0]
 export type MonacoHandle = {
@@ -56,7 +57,7 @@ const mapMarkerToCompilationError = (
 const getPositionKey = (line: number, column: number): string =>
   `${line}:${column}`
 
-const getTopLevelFunctionNamePositions = (code: string): ReadonlySet<string> => {
+const getEntryFunctionNamePositions = (code: string): ReadonlySet<string> => {
   const positions = new Set<string>()
 
   try {
@@ -64,6 +65,11 @@ const getTopLevelFunctionNamePositions = (code: string): ReadonlySet<string> => 
       sourceType: 'module',
       plugins: ['typescript'],
     })
+    const entryFunctionName = extractTypeScriptFunctionSignature(code)?.name
+
+    if (!entryFunctionName) {
+      return positions
+    }
 
     for (const node of ast.program.body) {
       const declaration =
@@ -74,6 +80,7 @@ const getTopLevelFunctionNamePositions = (code: string): ReadonlySet<string> => 
 
       if (
         declaration?.type !== 'FunctionDeclaration' ||
+        declaration.id?.name !== entryFunctionName ||
         !declaration.id?.loc
       ) {
         continue
@@ -85,6 +92,7 @@ const getTopLevelFunctionNamePositions = (code: string): ReadonlySet<string> => 
           declaration.id.loc.start.column + 1
         )
       )
+      break
     }
   } catch {
     return positions
@@ -166,7 +174,7 @@ export const subscribeToValidationMarkers = (
     const markers = monaco.editor.getModelMarkers({
       resource: model.uri,
     })
-    const functionNamePositions = getTopLevelFunctionNamePositions(
+    const functionNamePositions = getEntryFunctionNamePositions(
       model.getValue()
     )
     onValidateRef.current(
