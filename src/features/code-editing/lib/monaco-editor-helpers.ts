@@ -1,7 +1,10 @@
 import type { Monaco, OnMount } from '@monaco-editor/react'
+import { parse } from '@babel/parser'
+import type { Node } from '@babel/types'
 import type { CompilationError } from '@/entities/code'
 import { getPreparedTypeScriptEditorClassSource } from '@/entities/code/compiler'
 import { define, equals, isObject } from '@/shared/lib/guards'
+import { extractTypeScriptFunctionSignature } from './typescript-parser'
 
 export type MonacoEditor = Parameters<OnMount>[0]
 export type MonacoHandle = {
@@ -20,6 +23,7 @@ const PREPARED_CLASSES_LIB_PATH = 'ts:algorithm-visualizer-prepared-classes.ts'
 const EXTERNAL_MARKER_OWNER = 'owner'
 const DEFAULT_EDITOR_FONT_SIZE = 14
 const DEFAULT_EXTERNAL_MARKER_WIDTH = 10
+const UNUSED_DECLARATION_DIAGNOSTIC_CODE = '6133'
 
 export const DEFAULT_EDITOR_OPTIONS = {
   minimap: { enabled: false },
@@ -50,6 +54,87 @@ const mapMarkerToCompilationError = (
   severity:
     marker.severity === monaco.MarkerSeverity.Error ? 'error' : 'warning',
 })
+
+const getPositionKey = (line: number, column: number): string =>
+  `${line}:${column}`
+
+const getEntryIdentifier = (
+  declaration: Node,
+  entryFunctionName: string
+) => {
+  if (
+    (declaration.type === 'FunctionDeclaration' ||
+      declaration.type === 'TSDeclareFunction') &&
+    declaration.id?.name === entryFunctionName
+  ) {
+    return declaration.id
+  }
+
+  if (declaration.type !== 'VariableDeclaration') {
+    return undefined
+  }
+
+  return declaration.declarations.find(
+    (declarator) =>
+      declarator.id.type === 'Identifier' &&
+      declarator.id.name === entryFunctionName &&
+      (declarator.init?.type === 'ArrowFunctionExpression' ||
+        declarator.init?.type === 'FunctionExpression')
+  )?.id
+}
+
+const getEntryFunctionNamePositions = (code: string): ReadonlySet<string> => {
+  const positions = new Set<string>()
+
+  try {
+    const ast = parse(code, {
+      sourceType: 'module',
+      plugins: ['typescript'],
+    })
+    const entryFunctionName = extractTypeScriptFunctionSignature(code)?.name
+
+    if (!entryFunctionName) {
+      return positions
+    }
+
+    for (const node of ast.program.body) {
+      const declaration =
+        node.type === 'ExportNamedDeclaration' ||
+        node.type === 'ExportDefaultDeclaration'
+          ? node.declaration
+          : node
+      const entryIdentifier = declaration
+        ? getEntryIdentifier(declaration, entryFunctionName)
+        : undefined
+
+      if (!entryIdentifier?.loc) {
+        continue
+      }
+
+      positions.add(
+        getPositionKey(
+          entryIdentifier.loc.start.line,
+          entryIdentifier.loc.start.column + 1
+        )
+      )
+    }
+  } catch {
+    return positions
+  }
+
+  return positions
+}
+
+const isUnusedEntryFunctionHint = (
+  marker: MonacoMarker,
+  monaco: Monaco,
+  functionNamePositions: ReadonlySet<string>
+): boolean =>
+  marker.severity === monaco.MarkerSeverity.Hint &&
+  marker.code === UNUSED_DECLARATION_DIAGNOSTIC_CODE &&
+  functionNamePositions.has(
+    getPositionKey(marker.startLineNumber, marker.startColumn)
+  )
 
 const setPreparedClassesLibContent = (
   monaco: Monaco,
@@ -113,10 +198,22 @@ export const subscribeToValidationMarkers = (
     const markers = monaco.editor.getModelMarkers({
       resource: model.uri,
     })
+    const functionNamePositions = getEntryFunctionNamePositions(
+      model.getValue()
+    )
     onValidateRef.current(
-      markers.map((marker: MonacoMarker) =>
-        mapMarkerToCompilationError(marker, monaco)
-      )
+      markers
+        .filter(
+          (marker: MonacoMarker) =>
+            !isUnusedEntryFunctionHint(
+              marker,
+              monaco,
+              functionNamePositions
+            )
+        )
+        .map((marker: MonacoMarker) =>
+          mapMarkerToCompilationError(marker, monaco)
+        )
     )
   })
 

@@ -46,6 +46,7 @@ const createMonacoMock = () => {
     MarkerSeverity: {
       Error: 8,
       Warning: 4,
+      Hint: 1,
     },
     Range,
     editor: {
@@ -191,8 +192,16 @@ describe('monaco editor helpers', () => {
     ])
   })
 
-  it('subscribes to validation markers and maps them to compilation errors', () => {
-    const model = { uri: 'file:///source.ts' }
+  it('ignores the entry function hint but keeps unused helpers and locals', () => {
+    const model = {
+      uri: 'file:///source.ts',
+      getValue: () => `function solve(): void {
+  const unused = 1
+}
+
+function helper(): void {
+}`,
+    }
     const { editor } = createEditorWithModel(model)
     const monaco = createMonacoMock()
     const onValidate = vi.fn()
@@ -210,6 +219,27 @@ describe('monaco editor helpers', () => {
         startColumn: 2,
         message: 'Suspicious value',
         severity: monaco.MarkerSeverity.Warning,
+      },
+      {
+        startLineNumber: 1,
+        startColumn: 10,
+        message: "'solve' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
+      },
+      {
+        startLineNumber: 2,
+        startColumn: 9,
+        message: "'unused' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
+      },
+      {
+        startLineNumber: 5,
+        startColumn: 10,
+        message: "'helper' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
       },
     ])
     monaco.editor.onDidChangeMarkers.mockReturnValue(disposable)
@@ -240,6 +270,95 @@ describe('monaco editor helpers', () => {
         line: 9,
         column: 2,
         message: 'Suspicious value',
+        severity: 'warning',
+      },
+      {
+        line: 2,
+        column: 9,
+        message: "'unused' is declared but its value is never read.",
+        severity: 'warning',
+      },
+      {
+        line: 5,
+        column: 10,
+        message: "'helper' is declared but its value is never read.",
+        severity: 'warning',
+      },
+    ])
+  })
+
+  it('ignores an unused arrow function entry hint', () => {
+    const model = {
+      uri: 'file:///source.ts',
+      getValue: () =>
+        'const canVisit = (value: number): boolean => value > 0',
+    }
+    const { editor } = createEditorWithModel(model)
+    const monaco = createMonacoMock()
+    const onValidate = vi.fn()
+
+    monaco.editor.getModelMarkers.mockReturnValue([
+      {
+        startLineNumber: 1,
+        startColumn: 7,
+        message: "'canVisit' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
+      },
+    ])
+    monaco.editor.onDidChangeMarkers.mockReturnValue({ dispose: vi.fn() })
+
+    subscribeToValidationMarkers(editor, monaco.api, {
+      current: onValidate,
+    })
+    getMarkerChangeHandler(monaco)()
+
+    expect(onValidate).toHaveBeenCalledWith([])
+  })
+
+  it('ignores unused hints for every entry function overload', () => {
+    const model = {
+      uri: 'file:///source.ts',
+      getValue: () => `function solve(value: number): number;
+function solve(value: string): string;
+function solve(value: number | string): number | string {
+  return value
+}
+
+function helper(): void {}`,
+    }
+    const { editor } = createEditorWithModel(model)
+    const monaco = createMonacoMock()
+    const onValidate = vi.fn()
+
+    monaco.editor.getModelMarkers.mockReturnValue([
+      ...[1, 2, 3].map((line) => ({
+        startLineNumber: line,
+        startColumn: 10,
+        message: "'solve' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
+      })),
+      {
+        startLineNumber: 7,
+        startColumn: 10,
+        message: "'helper' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
+      },
+    ])
+    monaco.editor.onDidChangeMarkers.mockReturnValue({ dispose: vi.fn() })
+
+    subscribeToValidationMarkers(editor, monaco.api, {
+      current: onValidate,
+    })
+    getMarkerChangeHandler(monaco)()
+
+    expect(onValidate).toHaveBeenCalledWith([
+      {
+        line: 7,
+        column: 10,
+        message: "'helper' is declared but its value is never read.",
         severity: 'warning',
       },
     ])
