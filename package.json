@@ -32,7 +32,7 @@
     "@radix-ui/react-tabs": "1.1.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.43.0",
+    "framer-motion": "^13.0.0",
     "is-kit": "1.11.6",
     "lucide-react": "1.28.0",
     "monaco-editor": "0.56.0",
