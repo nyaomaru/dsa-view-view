@@ -46,6 +46,7 @@ const createMonacoMock = () => {
     MarkerSeverity: {
       Error: 8,
       Warning: 4,
+      Hint: 1,
     },
     Range,
     editor: {
@@ -191,8 +192,13 @@ describe('monaco editor helpers', () => {
     ])
   })
 
-  it('subscribes to validation markers and maps them to compilation errors', () => {
-    const model = { uri: 'file:///source.ts' }
+  it('ignores unused top-level function hints but keeps unused locals', () => {
+    const model = {
+      uri: 'file:///source.ts',
+      getValue: () => `function trap(): void {
+  const unused = 1
+}`,
+    }
     const { editor } = createEditorWithModel(model)
     const monaco = createMonacoMock()
     const onValidate = vi.fn()
@@ -210,6 +216,20 @@ describe('monaco editor helpers', () => {
         startColumn: 2,
         message: 'Suspicious value',
         severity: monaco.MarkerSeverity.Warning,
+      },
+      {
+        startLineNumber: 1,
+        startColumn: 10,
+        message: "'trap' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
+      },
+      {
+        startLineNumber: 2,
+        startColumn: 9,
+        message: "'unused' is declared but its value is never read.",
+        severity: monaco.MarkerSeverity.Hint,
+        code: '6133',
       },
     ])
     monaco.editor.onDidChangeMarkers.mockReturnValue(disposable)
@@ -240,6 +260,12 @@ describe('monaco editor helpers', () => {
         line: 9,
         column: 2,
         message: 'Suspicious value',
+        severity: 'warning',
+      },
+      {
+        line: 2,
+        column: 9,
+        message: "'unused' is declared but its value is never read.",
         severity: 'warning',
       },
     ])

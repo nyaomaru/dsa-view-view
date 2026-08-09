@@ -1,4 +1,5 @@
 import type { Monaco, OnMount } from '@monaco-editor/react'
+import { parse } from '@babel/parser'
 import type { CompilationError } from '@/entities/code'
 import { getPreparedTypeScriptEditorClassSource } from '@/entities/code/compiler'
 import { define, equals, isObject } from '@/shared/lib/guards'
@@ -20,6 +21,7 @@ const PREPARED_CLASSES_LIB_PATH = 'ts:algorithm-visualizer-prepared-classes.ts'
 const EXTERNAL_MARKER_OWNER = 'owner'
 const DEFAULT_EDITOR_FONT_SIZE = 14
 const DEFAULT_EXTERNAL_MARKER_WIDTH = 10
+const UNUSED_DECLARATION_DIAGNOSTIC_CODE = '6133'
 
 export const DEFAULT_EDITOR_OPTIONS = {
   minimap: { enabled: false },
@@ -50,6 +52,57 @@ const mapMarkerToCompilationError = (
   severity:
     marker.severity === monaco.MarkerSeverity.Error ? 'error' : 'warning',
 })
+
+const getPositionKey = (line: number, column: number): string =>
+  `${line}:${column}`
+
+const getTopLevelFunctionNamePositions = (code: string): ReadonlySet<string> => {
+  const positions = new Set<string>()
+
+  try {
+    const ast = parse(code, {
+      sourceType: 'module',
+      plugins: ['typescript'],
+    })
+
+    for (const node of ast.program.body) {
+      const declaration =
+        node.type === 'ExportNamedDeclaration' ||
+        node.type === 'ExportDefaultDeclaration'
+          ? node.declaration
+          : node
+
+      if (
+        declaration?.type !== 'FunctionDeclaration' ||
+        !declaration.id?.loc
+      ) {
+        continue
+      }
+
+      positions.add(
+        getPositionKey(
+          declaration.id.loc.start.line,
+          declaration.id.loc.start.column + 1
+        )
+      )
+    }
+  } catch {
+    return positions
+  }
+
+  return positions
+}
+
+const isUnusedTopLevelFunctionHint = (
+  marker: MonacoMarker,
+  monaco: Monaco,
+  functionNamePositions: ReadonlySet<string>
+): boolean =>
+  marker.severity === monaco.MarkerSeverity.Hint &&
+  marker.code === UNUSED_DECLARATION_DIAGNOSTIC_CODE &&
+  functionNamePositions.has(
+    getPositionKey(marker.startLineNumber, marker.startColumn)
+  )
 
 const setPreparedClassesLibContent = (
   monaco: Monaco,
@@ -113,10 +166,22 @@ export const subscribeToValidationMarkers = (
     const markers = monaco.editor.getModelMarkers({
       resource: model.uri,
     })
+    const functionNamePositions = getTopLevelFunctionNamePositions(
+      model.getValue()
+    )
     onValidateRef.current(
-      markers.map((marker: MonacoMarker) =>
-        mapMarkerToCompilationError(marker, monaco)
-      )
+      markers
+        .filter(
+          (marker: MonacoMarker) =>
+            !isUnusedTopLevelFunctionHint(
+              marker,
+              monaco,
+              functionNamePositions
+            )
+        )
+        .map((marker: MonacoMarker) =>
+          mapMarkerToCompilationError(marker, monaco)
+        )
     )
   })
 
