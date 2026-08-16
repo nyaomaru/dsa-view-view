@@ -20,6 +20,7 @@ import {
   isBinarySearchArrayCandidate,
 } from '../lib/binary-search-view'
 import { getAreaVisualizationState } from '../lib/area-view'
+import { getMaxSubarrayVisualizationState } from '../lib/max-subarray-view'
 import { getSlidingWindowVisualizationState } from '../lib/sliding-window-view'
 import { getRollingDpState, isRollingDpCandidate } from '../lib/rolling-dp-view'
 import { getGraphNodeAdjacencyRecord } from '../lib/graph-view'
@@ -34,6 +35,7 @@ import { StackVisualizer } from './stack-visualizer'
 import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
 import { BarChartVisualizer } from './bar-chart-visualizer'
 import { AreaVisualizer } from './area-visualizer'
+import { MaxSubarrayVisualizer } from './max-subarray-visualizer'
 import { BinarySearchVisualizer } from './binary-search-visualizer'
 import { SlidingWindowVisualizer } from './sliding-window-visualizer'
 import { DpVisualizer } from './dp-visualizer'
@@ -278,6 +280,23 @@ export function VisualizationModalContent({
         />
       ) : (
         <div>Area pointers are not available.</div>
+      )
+    }
+
+    case 'max-subarray': {
+      const visualizationState = getMaxSubarrayVisualizationState({
+        executionState,
+        variableName: targetVariable,
+        targetStepIndex,
+      })
+
+      return visualizationState ? (
+        <MaxSubarrayVisualizer
+          name={targetVariable}
+          state={visualizationState}
+        />
+      ) : (
+        <div>Maximum-subarray state is not available.</div>
       )
     }
 

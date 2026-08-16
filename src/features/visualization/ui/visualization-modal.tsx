@@ -94,6 +94,8 @@ function getVisualizationTitle({
       return `Bar Chart: ${targetVariable}`
     case 'area':
       return `Area View: ${targetVariable}`
+    case 'max-subarray':
+      return `Maximum Subarray View: ${targetVariable}`
     case 'binary-search':
       return `Index View: ${targetVariable}`
     case 'sliding-window':
@@ -144,6 +146,8 @@ function getVisualizationDescription(
       return 'Visualize numeric array as a bar chart.'
     case 'area':
       return 'Visualize the current container, histogram rectangle, or trapped water.'
+    case 'max-subarray':
+      return 'Follow the current position, best sum ending here, and best sum seen so far.'
     case 'binary-search':
       return 'Visualize the current binary-search range and mid index.'
     case 'sliding-window':
@@ -229,6 +233,7 @@ export function VisualizationModal({
               type === 'expression' ||
               type === 'list-graph' ||
               type === 'dp' ||
+              type === 'max-subarray' ||
               type === 'map' ||
               type === 'heap' ||
               type === 'word-ladder') &&

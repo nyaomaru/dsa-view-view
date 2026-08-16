@@ -13,6 +13,7 @@ import {
 import {
   getPrimaryAreaCandidate,
   getPrimaryBinarySearchCandidate,
+  getPrimaryMaxSubarrayCandidate,
   getPrimaryRollingDpName,
   getPrimarySlidingWindowCandidate,
 } from './indexed-candidates'
@@ -103,6 +104,8 @@ export function detectVisualizationState(
     executionState,
     initialVariableNames
   )
+  const primaryMaxSubarrayCandidate =
+    getPrimaryMaxSubarrayCandidate(executionState)
   const primarySlidingWindowCandidate =
     getPrimarySlidingWindowCandidate(executionState)
   const primaryDpName =
@@ -159,6 +162,8 @@ export function detectVisualizationState(
     primaryArrayName: hasSort ? primaryArrayName : undefined,
     primaryAreaArrayName: primaryAreaCandidate?.name,
     primaryAreaStepIndex: primaryAreaCandidate?.stepIndex,
+    primaryMaxSubarrayArrayName: primaryMaxSubarrayCandidate?.name,
+    primaryMaxSubarrayStepIndex: primaryMaxSubarrayCandidate?.stepIndex,
     primaryBinarySearchArrayName: primaryBinarySearchCandidate?.name,
     primaryBinarySearchStepIndex: primaryBinarySearchCandidate?.stepIndex,
     primarySlidingWindowStringName: primarySlidingWindowCandidate?.name,

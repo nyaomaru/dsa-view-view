@@ -360,6 +360,20 @@ export const ALGORITHM_EXAMPLE_SOURCES = {
 
   return result
 }`,
+  'maximum-subarray': `function maxSubArray(nums: number[]): number {
+  if (nums.length === 0) return 0
+
+  let maxEndingHere = nums[0]
+  let maxSoFar = nums[0]
+
+  for (let i = 1; i < nums.length; i++) {
+    const x = nums[i]
+    maxEndingHere = Math.max(x, maxEndingHere + x)
+    maxSoFar = Math.max(maxSoFar, maxEndingHere)
+  }
+
+  return maxSoFar
+}`,
   'word-break': `function wordBreak(s: string, wordDict: string[]): boolean {
   const words = new Set(wordDict)
   const dp = Array(s.length + 1).fill(false)

@@ -6,6 +6,7 @@ import {
 } from '../../lib/area-view'
 import { isSlidingWindowCandidate } from '../../lib/sliding-window-view'
 import { isRollingDpCandidate } from '../../lib/rolling-dp-view'
+import { getMaxSubarrayTraceCandidate } from '../../lib/max-subarray-view'
 import { getExecutionStepSearchOrder } from '../../lib/execution-step-search'
 import {
   findIndexedVariableCandidate,
@@ -27,6 +28,16 @@ export function getPrimaryBinarySearchCandidate(
       initialVariableNames.has(name) &&
       isBinarySearchArrayCandidate(name, value, variables)
   )
+}
+
+export function getPrimaryMaxSubarrayCandidate(
+  executionState: ExecutionState
+): IndexedVariableCandidate | undefined {
+  const candidate = getMaxSubarrayTraceCandidate(executionState)
+
+  return candidate
+    ? { name: candidate.name, stepIndex: candidate.stepIndex }
+    : undefined
 }
 
 export function getPrimaryAreaCandidate(

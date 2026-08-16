@@ -8,6 +8,7 @@ export type VisualizationType =
   | 'dp'
   | 'map'
   | 'area'
+  | 'max-subarray'
   | 'binary-search'
   | 'sliding-window'
   | 'bar-chart'

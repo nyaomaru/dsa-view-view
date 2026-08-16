@@ -17,7 +17,7 @@ describe('algorithm examples', () => {
     }
   })
 
-  it('ships 39 examples', () => {
-    expect(ALGORITHM_EXAMPLES).toHaveLength(39)
+  it('ships 40 examples', () => {
+    expect(ALGORITHM_EXAMPLES).toHaveLength(40)
   })
 })

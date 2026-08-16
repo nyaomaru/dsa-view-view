@@ -15,6 +15,8 @@ const emptyDetection: VisualizationDetection = {
   primaryArrayName: undefined,
   primaryAreaArrayName: undefined,
   primaryAreaStepIndex: undefined,
+  primaryMaxSubarrayArrayName: undefined,
+  primaryMaxSubarrayStepIndex: undefined,
   primaryBinarySearchArrayName: undefined,
   primaryBinarySearchStepIndex: undefined,
   primarySlidingWindowStringName: undefined,
@@ -96,6 +98,21 @@ describe('getPrimaryVisualization', () => {
       type: 'area',
       targetVariable: 'height',
       targetStepIndex: undefined,
+    })
+  })
+
+  it('selects maximum-subarray state ahead of generic DP candidates', () => {
+    expect(
+      getPrimaryVisualization({
+        ...emptyDetection,
+        primaryMaxSubarrayArrayName: 'nums',
+        primaryMaxSubarrayStepIndex: 3,
+        primaryDpName: 'dp',
+      })
+    ).toEqual({
+      type: 'max-subarray',
+      targetVariable: 'nums',
+      targetStepIndex: 3,
     })
   })
 
