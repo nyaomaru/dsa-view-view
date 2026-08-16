@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vite-plus/test'
-import { isDate, isMap, isRegExp, isSet } from './guards'
+import {
+  isDate,
+  isMap,
+  isNonEmptyNumericArray,
+  isRegExp,
+  isSet,
+} from './guards'
+
+describe('numeric collection guards', () => {
+  it('accepts only non-empty arrays of numeric values', () => {
+    expect(isNonEmptyNumericArray([1, '2'])).toBe(true)
+    expect(isNonEmptyNumericArray([])).toBe(false)
+    expect(isNonEmptyNumericArray([1, 'value'])).toBe(false)
+  })
+})
 
 describe('built-in instance guards', () => {
   it('accepts genuine built-in instances, including invalid Dates', () => {

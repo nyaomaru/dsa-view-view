@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test'
-import type { ExecutionState, ExecutionStep } from '@/entities/execution'
+import {
+  FUNCTION_ARGUMENTS_LABEL,
+  type ExecutionState,
+  type ExecutionStep,
+} from '@/entities/execution'
 import {
   getMaxSubarrayTraceCandidate,
   getMaxSubarrayVisualizationState,
@@ -163,6 +167,75 @@ function maxSubArray(nums: number[]): number {
       currentValue: 5,
       maxEndingHere: 5,
       maxSoFar: 5,
+    })
+  })
+
+  it('preserves singleton accumulators introduced in the first snapshot', () => {
+    const state = executeCode(
+      `
+function maxSubArray(nums: number[]): number {
+  let currentMax = nums[0]
+  let globalMax = nums[0]
+
+  for (let position = 1; position < nums.length; position++) {
+    const value = nums[position]
+    currentMax = Math.max(value, currentMax + value)
+    globalMax = Math.max(globalMax, currentMax)
+  }
+
+  return globalMax
+}
+`,
+      { nums: [5] },
+      'maxSubArray'
+    )
+
+    expect(getMaxSubarrayTraceCandidate(state)).toMatchObject({
+      name: 'nums',
+      endingName: 'currentMax',
+      bestName: 'globalMax',
+    })
+    expect(
+      getMaxSubarrayVisualizationState({
+        executionState: state,
+        variableName: 'nums',
+      })
+    ).toMatchObject({
+      currentIndex: 0,
+      currentValue: 5,
+      maxEndingHere: 5,
+      maxSoFar: 5,
+    })
+
+    const firstSnapshotState: ExecutionState = {
+      ...state,
+      currentStep: 1,
+      totalSteps: 2,
+      steps: [
+        {
+          ...state.steps[0],
+          variables: {
+            nums: [5],
+            [FUNCTION_ARGUMENTS_LABEL]: { nums: [5] },
+            currentMax: 5,
+          },
+        },
+        {
+          ...state.steps[1],
+          variables: {
+            nums: [5],
+            [FUNCTION_ARGUMENTS_LABEL]: { nums: [5] },
+            currentMax: 5,
+            globalMax: 5,
+          },
+        },
+      ],
+    }
+
+    expect(getMaxSubarrayTraceCandidate(firstSnapshotState)).toMatchObject({
+      name: 'nums',
+      endingName: 'currentMax',
+      bestName: 'globalMax',
     })
   })
 

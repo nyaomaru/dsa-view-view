@@ -1,9 +1,18 @@
-import type { ExecutionState } from '@/entities/execution'
 import {
+  FUNCTION_ARGUMENTS_LABEL,
+  type ExecutionState,
+} from '@/entities/execution'
+import {
+  and,
   isInteger,
+  isNonArrayObject,
+  isNonEmptyNumericArray,
   isNumber,
   isNumericArray,
   isUndefined,
+  predicateToRefine,
+  type Guard,
+  type NumericValue,
 } from '@/shared/lib/guards'
 import { getExecutionStepSearchOrder } from './execution-step-search'
 
@@ -57,7 +66,7 @@ type IndexedSourceTrace = {
   snapshots: NumericTraceSnapshot[]
   snapshotByStepIndex: Map<number, NumericTraceSnapshot>
   valueSetByName: Map<string, Set<number>>
-  initialNumericNames: Set<string>
+  inputNames: Set<string>
 }
 
 type MaxSubarrayTraceAnalysis = {
@@ -70,11 +79,17 @@ const traceAnalysisCache = new WeakMap<
   MaxSubarrayTraceAnalysis
 >()
 
-function numericArrayEquals(value: unknown, expected: number[]): boolean {
-  return (
-    isNumericArray(value) &&
-    value.length === expected.length &&
-    value.every((entry, index) => Number(entry) === expected[index])
+function createNumericArrayEqualityGuard(
+  expected: readonly number[]
+): Guard<readonly NumericValue[]> {
+  return and(
+    isNumericArray,
+    predicateToRefine<readonly NumericValue[]>((value) => {
+      return (
+        value.length === expected.length &&
+        value.every((entry, index) => Number(entry) === expected[index])
+      )
+    })
   )
 }
 
@@ -87,7 +102,7 @@ function getInitialNumericArrays(
   if (!initialStep) return []
 
   return Object.entries(initialStep.variables).flatMap(([name, value]) =>
-    isNumericArray(value) && value.length >= 1
+    isNonEmptyNumericArray(value)
       ? [[name, value.map(Number)] as [string, number[]]]
       : []
   )
@@ -115,9 +130,18 @@ function indexSourceTrace(
   const snapshots: NumericTraceSnapshot[] = []
   const snapshotByStepIndex = new Map<number, NumericTraceSnapshot>()
   const valueSetByName = new Map<string, Set<number>>()
+  const inputNames = new Set<string>()
+  const isExpectedSourceData = createNumericArrayEqualityGuard(data)
 
   steps.forEach((step, stepIndex) => {
-    if (!numericArrayEquals(step.variables[name], data)) return
+    if (!isExpectedSourceData(step.variables[name])) return
+
+    const functionArguments = step.variables[FUNCTION_ARGUMENTS_LABEL]
+    if (inputNames.size === 0 && isNonArrayObject(functionArguments)) {
+      for (const inputName of Object.keys(functionArguments)) {
+        inputNames.add(inputName)
+      }
+    }
 
     const values = new Map<string, number>()
     for (const [variableName, value] of Object.entries(step.variables)) {
@@ -141,7 +165,7 @@ function indexSourceTrace(
     snapshots,
     snapshotByStepIndex,
     valueSetByName,
-    initialNumericNames: new Set(snapshots[0]?.values.keys()),
+    inputNames,
   }
 }
 
@@ -162,7 +186,7 @@ function findSingletonCandidate(
   const accumulatorNames = [...source.valueSetByName.entries()]
     .filter(
       ([name, values]) =>
-        !source.initialNumericNames.has(name) && values.has(source.data[0])
+        !source.inputNames.has(name) && values.has(source.data[0])
     )
     .map(([name]) => name)
   if (accumulatorNames.length < 2) return undefined
