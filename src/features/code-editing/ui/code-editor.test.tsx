@@ -21,8 +21,9 @@ import { CodeEditor } from './code-editor'
 
 describe('CodeEditor', () => {
   it('renders overflow widgets outside clipping editor containers', async () => {
-    const { unmount } = render(
-      <CodeEditor value="const value = 1" onChange={vi.fn()} />
+    const onChange = vi.fn()
+    const { rerender, unmount } = render(
+      <CodeEditor value="const value = 1" onChange={onChange} />
     )
 
     await waitFor(() => expect(editorOptionsSpy).toHaveBeenCalled())
@@ -36,6 +37,10 @@ describe('CodeEditor', () => {
       'data-code-editor-overflow-widgets'
     )
     expect(overflowWidgetsDomNode.parentElement).toBe(document.body)
+
+    rerender(<CodeEditor value="const value = 2" onChange={onChange} />)
+
+    expect(editorOptionsSpy.mock.lastCall?.[0]).toBe(options)
 
     unmount()
 

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Editor from '@monaco-editor/react'
 import type { OnMount } from '@monaco-editor/react'
@@ -95,6 +95,16 @@ export function CodeEditor({
   const editorDisposablesRef = useRef<Array<{ dispose: () => void }>>([])
   const [overflowWidgetsDomNode, setOverflowWidgetsDomNode] =
     useState<HTMLDivElement | null>(null)
+  const editorOptions = useMemo(
+    () =>
+      overflowWidgetsDomNode
+        ? {
+            ...DEFAULT_EDITOR_OPTIONS,
+            overflowWidgetsDomNode,
+          }
+        : DEFAULT_EDITOR_OPTIONS,
+    [overflowWidgetsDomNode]
+  )
 
   useEffect(() => {
     onValidateRef.current = onValidate
@@ -219,10 +229,7 @@ export function CodeEditor({
             onMount={handleEditorDidMount}
             theme="vs-dark"
             loading={<CodeEditorSpinner />}
-            options={{
-              ...DEFAULT_EDITOR_OPTIONS,
-              overflowWidgetsDomNode,
-            }}
+            options={editorOptions}
           />
         ) : (
           <CodeEditorSpinner />
