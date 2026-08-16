@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test'
+import type { ExecutionState, ExecutionStep } from '@/entities/execution'
 import {
   getMaxSubarrayTraceCandidate,
   getMaxSubarrayVisualizationState,
@@ -139,5 +140,72 @@ function sumAndMax(nums: number[]): number {
     )
 
     expect(getMaxSubarrayTraceCandidate(state)).toBeUndefined()
+  })
+
+  it('indexes source snapshots once and reuses them during playback', () => {
+    let arrayElementReads = 0
+    const dataLength = 80
+    const nums = new Proxy(
+      Array.from({ length: dataLength }, () => -1),
+      {
+        get(target, property, receiver) {
+          if (/^\d+$/.test(String(property))) arrayElementReads++
+          return Reflect.get(target, property, receiver)
+        },
+      }
+    )
+    const createStep = (
+      stepNumber: number,
+      variables: Record<string, unknown>
+    ): ExecutionStep => ({
+      stepNumber,
+      type: 'assignment',
+      line: stepNumber + 1,
+      description: 'Kadane update',
+      variables,
+      timestamp: stepNumber,
+    })
+    const steps = [
+      createStep(0, { nums, localBest: -1, globalBest: -1 }),
+      ...Array.from({ length: dataLength - 1 }, (_, offset) =>
+        createStep(offset + 1, {
+          nums,
+          position: offset + 1,
+          localBest: -1,
+          globalBest: -1,
+        })
+      ),
+    ]
+    const state: ExecutionState = {
+      currentStep: 3,
+      totalSteps: steps.length,
+      steps,
+      isComplete: true,
+      returnValue: -1,
+    }
+
+    expect(getMaxSubarrayTraceCandidate(state)).toMatchObject({
+      name: 'nums',
+      indexName: 'position',
+      endingName: 'localBest',
+      bestName: 'globalBest',
+    })
+    const readsAfterIndexing = arrayElementReads
+    expect(readsAfterIndexing).toBeLessThan(dataLength * dataLength * 4)
+
+    expect(
+      getMaxSubarrayTraceCandidate({ ...state, currentStep: dataLength - 2 })
+    ).toBeDefined()
+    expect(
+      getMaxSubarrayVisualizationState({
+        executionState: { ...state, currentStep: dataLength - 2 },
+        variableName: 'nums',
+      })
+    ).toMatchObject({
+      currentIndex: dataLength - 2,
+      maxEndingHere: -1,
+      maxSoFar: -1,
+    })
+    expect(arrayElementReads).toBe(readsAfterIndexing)
   })
 })

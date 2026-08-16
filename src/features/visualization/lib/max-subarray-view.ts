@@ -40,6 +40,35 @@ export type MaxSubarrayVisualizationState = {
   >
 }
 
+type ExpectedKadaneState = {
+  ending: number
+  best: number
+}
+
+type NumericTraceSnapshot = {
+  stepIndex: number
+  values: Map<string, number>
+}
+
+type IndexedSourceTrace = {
+  name: string
+  data: number[]
+  expectedStates: ExpectedKadaneState[]
+  snapshots: NumericTraceSnapshot[]
+  snapshotByStepIndex: Map<number, NumericTraceSnapshot>
+  valueSetByName: Map<string, Set<number>>
+}
+
+type MaxSubarrayTraceAnalysis = {
+  candidate: MaxSubarrayTraceCandidate | undefined
+  sourceByName: Map<string, IndexedSourceTrace>
+}
+
+const traceAnalysisCache = new WeakMap<
+  ExecutionState['steps'],
+  MaxSubarrayTraceAnalysis
+>()
+
 function numericArrayEquals(value: unknown, expected: number[]): boolean {
   return (
     isNumericArray(value) &&
@@ -49,9 +78,9 @@ function numericArrayEquals(value: unknown, expected: number[]): boolean {
 }
 
 function getInitialNumericArrays(
-  executionState: ExecutionState
+  steps: ExecutionState['steps']
 ): Array<[string, number[]]> {
-  const initialStep = executionState.steps.find(
+  const initialStep = steps.find(
     (step) => Object.keys(step.variables).length > 0
   )
   if (!initialStep) return []
@@ -63,147 +92,204 @@ function getInitialNumericArrays(
   )
 }
 
-function getNumericVariableNames(executionState: ExecutionState): string[] {
-  const names = new Set<string>()
+function getExpectedStates(data: number[]): ExpectedKadaneState[] {
+  let ending = data[0]
+  let best = data[0]
 
-  for (const step of executionState.steps) {
-    for (const [name, value] of Object.entries(step.variables)) {
-      if (isNumber(value)) names.add(name)
+  return data.map((value, index) => {
+    if (index > 0) {
+      ending = Math.max(value, ending + value)
+      best = Math.max(best, ending)
     }
-  }
 
-  return [...names]
-}
-
-function appearsWithEveryLoopIndex({
-  executionState,
-  arrayName,
-  data,
-  variableName,
-}: {
-  executionState: ExecutionState
-  arrayName: string
-  data: number[]
-  variableName: string
-}): boolean {
-  return data.slice(1).every((_, indexOffset) => {
-    const expectedIndex = indexOffset + 1
-
-    return executionState.steps.some(
-      (step) =>
-        numericArrayEquals(step.variables[arrayName], data) &&
-        step.variables[variableName] === expectedIndex
-    )
+    return { ending, best }
   })
 }
 
-function isInitializedFromFirstValue({
-  executionState,
-  arrayName,
-  data,
-  variableName,
-}: {
-  executionState: ExecutionState
-  arrayName: string
+function indexSourceTrace(
+  steps: ExecutionState['steps'],
+  name: string,
   data: number[]
-  variableName: string
-}): boolean {
-  return executionState.steps.some(
-    (step) =>
-      numericArrayEquals(step.variables[arrayName], data) &&
-      step.variables[variableName] === data[0]
-  )
+): IndexedSourceTrace {
+  const snapshots: NumericTraceSnapshot[] = []
+  const snapshotByStepIndex = new Map<number, NumericTraceSnapshot>()
+  const valueSetByName = new Map<string, Set<number>>()
+
+  steps.forEach((step, stepIndex) => {
+    if (!numericArrayEquals(step.variables[name], data)) return
+
+    const values = new Map<string, number>()
+    for (const [variableName, value] of Object.entries(step.variables)) {
+      if (!isNumber(value)) continue
+
+      values.set(variableName, value)
+      const observedValues = valueSetByName.get(variableName) ?? new Set()
+      observedValues.add(value)
+      valueSetByName.set(variableName, observedValues)
+    }
+
+    const snapshot = { stepIndex, values }
+    snapshots.push(snapshot)
+    snapshotByStepIndex.set(stepIndex, snapshot)
+  })
+
+  return {
+    name,
+    data,
+    expectedStates: getExpectedStates(data),
+    snapshots,
+    snapshotByStepIndex,
+    valueSetByName,
+  }
+}
+
+function includesEveryLoopIndex(
+  observedValues: Set<number>,
+  dataLength: number
+): boolean {
+  for (let index = 1; index < dataLength; index++) {
+    if (!observedValues.has(index)) return false
+  }
+
+  return true
+}
+
+function groupSnapshotsByIndex(
+  source: IndexedSourceTrace,
+  indexName: string
+): Map<number, NumericTraceSnapshot[]> {
+  const snapshotsByIndex = new Map<number, NumericTraceSnapshot[]>()
+
+  for (const snapshot of source.snapshots) {
+    const index = snapshot.values.get(indexName)
+    if (!isInteger(index) || index < 1 || index >= source.data.length) continue
+
+    const snapshots = snapshotsByIndex.get(index) ?? []
+    snapshots.push(snapshot)
+    snapshotsByIndex.set(index, snapshots)
+  }
+
+  return snapshotsByIndex
+}
+
+function findFirstMatchingUpdateStep({
+  source,
+  snapshotsByIndex,
+  endingName,
+  bestName,
+}: {
+  source: IndexedSourceTrace
+  snapshotsByIndex: Map<number, NumericTraceSnapshot[]>
+  endingName: string
+  bestName: string
+}): number | undefined {
+  let firstUpdateStepIndex: number | undefined
+  let previousStepIndex = -1
+
+  for (let index = 1; index < source.data.length; index++) {
+    const expectedState = source.expectedStates[index]
+    const matchingSnapshot = snapshotsByIndex
+      .get(index)
+      ?.find(
+        (snapshot) =>
+          snapshot.stepIndex > previousStepIndex &&
+          snapshot.values.get(endingName) === expectedState.ending &&
+          snapshot.values.get(bestName) === expectedState.best
+      )
+    if (!matchingSnapshot) return undefined
+
+    firstUpdateStepIndex ??= matchingSnapshot.stepIndex
+    previousStepIndex = matchingSnapshot.stepIndex
+  }
+
+  return firstUpdateStepIndex
 }
 
 function findInitialStateStep({
-  executionState,
-  data,
-  arrayName,
+  source,
   endingName,
   bestName,
   beforeStepIndex,
 }: {
-  executionState: ExecutionState
-  data: number[]
-  arrayName: string
+  source: IndexedSourceTrace
   endingName: string
   bestName: string
   beforeStepIndex: number
 }): number | undefined {
-  return executionState.steps.findIndex((step, stepIndex) => {
-    if (stepIndex > beforeStepIndex) return false
-
-    return (
-      numericArrayEquals(step.variables[arrayName], data) &&
-      step.variables[endingName] === data[0] &&
-      step.variables[bestName] === data[0]
-    )
-  })
+  return source.snapshots.find(
+    (snapshot) =>
+      snapshot.stepIndex <= beforeStepIndex &&
+      snapshot.values.get(endingName) === source.expectedStates[0].ending &&
+      snapshot.values.get(bestName) === source.expectedStates[0].best
+  )?.stepIndex
 }
 
-function findKadaneMapping({
-  executionState,
-  arrayName,
-  data,
-  indexName,
-  endingName,
-  bestName,
-}: {
-  executionState: ExecutionState
-  arrayName: string
-  data: number[]
-  indexName: string
-  endingName: string
-  bestName: string
-}): MaxSubarrayTraceCandidate | undefined {
-  let previousEnding = data[0]
-  let previousBest = data[0]
-  let previousStepIndex = -1
-  let firstUpdateStepIndex: number | undefined
+function findCandidateForSource(
+  source: IndexedSourceTrace
+): MaxSubarrayTraceCandidate | undefined {
+  const indexNames = [...source.valueSetByName.entries()]
+    .filter(([, values]) => includesEveryLoopIndex(values, source.data.length))
+    .map(([name]) => name)
+  const accumulatorNames = [...source.valueSetByName.entries()]
+    .filter(([, values]) => values.has(source.data[0]))
+    .map(([name]) => name)
 
-  for (let index = 1; index < data.length; index++) {
-    const expectedEnding = Math.max(data[index], previousEnding + data[index])
-    const expectedBest = Math.max(previousBest, expectedEnding)
-    const stepIndex = executionState.steps.findIndex((step, candidateIndex) => {
-      if (candidateIndex <= previousStepIndex) return false
+  for (const indexName of indexNames) {
+    const snapshotsByIndex = groupSnapshotsByIndex(source, indexName)
 
-      return (
-        numericArrayEquals(step.variables[arrayName], data) &&
-        step.variables[indexName] === index &&
-        step.variables[endingName] === expectedEnding &&
-        step.variables[bestName] === expectedBest
-      )
-    })
+    for (const endingName of accumulatorNames) {
+      if (endingName === indexName) continue
 
-    if (stepIndex < 0) return undefined
+      for (const bestName of accumulatorNames) {
+        if (bestName === indexName || bestName === endingName) continue
 
-    firstUpdateStepIndex ??= stepIndex
-    previousStepIndex = stepIndex
-    previousEnding = expectedEnding
-    previousBest = expectedBest
+        const firstUpdateStepIndex = findFirstMatchingUpdateStep({
+          source,
+          snapshotsByIndex,
+          endingName,
+          bestName,
+        })
+        if (isUndefined(firstUpdateStepIndex)) continue
+        const initialStateStepIndex = findInitialStateStep({
+          source,
+          endingName,
+          bestName,
+          beforeStepIndex: firstUpdateStepIndex,
+        })
+
+        return {
+          name: source.name,
+          stepIndex: initialStateStepIndex ?? firstUpdateStepIndex,
+          indexName,
+          endingName,
+          bestName,
+        }
+      }
+    }
   }
 
-  if (isUndefined(firstUpdateStepIndex)) return undefined
+  return undefined
+}
 
-  const initialStateStepIndex = findInitialStateStep({
-    executionState,
-    data,
-    arrayName,
-    endingName,
-    bestName,
-    beforeStepIndex: firstUpdateStepIndex,
-  })
+function analyzeTrace(
+  steps: ExecutionState['steps']
+): MaxSubarrayTraceAnalysis {
+  const cachedAnalysis = traceAnalysisCache.get(steps)
+  if (cachedAnalysis) return cachedAnalysis
 
-  return {
-    name: arrayName,
-    stepIndex:
-      !isUndefined(initialStateStepIndex) && initialStateStepIndex >= 0
-        ? initialStateStepIndex
-        : firstUpdateStepIndex,
-    indexName,
-    endingName,
-    bestName,
+  const sourceByName = new Map<string, IndexedSourceTrace>()
+  let candidate: MaxSubarrayTraceCandidate | undefined
+
+  for (const [name, data] of getInitialNumericArrays(steps)) {
+    const source = indexSourceTrace(steps, name, data)
+    sourceByName.set(name, source)
+    candidate = findCandidateForSource(source)
+    if (candidate) break
   }
+
+  const analysis = { candidate, sourceByName }
+  traceAnalysisCache.set(steps, analysis)
+  return analysis
 }
 
 /**
@@ -213,89 +299,40 @@ function findKadaneMapping({
 export function getMaxSubarrayTraceCandidate(
   executionState: ExecutionState
 ): MaxSubarrayTraceCandidate | undefined {
-  const numericNames = getNumericVariableNames(executionState)
-
-  for (const [arrayName, data] of getInitialNumericArrays(executionState)) {
-    const indexNames = numericNames.filter((variableName) =>
-      appearsWithEveryLoopIndex({
-        executionState,
-        arrayName,
-        data,
-        variableName,
-      })
-    )
-    const accumulatorNames = numericNames.filter((variableName) =>
-      isInitializedFromFirstValue({
-        executionState,
-        arrayName,
-        data,
-        variableName,
-      })
-    )
-
-    for (const indexName of indexNames) {
-      for (const endingName of accumulatorNames) {
-        if (endingName === indexName) continue
-
-        for (const bestName of accumulatorNames) {
-          if (bestName === indexName || bestName === endingName) continue
-
-          const candidate = findKadaneMapping({
-            executionState,
-            arrayName,
-            data,
-            indexName,
-            endingName,
-            bestName,
-          })
-          if (candidate) return candidate
-        }
-      }
-    }
-  }
-
-  return undefined
+  return analyzeTrace(executionState.steps).candidate
 }
 
 function readVisualizationState({
-  executionState,
   stepIndex,
   candidate,
-  data,
+  source,
 }: {
-  executionState: ExecutionState
   stepIndex: number
   candidate: MaxSubarrayTraceCandidate
-  data: number[]
+  source: IndexedSourceTrace
 }): MaxSubarrayVisualizationState | undefined {
-  const variables = executionState.steps[stepIndex]?.variables
-  if (!variables) return undefined
-  if (!numericArrayEquals(variables[candidate.name], data)) return undefined
+  const snapshot = source.snapshotByStepIndex.get(stepIndex)
+  if (!snapshot) return undefined
 
-  const maxEndingHere = variables[candidate.endingName]
-  const maxSoFar = variables[candidate.bestName]
-  if (!isNumber(maxEndingHere) || !isNumber(maxSoFar)) return undefined
+  const maxEndingHere = snapshot.values.get(candidate.endingName)
+  const maxSoFar = snapshot.values.get(candidate.bestName)
+  if (isUndefined(maxEndingHere) || isUndefined(maxSoFar)) return undefined
 
-  const recordedIndex = variables[candidate.indexName]
+  const recordedIndex = snapshot.values.get(candidate.indexName)
   const isRecordedIndexInBounds =
     isInteger(recordedIndex) &&
     recordedIndex >= 0 &&
-    recordedIndex < data.length
-  const isInitialState = maxEndingHere === data[0] && maxSoFar === data[0]
-  let expectedEnding = data[0]
-  let expectedBest = data[0]
-
-  if (isRecordedIndexInBounds) {
-    for (let index = 1; index <= recordedIndex; index++) {
-      expectedEnding = Math.max(data[index], expectedEnding + data[index])
-      expectedBest = Math.max(expectedBest, expectedEnding)
-    }
-  }
-
+    recordedIndex < source.data.length
+  const expectedState = isRecordedIndexInBounds
+    ? source.expectedStates[recordedIndex]
+    : undefined
   const matchesRecordedIndex =
     isRecordedIndexInBounds &&
-    maxEndingHere === expectedEnding &&
-    maxSoFar === expectedBest
+    maxEndingHere === expectedState?.ending &&
+    maxSoFar === expectedState.best
+  const initialState = source.expectedStates[0]
+  const isInitialState =
+    maxEndingHere === initialState.ending && maxSoFar === initialState.best
   const currentIndex = matchesRecordedIndex
     ? recordedIndex
     : isInitialState
@@ -305,9 +342,9 @@ function readVisualizationState({
   if (isUndefined(currentIndex)) return undefined
 
   return {
-    data,
+    data: source.data,
     currentIndex,
-    currentValue: data[currentIndex],
+    currentValue: source.data[currentIndex],
     maxEndingHere,
     maxSoFar,
     variableNames: {
@@ -328,13 +365,12 @@ export function getMaxSubarrayVisualizationState({
   variableName: string
   targetStepIndex?: number
 }): MaxSubarrayVisualizationState | undefined {
-  const candidate = getMaxSubarrayTraceCandidate(executionState)
+  const analysis = analyzeTrace(executionState.steps)
+  const { candidate } = analysis
   if (!candidate || candidate.name !== variableName) return undefined
 
-  const data = getInitialNumericArrays(executionState).find(
-    ([name]) => name === variableName
-  )?.[1]
-  if (!data) return undefined
+  const source = analysis.sourceByName.get(variableName)
+  if (!source) return undefined
 
   const currentAndPastStepIndexes = getExecutionStepSearchOrder({
     executionState,
@@ -346,7 +382,6 @@ export function getMaxSubarrayVisualizationState({
     targetStepIndex,
     preferPastSteps: true,
   })
-
   const orderedStepIndexes = new Set([
     ...currentAndPastStepIndexes,
     ...fallbackStepIndexes,
@@ -354,10 +389,9 @@ export function getMaxSubarrayVisualizationState({
 
   for (const stepIndex of orderedStepIndexes) {
     const state = readVisualizationState({
-      executionState,
       stepIndex,
       candidate,
-      data,
+      source,
     })
     if (state) return state
   }
