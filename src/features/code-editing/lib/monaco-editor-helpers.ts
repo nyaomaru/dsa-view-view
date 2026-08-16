@@ -28,6 +28,12 @@ const UNUSED_DECLARATION_DIAGNOSTIC_CODE = '6133'
 export const DEFAULT_EDITOR_OPTIONS = {
   minimap: { enabled: false },
   fontSize: DEFAULT_EDITOR_FONT_SIZE,
+  fixedOverflowWidgets: true,
+  hover: {
+    enabled: 'on',
+    delay: 300,
+    sticky: true,
+  },
   lineNumbers: 'on',
   roundedSelection: false,
   scrollBeyondLastLine: false,

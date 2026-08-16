@@ -1,4 +1,5 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Editor from '@monaco-editor/react'
 import type { OnMount } from '@monaco-editor/react'
 import type { CompilationError } from '@/entities/code'
@@ -92,6 +93,18 @@ export function CodeEditor({
   const decorationsRef = useRef<string[]>([])
   const preparedClassesLibRef = useRef<string | null>(null)
   const editorDisposablesRef = useRef<Array<{ dispose: () => void }>>([])
+  const [overflowWidgetsDomNode, setOverflowWidgetsDomNode] =
+    useState<HTMLDivElement | null>(null)
+  const editorOptions = useMemo(
+    () =>
+      overflowWidgetsDomNode
+        ? {
+            ...DEFAULT_EDITOR_OPTIONS,
+            overflowWidgetsDomNode,
+          }
+        : DEFAULT_EDITOR_OPTIONS,
+    [overflowWidgetsDomNode]
+  )
 
   useEffect(() => {
     onValidateRef.current = onValidate
@@ -195,18 +208,33 @@ export function CodeEditor({
   }, [errors])
 
   return (
-    <CodeEditorFrame height={height}>
-      <Editor
-        height="100%"
-        language={language}
-        path={language === 'typescript' ? TYPESCRIPT_MODEL_PATH : undefined}
-        value={value}
-        onChange={handleEditorChange}
-        onMount={handleEditorDidMount}
-        theme="vs-dark"
-        loading={<CodeEditorSpinner />}
-        options={DEFAULT_EDITOR_OPTIONS}
-      />
-    </CodeEditorFrame>
+    <>
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={setOverflowWidgetsDomNode}
+            className="monaco-editor vs-dark"
+            data-code-editor-overflow-widgets=""
+          />,
+          document.body
+        )}
+      <CodeEditorFrame height={height}>
+        {overflowWidgetsDomNode ? (
+          <Editor
+            height="100%"
+            language={language}
+            path={language === 'typescript' ? TYPESCRIPT_MODEL_PATH : undefined}
+            value={value}
+            onChange={handleEditorChange}
+            onMount={handleEditorDidMount}
+            theme="vs-dark"
+            loading={<CodeEditorSpinner />}
+            options={editorOptions}
+          />
+        ) : (
+          <CodeEditorSpinner />
+        )}
+      </CodeEditorFrame>
+    </>
   )
 }

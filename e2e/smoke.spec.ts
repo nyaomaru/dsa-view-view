@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 test('formats TypeScript with Ctrl+S', async ({ page }) => {
   await page.goto('/')
 
-  const editor = page.locator('.monaco-editor')
+  const editor = page.getByRole('code')
   await expect(editor).toBeVisible()
   await editor.click()
   await page.keyboard.press('Control+A')
@@ -26,7 +26,7 @@ test('allows entry functions that share names with DOM globals', async ({
 }) => {
   await page.goto('/')
 
-  const editor = page.locator('.monaco-editor')
+  const editor = page.getByRole('code')
   await expect(editor).toBeVisible()
   const sourceCode = `function* parent(): Generator<number | string, string, void> {
   const childResult = yield* child()
