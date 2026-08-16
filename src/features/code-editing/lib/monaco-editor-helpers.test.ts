@@ -105,6 +105,12 @@ describe('monaco editor helpers', () => {
       ...DEFAULT_EDITOR_OPTIONS,
       readOnly: true,
     })
+    expect(DEFAULT_EDITOR_OPTIONS.hover).toEqual({
+      enabled: 'on',
+      delay: 300,
+      sticky: true,
+    })
+    expect(DEFAULT_EDITOR_OPTIONS.fixedOverflowWidgets).toBe(true)
   })
 
   it('updates and clears highlighted line decorations', () => {
