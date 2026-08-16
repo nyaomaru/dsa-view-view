@@ -120,6 +120,52 @@ function maxSubArray(nums: number[]): number {
     })
   })
 
+  it('visualizes a one-element input as index zero', () => {
+    const state = executeCode(
+      `
+function maxSubArray(nums: number[]): number {
+  if (nums.length === 0) return 0
+
+  let maxEndingHere = nums[0]
+  let maxSoFar = nums[0]
+
+  for (let i = 1; i < nums.length; i++) {
+    const x = nums[i]
+    maxEndingHere = Math.max(x, maxEndingHere + x)
+    maxSoFar = Math.max(maxSoFar, maxEndingHere)
+  }
+
+  return maxSoFar
+}
+`,
+      { nums: [5] },
+      'maxSubArray'
+    )
+    const candidate = getMaxSubarrayTraceCandidate(state)
+    const view = getMaxSubarrayVisualizationState({
+      executionState: state,
+      variableName: 'nums',
+      targetStepIndex: candidate?.stepIndex,
+    })
+
+    expect(candidate).toMatchObject({
+      name: 'nums',
+      endingName: 'maxEndingHere',
+      bestName: 'maxSoFar',
+    })
+    expect(detectVisualizationState(state)).toMatchObject({
+      primaryMaxSubarrayArrayName: 'nums',
+      primaryMaxSubarrayStepIndex: candidate?.stepIndex,
+    })
+    expect(view).toMatchObject({
+      data: [5],
+      currentIndex: 0,
+      currentValue: 5,
+      maxEndingHere: 5,
+      maxSoFar: 5,
+    })
+  })
+
   it('does not classify unrelated running totals as Kadane state', () => {
     const state = executeCode(
       `
@@ -137,6 +183,22 @@ function sumAndMax(nums: number[]): number {
 `,
       input,
       'sumAndMax'
+    )
+
+    expect(getMaxSubarrayTraceCandidate(state)).toBeUndefined()
+  })
+
+  it('does not infer singleton Kadane state from unrelated duplicate values', () => {
+    const state = executeCode(
+      `
+function duplicateFirst(nums: number[]): number {
+  const first = nums[0]
+  const duplicate = nums[0]
+  return first + duplicate
+}
+`,
+      { nums: [5] },
+      'duplicateFirst'
     )
 
     expect(getMaxSubarrayTraceCandidate(state)).toBeUndefined()

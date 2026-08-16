@@ -57,6 +57,7 @@ type IndexedSourceTrace = {
   snapshots: NumericTraceSnapshot[]
   snapshotByStepIndex: Map<number, NumericTraceSnapshot>
   valueSetByName: Map<string, Set<number>>
+  initialNumericNames: Set<string>
 }
 
 type MaxSubarrayTraceAnalysis = {
@@ -86,7 +87,7 @@ function getInitialNumericArrays(
   if (!initialStep) return []
 
   return Object.entries(initialStep.variables).flatMap(([name, value]) =>
-    isNumericArray(value) && value.length >= 2
+    isNumericArray(value) && value.length >= 1
       ? [[name, value.map(Number)] as [string, number[]]]
       : []
   )
@@ -140,6 +141,62 @@ function indexSourceTrace(
     snapshots,
     snapshotByStepIndex,
     valueSetByName,
+    initialNumericNames: new Set(snapshots[0]?.values.keys()),
+  }
+}
+
+function getNameScore(name: string, hints: string[]): number {
+  const normalizedName = name.toLowerCase().replaceAll(/[^a-z0-9]/g, '')
+  return hints.filter((hint) => normalizedName.includes(hint)).length
+}
+
+function getHighestScoringName(names: string[], hints: string[]): string {
+  return names.reduce((bestName, name) =>
+    getNameScore(name, hints) > getNameScore(bestName, hints) ? name : bestName
+  )
+}
+
+function findSingletonCandidate(
+  source: IndexedSourceTrace
+): MaxSubarrayTraceCandidate | undefined {
+  const accumulatorNames = [...source.valueSetByName.entries()]
+    .filter(
+      ([name, values]) =>
+        !source.initialNumericNames.has(name) && values.has(source.data[0])
+    )
+    .map(([name]) => name)
+  if (accumulatorNames.length < 2) return undefined
+
+  const endingNameHints = ['ending', 'local', 'current', 'running']
+  const endingName = getHighestScoringName(accumulatorNames, endingNameHints)
+  if (getNameScore(endingName, endingNameHints) === 0) return undefined
+
+  const bestNames = accumulatorNames.filter((name) => name !== endingName)
+  const bestNameHints = [
+    'sofar',
+    'global',
+    'overall',
+    'best',
+    'maxsum',
+    'answer',
+    'result',
+  ]
+  const bestName = getHighestScoringName(bestNames, bestNameHints)
+  if (getNameScore(bestName, bestNameHints) === 0) return undefined
+
+  const initializedStep = source.snapshots.find(
+    (snapshot) =>
+      snapshot.values.get(endingName) === source.data[0] &&
+      snapshot.values.get(bestName) === source.data[0]
+  )
+  if (!initializedStep) return undefined
+
+  return {
+    name: source.name,
+    stepIndex: initializedStep.stepIndex,
+    indexName: 'index',
+    endingName,
+    bestName,
   }
 }
 
@@ -227,6 +284,8 @@ function findInitialStateStep({
 function findCandidateForSource(
   source: IndexedSourceTrace
 ): MaxSubarrayTraceCandidate | undefined {
+  if (source.data.length === 1) return findSingletonCandidate(source)
+
   const indexNames = [...source.valueSetByName.entries()]
     .filter(([, values]) => includesEveryLoopIndex(values, source.data.length))
     .map(([name]) => name)
