@@ -302,6 +302,31 @@ function sumAndMax(nums: number[]): number {
     expect(getMaxSubarrayTraceCandidate(state)).toBeUndefined()
   })
 
+  it('does not classify degenerate extrema scans as Kadane state', () => {
+    const state = executeCode(
+      `
+function getRange(nums: number[]): number {
+  let minimum = nums[0]
+  let maximum = nums[0]
+
+  for (let index = 1; index < nums.length; index++) {
+    minimum = Math.min(minimum, nums[index])
+    maximum = Math.max(maximum, nums[index])
+  }
+
+  return maximum - minimum
+}
+`,
+      { nums: [-1, -1, -1] },
+      'getRange'
+    )
+
+    expect(getMaxSubarrayTraceCandidate(state)).toBeUndefined()
+    expect(
+      detectVisualizationState(state).primaryMaxSubarrayArrayName
+    ).toBeUndefined()
+  })
+
   it('does not infer singleton Kadane state from unrelated duplicate values', () => {
     const state = executeCode(
       `

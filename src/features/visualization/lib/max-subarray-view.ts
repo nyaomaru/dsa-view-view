@@ -79,6 +79,17 @@ const traceAnalysisCache = new WeakMap<
   MaxSubarrayTraceAnalysis
 >()
 
+const endingNameHints = ['ending', 'local', 'current', 'running']
+const bestNameHints = [
+  'sofar',
+  'global',
+  'overall',
+  'best',
+  'maxsum',
+  'answer',
+  'result',
+]
+
 function createNumericArrayEqualityGuard(
   expected: readonly number[]
 ): Guard<readonly NumericValue[]> {
@@ -180,6 +191,29 @@ function getHighestScoringName(names: string[], hints: string[]): string {
   )
 }
 
+function hasAccumulatorNameEvidence(
+  endingName: string,
+  bestName: string
+): boolean {
+  return (
+    getNameScore(endingName, endingNameHints) > 0 &&
+    getNameScore(bestName, bestNameHints) > 0
+  )
+}
+
+function hasKadaneRecurrenceEvidence(source: IndexedSourceTrace): boolean {
+  return source.expectedStates.some((state, index) => {
+    if (index === 0) return false
+
+    const previousEnding = source.expectedStates[index - 1].ending
+    const currentValue = source.data[index]
+    return (
+      state.ending === previousEnding + currentValue &&
+      state.ending !== currentValue
+    )
+  })
+}
+
 function findSingletonCandidate(
   source: IndexedSourceTrace
 ): MaxSubarrayTraceCandidate | undefined {
@@ -191,20 +225,10 @@ function findSingletonCandidate(
     .map(([name]) => name)
   if (accumulatorNames.length < 2) return undefined
 
-  const endingNameHints = ['ending', 'local', 'current', 'running']
   const endingName = getHighestScoringName(accumulatorNames, endingNameHints)
   if (getNameScore(endingName, endingNameHints) === 0) return undefined
 
   const bestNames = accumulatorNames.filter((name) => name !== endingName)
-  const bestNameHints = [
-    'sofar',
-    'global',
-    'overall',
-    'best',
-    'maxsum',
-    'answer',
-    'result',
-  ]
   const bestName = getHighestScoringName(bestNames, bestNameHints)
   if (getNameScore(bestName, bestNameHints) === 0) return undefined
 
@@ -310,6 +334,7 @@ function findCandidateForSource(
 ): MaxSubarrayTraceCandidate | undefined {
   if (source.data.length === 1) return findSingletonCandidate(source)
 
+  const hasRecurrenceEvidence = hasKadaneRecurrenceEvidence(source)
   const indexNames = [...source.valueSetByName.entries()]
     .filter(([, values]) => includesEveryLoopIndex(values, source.data.length))
     .map(([name]) => name)
@@ -333,6 +358,12 @@ function findCandidateForSource(
           bestName,
         })
         if (isUndefined(firstUpdateStepIndex)) continue
+        if (
+          !hasRecurrenceEvidence &&
+          !hasAccumulatorNameEvidence(endingName, bestName)
+        ) {
+          continue
+        }
         const initialStateStepIndex = findInitialStateStep({
           source,
           endingName,
