@@ -1,4 +1,5 @@
 import {
+  define,
   isAdjacencyList,
   isInteger,
   isMatrix,
@@ -30,6 +31,20 @@ function isSquareBinaryMatrix(value: readonly (readonly unknown[])[]): boolean {
   )
 }
 
+const isGraphAdjacencySource = define<readonly (readonly unknown[])[]>(
+  (value) => {
+    if (!isAdjacencyList(value) && !isMatrix(value)) return false
+    if (isSquareBinaryMatrix(value)) return false
+
+    return value.every((neighbors) =>
+      neighbors.every(
+        (neighbor) =>
+          isInteger(neighbor) && neighbor >= 0 && neighbor < value.length
+      )
+    )
+  }
+)
+
 /**
  * Identifies adjacency lists, including graph variables whose node degrees
  * happen to produce a rectangular array.
@@ -39,15 +54,7 @@ export function isAdjacencyListCandidate(
   value: unknown
 ): value is readonly (readonly unknown[])[] {
   if (!isGraphVariableName(name)) return false
-  if (!isAdjacencyList(value) && !isMatrix(value)) return false
-  if (isSquareBinaryMatrix(value)) return false
-
-  return value.every((neighbors) =>
-    neighbors.every(
-      (neighbor) =>
-        isInteger(neighbor) && neighbor >= 0 && neighbor < value.length
-    )
-  )
+  return isGraphAdjacencySource(value)
 }
 
 /** Converts a cyclic graph-node structure into the record consumed by Graph View. */

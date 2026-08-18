@@ -6,6 +6,7 @@ import {
   isArray,
   isInstanceOf,
   isNumber,
+  nonEmptyArrayOf,
   isObject,
   isString,
   not,
@@ -39,6 +40,7 @@ export {
   isSymbol,
   isString,
   isUndefined,
+  nonEmptyArrayOf,
   not,
   oneOfValues,
   or,
@@ -65,6 +67,8 @@ export const isNumericString = and(
 export const isNumericValue = or(isNumber, isNumericString)
 
 export const isNumericArray = arrayOf(isNumericValue)
+
+export const isNonEmptyNumericArray = nonEmptyArrayOf(isNumericValue)
 
 export const isBooleanArray = arrayOf(isBoolean)
 

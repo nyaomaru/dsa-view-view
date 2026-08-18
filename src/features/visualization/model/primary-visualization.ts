@@ -46,6 +46,14 @@ export function getPrimaryVisualization(
     }
   }
 
+  if (detection.primaryMaxSubarrayArrayName) {
+    return {
+      type: 'max-subarray',
+      targetVariable: detection.primaryMaxSubarrayArrayName,
+      targetStepIndex: detection.primaryMaxSubarrayStepIndex,
+    }
+  }
+
   if (detection.primaryBinarySearchArrayName) {
     return {
       type: 'binary-search',

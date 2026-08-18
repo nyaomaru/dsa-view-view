@@ -23,6 +23,10 @@ export type VisualizationDetection = {
   primaryAreaArrayName: string | undefined
   /** Step index where area pointers are available. */
   primaryAreaStepIndex: number | undefined
+  /** Primary numeric source detected for Kadane's maximum-subarray view. */
+  primaryMaxSubarrayArrayName: string | undefined
+  /** Step index where initialized maximum-subarray state is available. */
+  primaryMaxSubarrayStepIndex: number | undefined
   /** Primary numeric array to show in binary-search index view. */
   primaryBinarySearchArrayName: string | undefined
   /** Step index where binary-search indexes are available. */

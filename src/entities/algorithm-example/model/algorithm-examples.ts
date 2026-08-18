@@ -29,6 +29,7 @@ const EXAMPLE_CATEGORY_BY_ID = new Map<AlgorithmExampleSourceId, string>([
   ['daily-temperatures', 'Stack'],
   ['trapping-rain-water', 'Two Pointers'],
   ['container-with-most-water', 'Two Pointers'],
+  ['maximum-subarray', 'Dynamic Programming'],
   ['word-break', 'Dynamic Programming'],
   ['coin-change', 'Dynamic Programming'],
   ['longest-increasing-subsequence', 'Dynamic Programming'],
@@ -202,6 +203,14 @@ const ALGORITHM_EXAMPLE_DEFINITIONS: AlgorithmExampleDefinition[] = [
       temperatures: '[73, 74, 75, 71, 69, 72, 76, 73]',
     },
     sourceCode: ALGORITHM_EXAMPLE_SOURCES['daily-temperatures'],
+  },
+  {
+    id: 'maximum-subarray',
+    label: 'Maximum Subarray',
+    defaultInputValues: {
+      nums: '[-2, 1, -3, 4, -1, 2, 1, -5, 4]',
+    },
+    sourceCode: ALGORITHM_EXAMPLE_SOURCES['maximum-subarray'],
   },
   {
     id: 'word-break',

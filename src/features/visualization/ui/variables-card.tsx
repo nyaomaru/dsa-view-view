@@ -54,6 +54,10 @@ type VariablesCardProps = {
   primaryAreaArrayName?: string
   /** Step index where area pointers are available. */
   primaryAreaStepIndex?: number
+  /** Primary numeric array detected for maximum-subarray visualization. */
+  primaryMaxSubarrayArrayName?: string
+  /** Step index where maximum-subarray state is available. */
+  primaryMaxSubarrayStepIndex?: number
   /** Primary numeric array detected for binary-search index visualization. */
   primaryBinarySearchArrayName?: string
   /** Step index where binary-search indexes are available. */
@@ -103,6 +107,8 @@ export function VariablesCard({
   primaryArrayName,
   primaryAreaArrayName,
   primaryAreaStepIndex,
+  primaryMaxSubarrayArrayName,
+  primaryMaxSubarrayStepIndex,
   primaryBinarySearchArrayName,
   primaryBinarySearchStepIndex,
   primarySlidingWindowStringName,
@@ -233,6 +239,23 @@ export function VariablesCard({
             >
               <BarChart2 className="w-4 h-4" />
               Area View
+            </Button>
+          )}
+          {primaryMaxSubarrayArrayName && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                onOpenVisualization(
+                  'max-subarray',
+                  primaryMaxSubarrayArrayName,
+                  primaryMaxSubarrayStepIndex
+                )
+              }
+            >
+              <BarChart2 className="w-4 h-4" />
+              Max Subarray View
             </Button>
           )}
           {primaryBinarySearchArrayName && (

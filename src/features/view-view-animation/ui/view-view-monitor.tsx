@@ -125,7 +125,7 @@ export function ViewViewMonitor({
         )}
         {shouldRenderAnimation &&
           (shouldShowScreenFrame || shouldShowScreenFallback) && (
-            <div className="absolute left-[8%] top-[27%] h-[57%] w-[78%] overflow-hidden rounded-[20%] bg-[#181d17]">
+            <div className="absolute left-[8%] top-[27%] h-[57%] w-[78%] overflow-hidden rounded-[20%]">
               {shouldShowScreenFallback && (
                 <img
                   src={VIEW_VIEW_WAIT_FALLBACK_SOURCE}

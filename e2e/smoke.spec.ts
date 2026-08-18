@@ -192,6 +192,46 @@ test('visualizes trapped rain water between height bars', async ({
   await expect(page.getByText('water=6')).toBeVisible()
 })
 
+test('tracks maximum-subarray state at each array position', async ({
+  page,
+  isMobile,
+}) => {
+  await page.goto('/')
+
+  await page.getByRole('combobox', { name: 'Example' }).click()
+  await page.getByLabel('Search examples').fill('maximum subarray')
+  await page
+    .getByRole('option', { name: 'Maximum Subarray', exact: true })
+    .click()
+
+  await expect(page.getByText('Input Parameters')).toBeVisible()
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+  await expect(page.getByText('All execution steps')).toBeVisible()
+
+  const maxSubarrayDialog = page.getByRole('dialog').filter({
+    has: page.getByRole('heading', {
+      name: 'Maximum Subarray View: nums',
+    }),
+  })
+  if (isMobile) {
+    await page.getByTitle('Skip to End').first().click()
+    await page.getByRole('button', { name: 'Max Subarray View' }).click()
+  } else {
+    await maxSubarrayDialog.getByTitle('Skip to End').click()
+  }
+
+  await expect(maxSubarrayDialog).toBeVisible()
+  await expect(maxSubarrayDialog.getByText('Best ending here')).toBeVisible()
+  await expect(maxSubarrayDialog.getByText('Best so far')).toBeVisible()
+  await expect(
+    maxSubarrayDialog.getByLabel('Index 8: 4, current')
+  ).toBeVisible()
+  await expect(
+    maxSubarrayDialog.getByText('maxEndingHere').first()
+  ).toBeVisible()
+  await expect(maxSubarrayDialog.getByText('maxSoFar').first()).toBeVisible()
+})
+
 test('visualizes array and rolling DP examples', async ({ page, isMobile }) => {
   const examples = [
     { label: 'Coin Change', variable: 'dp', table: 'dp: DP table' },
