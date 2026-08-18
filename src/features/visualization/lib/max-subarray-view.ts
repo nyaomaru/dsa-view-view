@@ -406,19 +406,27 @@ function readVisualizationState({
     isInteger(recordedIndex) &&
     recordedIndex >= 0 &&
     recordedIndex < source.data.length
-  const expectedState = isRecordedIndexInBounds
-    ? source.expectedStates[recordedIndex]
-    : undefined
+  const matchesExpectedState = (index: number): boolean => {
+    const expectedState = source.expectedStates[index]
+    return (
+      maxEndingHere === expectedState?.ending && maxSoFar === expectedState.best
+    )
+  }
   const matchesRecordedIndex =
-    isRecordedIndexInBounds &&
-    maxEndingHere === expectedState?.ending &&
-    maxSoFar === expectedState.best
-  const initialState = source.expectedStates[0]
-  const isInitialState =
-    maxEndingHere === initialState.ending && maxSoFar === initialState.best
+    isRecordedIndexInBounds && matchesExpectedState(recordedIndex)
+  const previousIndex =
+    isInteger(recordedIndex) &&
+    recordedIndex >= 1 &&
+    recordedIndex <= source.data.length
+      ? recordedIndex - 1
+      : undefined
+  const matchesPreviousIndex =
+    !isUndefined(previousIndex) && matchesExpectedState(previousIndex)
   const currentIndex = matchesRecordedIndex
     ? recordedIndex
-    : isInitialState
+    : matchesPreviousIndex
+      ? previousIndex
+      : matchesExpectedState(0)
       ? 0
       : undefined
 

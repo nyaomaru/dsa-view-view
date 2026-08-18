@@ -124,6 +124,47 @@ function maxSubArray(nums: number[]): number {
     })
   })
 
+  it('uses the previous loop position when accumulator states repeat', () => {
+    const state = executeCode(
+      `
+function maxSubArray(nums: number[]): number {
+  let maxEndingHere = nums[0]
+  let maxSoFar = nums[0]
+
+  for (let i = 1; i < nums.length; i++) {
+    const x = nums[i]
+    maxEndingHere = Math.max(x, maxEndingHere + x)
+    maxSoFar = Math.max(maxSoFar, maxEndingHere)
+  }
+
+  return maxSoFar
+}
+`,
+      { nums: [1, -2, 1, -2] },
+      'maxSubArray'
+    )
+    const loopEntryStep = state.steps.findIndex(
+      (step) =>
+        step.variables.i === 3 &&
+        step.variables.maxEndingHere === 1 &&
+        step.variables.maxSoFar === 1
+    )
+    const candidate = getMaxSubarrayTraceCandidate(state)
+    const view = getMaxSubarrayVisualizationState({
+      executionState: { ...state, currentStep: loopEntryStep },
+      variableName: 'nums',
+      targetStepIndex: candidate?.stepIndex,
+    })
+
+    expect(loopEntryStep).toBeGreaterThanOrEqual(0)
+    expect(view).toMatchObject({
+      currentIndex: 2,
+      currentValue: 1,
+      maxEndingHere: 1,
+      maxSoFar: 1,
+    })
+  })
+
   it('visualizes a one-element input as index zero', () => {
     const state = executeCode(
       `
