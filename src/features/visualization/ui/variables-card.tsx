@@ -58,6 +58,10 @@ type VariablesCardProps = {
   primaryMaxSubarrayArrayName?: string
   /** Step index where maximum-subarray state is available. */
   primaryMaxSubarrayStepIndex?: number
+  /** Primary numeric array detected for stock-profit visualization. */
+  primaryStockProfitArrayName?: string
+  /** Step index where stock-profit state is available. */
+  primaryStockProfitStepIndex?: number
   /** Primary numeric array detected for binary-search index visualization. */
   primaryBinarySearchArrayName?: string
   /** Step index where binary-search indexes are available. */
@@ -109,6 +113,8 @@ export function VariablesCard({
   primaryAreaStepIndex,
   primaryMaxSubarrayArrayName,
   primaryMaxSubarrayStepIndex,
+  primaryStockProfitArrayName,
+  primaryStockProfitStepIndex,
   primaryBinarySearchArrayName,
   primaryBinarySearchStepIndex,
   primarySlidingWindowStringName,
@@ -256,6 +262,23 @@ export function VariablesCard({
             >
               <BarChart2 className="w-4 h-4" />
               Max Subarray View
+            </Button>
+          )}
+          {primaryStockProfitArrayName && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                onOpenVisualization(
+                  'stock-profit',
+                  primaryStockProfitArrayName,
+                  primaryStockProfitStepIndex
+                )
+              }
+            >
+              <BarChart2 className="w-4 h-4" />
+              Stock Profit View
             </Button>
           )}
           {primaryBinarySearchArrayName && (

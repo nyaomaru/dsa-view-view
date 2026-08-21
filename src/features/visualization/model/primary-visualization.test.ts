@@ -17,6 +17,8 @@ const emptyDetection: VisualizationDetection = {
   primaryAreaStepIndex: undefined,
   primaryMaxSubarrayArrayName: undefined,
   primaryMaxSubarrayStepIndex: undefined,
+  primaryStockProfitArrayName: undefined,
+  primaryStockProfitStepIndex: undefined,
   primaryBinarySearchArrayName: undefined,
   primaryBinarySearchStepIndex: undefined,
   primarySlidingWindowStringName: undefined,
@@ -113,6 +115,21 @@ describe('getPrimaryVisualization', () => {
       type: 'max-subarray',
       targetVariable: 'nums',
       targetStepIndex: 3,
+    })
+  })
+
+  it('selects stock-profit state ahead of generic candidates', () => {
+    expect(
+      getPrimaryVisualization({
+        ...emptyDetection,
+        primaryStockProfitArrayName: 'prices',
+        primaryStockProfitStepIndex: 4,
+        primaryDpName: 'dp',
+      })
+    ).toEqual({
+      type: 'stock-profit',
+      targetVariable: 'prices',
+      targetStepIndex: 4,
     })
   })
 

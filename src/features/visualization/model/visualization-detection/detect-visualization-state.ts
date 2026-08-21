@@ -16,6 +16,7 @@ import {
   getPrimaryMaxSubarrayCandidate,
   getPrimaryRollingDpName,
   getPrimarySlidingWindowCandidate,
+  getPrimaryStockProfitCandidate,
 } from './indexed-candidates'
 import {
   getPrimaryListNodeName,
@@ -106,6 +107,8 @@ export function detectVisualizationState(
   )
   const primaryMaxSubarrayCandidate =
     getPrimaryMaxSubarrayCandidate(executionState)
+  const primaryStockProfitCandidate =
+    getPrimaryStockProfitCandidate(executionState)
   const primarySlidingWindowCandidate =
     getPrimarySlidingWindowCandidate(executionState)
   const primaryDpName =
@@ -164,6 +167,8 @@ export function detectVisualizationState(
     primaryAreaStepIndex: primaryAreaCandidate?.stepIndex,
     primaryMaxSubarrayArrayName: primaryMaxSubarrayCandidate?.name,
     primaryMaxSubarrayStepIndex: primaryMaxSubarrayCandidate?.stepIndex,
+    primaryStockProfitArrayName: primaryStockProfitCandidate?.name,
+    primaryStockProfitStepIndex: primaryStockProfitCandidate?.stepIndex,
     primaryBinarySearchArrayName: primaryBinarySearchCandidate?.name,
     primaryBinarySearchStepIndex: primaryBinarySearchCandidate?.stepIndex,
     primarySlidingWindowStringName: primarySlidingWindowCandidate?.name,

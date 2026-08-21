@@ -27,6 +27,10 @@ export type VisualizationDetection = {
   primaryMaxSubarrayArrayName: string | undefined
   /** Step index where initialized maximum-subarray state is available. */
   primaryMaxSubarrayStepIndex: number | undefined
+  /** Primary numeric source detected for stock-profit visualization. */
+  primaryStockProfitArrayName: string | undefined
+  /** Step index where initialized stock-profit state is available. */
+  primaryStockProfitStepIndex: number | undefined
   /** Primary numeric array to show in binary-search index view. */
   primaryBinarySearchArrayName: string | undefined
   /** Step index where binary-search indexes are available. */
