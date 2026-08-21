@@ -92,20 +92,51 @@ test('loads, compiles, runs a demo, and opens core dialogs', async ({
   await executionWorkerStarted
   await expect(page.getByText('All execution steps')).toBeVisible()
 
+  const visualizationDialog = page
+    .getByRole('dialog')
+    .filter({ has: page.getByRole('heading', { name: 'Bar Chart: nums' }) })
+  const openDialog = page.getByRole('dialog')
+  await expect(openDialog).toBeVisible()
+
+  if (isMobile) {
+    const viewport = page.viewportSize()
+    const dialogBox = await openDialog.boundingBox()
+    const playbackBox = await openDialog
+      .getByRole('group', {
+        name: 'Visualization playback controls',
+      })
+      .boundingBox()
+
+    expect(viewport).not.toBeNull()
+    expect(dialogBox).not.toBeNull()
+    expect(playbackBox).not.toBeNull()
+    expect(dialogBox?.x).toBeCloseTo(4, 0)
+    expect(dialogBox?.y).toBeCloseTo(8, 0)
+    expect(dialogBox?.width).toBeCloseTo((viewport?.width ?? 0) - 8, 0)
+    expect(dialogBox?.height).toBeCloseTo((viewport?.height ?? 0) - 16, 0)
+    expect(playbackBox?.x).toBeGreaterThan(dialogBox?.x ?? 0)
+    expect((playbackBox?.x ?? 0) + (playbackBox?.width ?? 0)).toBeLessThan(
+      (dialogBox?.x ?? 0) + (dialogBox?.width ?? 0)
+    )
+    expect((playbackBox?.y ?? 0) + (playbackBox?.height ?? 0)).toBeLessThan(
+      (dialogBox?.y ?? 0) + (dialogBox?.height ?? 0)
+    )
+    await expect(
+      openDialog.getByRole('group', {
+        name: 'Visualization playback controls',
+      })
+    ).toBeVisible()
+  }
+
+  await openDialog.getByRole('button', { name: 'Close' }).click()
+  await expect(openDialog).toBeHidden()
+
   if (isMobile) {
     await expect(page.getByRole('button', { name: 'Runtime' })).toHaveClass(
       /bg-primary/
     )
   }
 
-  const visualizationDialog = page
-    .getByRole('dialog')
-    .filter({ has: page.getByRole('heading', { name: 'Bar Chart: nums' }) })
-  const openDialog = page.getByRole('dialog')
-  if (await openDialog.isVisible()) {
-    await openDialog.getByRole('button', { name: 'Close' }).click()
-    await expect(openDialog).toBeHidden()
-  }
   await page.getByTitle('Visualize as bar chart').click()
   await expect(visualizationDialog).toBeVisible()
   await visualizationDialog.getByRole('button', { name: 'Close' }).click()
@@ -122,10 +153,7 @@ test('loads, compiles, runs a demo, and opens core dialogs', async ({
   }
 })
 
-test('visualizes Product Except Self answer growth', async ({
-  page,
-  isMobile,
-}) => {
+test('visualizes Product Except Self answer growth', async ({ page }) => {
   await page.goto('/')
 
   await page.getByRole('combobox', { name: 'Example' }).click()
@@ -147,21 +175,14 @@ test('visualizes Product Except Self answer growth', async ({
     page.getByText('Worker returned an invalid response.')
   ).toHaveCount(0)
 
+  const stackDialog = page.getByRole('dialog').filter({
+    has: page.getByRole('heading', { name: 'Stack Visualization: answer' }),
+  })
   await page.getByTitle('Skip to End').first().click()
-  if (isMobile) {
-    const answerRow = page.getByText('answer', { exact: true }).locator('../..')
-    await answerRow.getByTitle('Visualize as stack').click()
-  }
-
-  await expect(
-    page.getByRole('heading', { name: 'Stack Visualization: answer' })
-  ).toBeVisible()
+  await expect(stackDialog).toBeVisible()
 })
 
-test('visualizes trapped rain water between height bars', async ({
-  page,
-  isMobile,
-}) => {
+test('visualizes trapped rain water between height bars', async ({ page }) => {
   await page.goto('/')
 
   await page.getByRole('combobox', { name: 'Example' }).click()
@@ -177,13 +198,9 @@ test('visualizes trapped rain water between height bars', async ({
   const areaDialog = page
     .getByRole('dialog')
     .filter({ has: page.getByRole('heading', { name: 'Area View: height' }) })
-  if (isMobile) {
-    await page.getByTitle('Skip to End').first().click()
-    await page.getByRole('button', { name: 'Area View' }).click()
-  } else {
-    await areaDialog.getByTitle('Skip to End').click()
-    await expect(areaDialog.getByTitle('Skip to End')).toBeDisabled()
-  }
+  await expect(areaDialog).toBeVisible()
+  await areaDialog.getByTitle('Skip to End').click()
+  await expect(areaDialog.getByTitle('Skip to End')).toBeDisabled()
 
   await expect(
     page.getByRole('heading', { name: 'Area View: height' })
@@ -194,7 +211,6 @@ test('visualizes trapped rain water between height bars', async ({
 
 test('tracks maximum-subarray state at each array position', async ({
   page,
-  isMobile,
 }) => {
   await page.goto('/')
 
@@ -213,14 +229,8 @@ test('tracks maximum-subarray state at each array position', async ({
       name: 'Maximum Subarray View: nums',
     }),
   })
-  if (isMobile) {
-    await page.getByTitle('Skip to End').first().click()
-    await page.getByRole('button', { name: 'Max Subarray View' }).click()
-  } else {
-    await maxSubarrayDialog.getByTitle('Skip to End').click()
-  }
-
   await expect(maxSubarrayDialog).toBeVisible()
+  await maxSubarrayDialog.getByTitle('Skip to End').click()
   await expect(maxSubarrayDialog.getByText('Best ending here')).toBeVisible()
   await expect(maxSubarrayDialog.getByText('Best so far')).toBeVisible()
   await expect(
@@ -262,14 +272,10 @@ test('visualizes array and rolling DP examples', async ({ page, isMobile }) => {
         name: `DP View: ${example.variable}`,
       }),
     })
-    if (isMobile) {
-      await page.getByTitle('Skip to End').first().click()
-      await page.getByRole('button', { name: 'DP View' }).click()
-    } else if (await dpDialog.isVisible()) {
+    if (await dpDialog.isVisible()) {
       await dpDialog.getByTitle('Skip to End').click()
     } else {
       await page.getByTitle('Skip to End').first().click()
-      await expect(dpDialog).toBeVisible()
     }
 
     await expect(dpDialog).toBeVisible()
@@ -297,7 +303,7 @@ test('visualizes array and rolling DP examples', async ({ page, isMobile }) => {
   }
 })
 
-test('visualizes semantic Map updates', async ({ page, isMobile }) => {
+test('visualizes semantic Map updates', async ({ page }) => {
   const examples = [
     { label: 'Two Sum', map: 'seen', table: 'seen: lookup table' },
     {
@@ -323,10 +329,7 @@ test('visualizes semantic Map updates', async ({ page, isMobile }) => {
         name: `Map View: ${example.map}`,
       }),
     })
-    if (isMobile) {
-      await page.getByTitle('Skip to End').first().click()
-      await page.getByRole('button', { name: 'Map View' }).click()
-    } else if (await mapDialog.isVisible()) {
+    if (await mapDialog.isVisible()) {
       await mapDialog.getByTitle('Skip to End').click()
     } else {
       await page.getByTitle('Skip to End').first().click()
@@ -339,7 +342,6 @@ test('visualizes semantic Map updates', async ({ page, isMobile }) => {
 
 test('shows Top K result growth instead of buckets Matrix View', async ({
   page,
-  isMobile,
 }) => {
   await page.goto('/')
 
@@ -353,23 +355,17 @@ test('shows Top K result growth instead of buckets Matrix View', async ({
   await page.getByRole('button', { name: 'Run', exact: true }).click()
   await expect(page.getByText('All execution steps')).toBeVisible()
 
-  await page.getByTitle('Skip to End').first().click()
-
   await expect(page.getByText('Graph View')).toHaveCount(0)
   await expect(page.getByText('Matrix View')).toHaveCount(0)
-  if (isMobile) {
-    const resultRow = page.getByText('result', { exact: true }).locator('../..')
-    await resultRow.getByTitle('Visualize as stack').click()
-  }
-
-  await expect(
-    page.getByRole('heading', { name: 'Stack Visualization: result' })
-  ).toBeVisible()
+  const stackDialog = page.getByRole('dialog').filter({
+    has: page.getByRole('heading', { name: 'Stack Visualization: result' }),
+  })
+  await page.getByTitle('Skip to End').first().click()
+  await expect(stackDialog).toBeVisible()
 })
 
 test('returns cyclic clone graphs across the worker boundary', async ({
   page,
-  isMobile,
 }) => {
   await page.goto('/')
 
@@ -390,11 +386,25 @@ test('returns cyclic clone graphs across the worker boundary', async ({
     page.getByText('Execution produced a value that cannot leave the worker.')
   ).toHaveCount(0)
 
-  if (isMobile) {
-    await page.getByRole('button', { name: 'Graph View' }).click()
-  }
+  const graphDialog = page.getByRole('dialog').filter({
+    has: page.getByRole('heading', { name: 'Graph: return value' }),
+  })
+  await expect(graphDialog).toBeVisible()
+  await expect(graphDialog).toHaveCSS('opacity', '1')
 
-  await expect(
-    page.getByRole('heading', { name: 'Graph: return value' })
-  ).toBeVisible()
+  const dialogBox = await graphDialog.boundingBox()
+  const graphBox = await graphDialog
+    .getByRole('img', { name: 'return value graph' })
+    .boundingBox()
+
+  expect(dialogBox).not.toBeNull()
+  expect(graphBox).not.toBeNull()
+  expect(graphBox?.x).toBeGreaterThanOrEqual(dialogBox?.x ?? 0)
+  expect(graphBox?.y).toBeGreaterThanOrEqual(dialogBox?.y ?? 0)
+  expect((graphBox?.x ?? 0) + (graphBox?.width ?? 0)).toBeLessThanOrEqual(
+    (dialogBox?.x ?? 0) + (dialogBox?.width ?? 0)
+  )
+  expect((graphBox?.y ?? 0) + (graphBox?.height ?? 0)).toBeLessThanOrEqual(
+    (dialogBox?.y ?? 0) + (dialogBox?.height ?? 0)
+  )
 })

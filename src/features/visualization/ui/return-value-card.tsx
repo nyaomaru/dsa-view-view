@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronLeft, ChevronUp } from 'lucide-react'
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@/shared/ui'
+import { cn } from '@/shared/lib/class-names'
 import { isInlineReturnValue, stringifyValue } from '../lib/value-formatting'
 import type { RefObject } from 'react'
 
@@ -17,6 +18,8 @@ type ReturnValueCardProps = {
   onExpandedChange: (isExpanded: boolean) => void
   /** Moves playback to the previous step when step review is available. */
   onStepBackward?: () => void
+  /** Uses a compact layout on small screens while preserving the desktop card. */
+  compactOnMobile?: boolean
 }
 
 export function ReturnValueCard({
@@ -25,12 +28,18 @@ export function ReturnValueCard({
   returnValueRef,
   onExpandedChange,
   onStepBackward,
+  compactOnMobile = false,
 }: ReturnValueCardProps) {
   const shouldInlineReturnValue = isInlineReturnValue(returnValue)
 
   return (
     <Card ref={returnValueRef} className="border-primary">
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader
+        className={cn(
+          'flex flex-row items-center justify-between',
+          compactOnMobile && 'p-3 sm:p-6'
+        )}
+      >
         <CardTitle className="text-primary">Return Value</CardTitle>
         {!shouldInlineReturnValue && (
           <Button
@@ -48,7 +57,12 @@ export function ReturnValueCard({
           </Button>
         )}
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent
+        className={cn(
+          'space-y-4',
+          compactOnMobile && 'px-3 pb-3 sm:px-6 sm:pb-6'
+        )}
+      >
         <div>
           {shouldInlineReturnValue ? (
             <code className="font-mono text-sm">
@@ -65,7 +79,12 @@ export function ReturnValueCard({
           )}
         </div>
         {onStepBackward && (
-          <div className="flex flex-col gap-3 rounded-md border border-primary/25 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div
+            className={cn(
+              'flex flex-col gap-3 rounded-md border border-primary/25 bg-primary/5 p-3 sm:flex-row sm:items-center sm:justify-between',
+              compactOnMobile && 'hidden sm:flex'
+            )}
+          >
             <div className="space-y-1">
               <p className="text-sm font-medium">
                 Want to see how this result was reached?

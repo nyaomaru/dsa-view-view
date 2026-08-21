@@ -43,7 +43,11 @@ export function PlaybackControls({
   className,
 }: PlaybackControlsProps) {
   return (
-    <div className={cn('flex gap-1', className)}>
+    <div
+      role="group"
+      aria-label="Visualization playback controls"
+      className={cn('flex gap-1', className)}
+    >
       <Button
         variant="outline"
         size="sm"

@@ -219,16 +219,20 @@ export function VisualizationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="top-4 h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] translate-y-0 flex flex-col bg-background sm:top-[50%] sm:h-[min(80vh,calc(100dvh-2rem))] sm:max-w-3xl sm:translate-y-[-50%]">
-        <DialogHeader className="shrink-0">
+      <DialogContent className="left-1 top-2 flex h-[calc(100dvh-1rem)] w-[calc(100vw-0.5rem)] max-w-none translate-x-0 translate-y-0 flex-col gap-0 bg-background p-1 sm:left-[50%] sm:top-[50%] sm:h-[min(80vh,calc(100dvh-2rem))] sm:w-[calc(100vw-2rem)] sm:max-w-3xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:gap-4 sm:p-6">
+        <DialogHeader className="shrink-0 px-4 pb-3 pt-4 pr-14 text-left sm:p-0">
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogDescription className="hidden sm:block">
+            {description}
+          </DialogDescription>
         </DialogHeader>
 
         <div
           className={cn(
-            'py-4 flex-1 min-h-0 overflow-y-auto overscroll-contain',
+            'min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain px-4 py-3 sm:px-0 sm:py-4',
             showsCallFrameInspector && 'lg:overflow-hidden',
+            type === 'graph' &&
+              'flex items-center justify-center overflow-hidden',
             (type === 'matrix' ||
               type === 'expression' ||
               type === 'list-graph' ||
@@ -246,12 +250,13 @@ export function VisualizationModal({
 
         {executionState.isComplete &&
           !isUndefined(executionState.returnValue) && (
-            <div className="shrink-0">
+            <div className="shrink-0 px-4 pb-3 sm:px-0 sm:pb-0">
               <ReturnValueCard
                 returnValue={executionState.returnValue}
                 isExpanded={isReturnValueExpanded}
                 returnValueRef={returnValueRef}
                 onExpandedChange={setIsReturnValueExpanded}
+                compactOnMobile
                 onStepBackward={
                   executionState.totalSteps > 1 ? onStepBackward : undefined
                 }
@@ -268,7 +273,7 @@ export function VisualizationModal({
           onStepForward={onStepForward}
           onStepBackward={onStepBackward}
           onSkipToEnd={onSkipToEnd}
-          className="shrink-0 justify-center gap-2 pt-4 border-t mt-auto"
+          className="mt-auto shrink-0 justify-center gap-2 px-4 py-3 sm:px-0 sm:pb-0 sm:pt-4"
         />
       </DialogContent>
     </Dialog>

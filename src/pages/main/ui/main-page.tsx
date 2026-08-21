@@ -157,7 +157,7 @@ export function MainPage() {
             viewViewAnimationSrc={viewViewAnimation.src}
             onViewViewAnimationLoad={viewViewAnimation.onAnimationLoad}
             showViewViewMonitor={isLargeScreen}
-            autoOpenPrimaryVisualization={isLargeScreen}
+            autoOpenPrimaryVisualization
             onModeChange={setMode}
             onExampleChange={handleExampleChange}
             onCompile={handleCompile}
