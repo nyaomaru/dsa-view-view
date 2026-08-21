@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { isArray, isObject } from '@/shared/lib/guards'
-import { pxToRem } from '@/shared/lib/units'
 import { GRAPH_CONFIG } from '../constants/constants'
 
 /**
@@ -129,8 +128,8 @@ export function GraphVisualizer({
   }
 
   return (
-    <div className="flex flex-col items-center w-full">
-      <div className="mb-4 text-center">
+    <div className="flex h-full min-h-0 min-w-0 w-full flex-col items-center">
+      <div className="mb-4 shrink-0 text-center">
         <h3 className="text-lg font-semibold">{name} (Graph)</h3>
         {nodeStates && (
           <div className="flex gap-4 mt-2 justify-center">
@@ -159,13 +158,12 @@ export function GraphVisualizer({
         )}
       </div>
 
-      <div
-        className="relative border rounded-xl overflow-hidden bg-muted/20"
-        style={{ width: pxToRem(CANVAS_SIZE), height: pxToRem(CANVAS_SIZE) }}
-      >
+      <div className="relative min-h-0 min-w-0 w-full max-w-[31.25rem] flex-1 overflow-hidden rounded-xl border bg-muted/20">
         <svg
           viewBox={`0 0 ${CANVAS_SIZE} ${CANVAS_SIZE}`}
           className="w-full h-full"
+          role="img"
+          aria-label={`${name} graph`}
         >
           <defs>
             <marker

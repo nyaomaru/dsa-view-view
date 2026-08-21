@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vite-plus/test'
 
 import type { ExecutionState } from '@/entities/execution'
@@ -50,13 +50,37 @@ function renderModal(type: VisualizationType) {
 }
 
 describe('VisualizationModal', () => {
+  it('uses the near-full mobile viewport and restores the desktop dialog layout', () => {
+    renderModal('matrix')
+
+    const dialog = screen.getByRole('dialog')
+
+    expect(dialog).toHaveClass(
+      'left-1',
+      'top-2',
+      'h-[calc(100dvh-1rem)]',
+      'w-[calc(100vw-0.5rem)]',
+      'max-w-none',
+      'p-1',
+      'sm:left-[50%]',
+      'sm:top-[50%]',
+      'sm:max-w-3xl'
+    )
+    const playbackControls = screen.getByRole('group', {
+      name: 'Visualization playback controls',
+    })
+
+    expect(playbackControls).toBeInTheDocument()
+    expect(playbackControls).not.toHaveClass('border-t', 'bg-background')
+  })
+
   it('keeps body scrolling for non-tree visualizations with call frames', () => {
     const { container } = renderModal('matrix')
     const scrollContainer = container.ownerDocument.querySelector(
       '[data-tree-scroll-container]'
     )
 
-    expect(scrollContainer).toHaveClass('overflow-y-auto')
+    expect(scrollContainer).toHaveClass('min-h-0', 'min-w-0', 'overflow-auto')
     expect(scrollContainer).not.toHaveClass('lg:overflow-hidden')
   })
 
