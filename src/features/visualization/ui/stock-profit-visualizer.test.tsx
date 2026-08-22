@@ -29,10 +29,10 @@ describe('StockProfitVisualizer', () => {
     expect(screen.getByText('Best profit')).toBeInTheDocument()
     expect(screen.getByText('maxProfit')).toBeInTheDocument()
     expect(screen.getByText('min')).toBeInTheDocument()
-    expect(screen.getByLabelText('Day 4: price 6, current')).toHaveAttribute(
-      'aria-current',
-      'step'
-    )
+    expect(
+      screen.getByLabelText('Day 4: price 6, current and sell')
+    ).toHaveAttribute('aria-current', 'step')
+    expect(screen.getByText('current · sell')).toBeInTheDocument()
     expect(
       screen.getByLabelText('Day 1: price 1, buy').querySelector('div')
     ).toHaveClass('border-primary/40', 'bg-primary/10')
@@ -99,6 +99,10 @@ describe('StockProfitVisualizer', () => {
     expect(screen.getByText('Total profit')).toBeInTheDocument()
     expect(screen.getByText('diff')).toBeInTheDocument()
     expect(screen.getByLabelText('Day 3: price 3, buy')).toBeInTheDocument()
+    expect(
+      screen.getByLabelText('Day 4: price 6, current and sell')
+    ).toHaveAttribute('aria-current', 'step')
+    expect(screen.getByText('current · sell')).toBeInTheDocument()
     expect(screen.getByText('3 > 0 → add the gain')).toBeInTheDocument()
   })
 
@@ -145,5 +149,6 @@ describe('StockProfitVisualizer', () => {
       )
     ).toBeInTheDocument()
     expect(screen.queryByText('buy')).not.toBeInTheDocument()
+    expect(screen.queryByText('current · sell')).not.toBeInTheDocument()
   })
 })

@@ -3,9 +3,21 @@ import { Card } from '@/shared/ui'
 import { oneOfValues } from '@/shared/lib/guards'
 import type { StockProfitVisualizationState } from '../lib/stock-profit-view'
 
-type PriceStatus = 'current' | 'buy' | 'sell' | 'processed' | 'pending'
+type PriceStatus =
+  | 'current'
+  | 'current-sell'
+  | 'buy'
+  | 'sell'
+  | 'processed'
+  | 'pending'
 
-const isLabeledPriceStatus = oneOfValues('current', 'buy', 'sell')
+const isCurrentPriceStatus = oneOfValues('current', 'current-sell')
+const isLabeledPriceStatus = oneOfValues(
+  'current',
+  'current-sell',
+  'buy',
+  'sell'
+)
 
 type StockProfitVisualizerProps = {
   /** Source-array variable name. */
@@ -70,16 +82,29 @@ function getPriceStatus({
 }): PriceStatus {
   const showsTradeMarker = hasExecutedTrade(state)
 
-  if (index === state.currentIndex) return 'current'
+  if (index === state.currentIndex) {
+    return showsTradeMarker && index === state.sellIndex
+      ? 'current-sell'
+      : 'current'
+  }
   if (showsTradeMarker && index === state.buyIndex) return 'buy'
   if (showsTradeMarker && index === state.sellIndex) return 'sell'
   if (index < state.currentIndex) return 'processed'
   return 'pending'
 }
 
+function getPriceStatusLabel(status: PriceStatus): string {
+  return status === 'current-sell' ? 'current · sell' : status
+}
+
+function getAccessiblePriceStatus(status: PriceStatus): string {
+  return status === 'current-sell' ? 'current and sell' : status
+}
+
 function getPriceClass(status: PriceStatus): string {
   switch (status) {
     case 'current':
+    case 'current-sell':
       return 'border-primary bg-primary text-primary-foreground shadow-sm'
     case 'buy':
       return 'border-primary/40 bg-primary/10 text-foreground'
@@ -155,8 +180,10 @@ export function StockProfitVisualizer({
               return (
                 <li
                   key={index}
-                  aria-current={status === 'current' ? 'step' : undefined}
-                  aria-label={`Day ${index}: price ${price}, ${status}`}
+                  aria-current={
+                    isCurrentPriceStatus(status) ? 'step' : undefined
+                  }
+                  aria-label={`Day ${index}: price ${price}, ${getAccessiblePriceStatus(status)}`}
                   className="relative flex flex-col items-center gap-1"
                 >
                   {isLabeledPriceStatus(status) && (
@@ -168,7 +195,7 @@ export function StockProfitVisualizer({
                           : 'text-primary',
                       ].join(' ')}
                     >
-                      {status}
+                      {getPriceStatusLabel(status)}
                     </span>
                   )}
                   <div
