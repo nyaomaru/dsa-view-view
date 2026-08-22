@@ -132,6 +132,44 @@ function maxProfit(prices: number[]): number {
     })
   })
 
+  it('ties matching adjacent deltas to the price array read by the loop', () => {
+    const shiftedPrices = input.prices.map((price) => price + 10)
+    const state = executeCode(
+      `
+function maxProfit(
+  shiftedPrices: number[],
+  prices: number[]
+): number {
+  const n = prices.length
+  let profit = 0
+
+  for (let i = 1; i < n; i++) {
+    const diff = prices[i] - prices[i - 1]
+    if (diff > 0) profit += diff
+  }
+
+  return profit
+}
+`,
+      { shiftedPrices, prices: input.prices },
+      'maxProfit'
+    )
+    const candidate = getStockProfitTraceCandidate(state)
+    const view = getStockProfitVisualizationState({
+      executionState: state,
+      variableName: 'prices',
+    })
+
+    expect(candidate).toMatchObject({
+      name: 'prices',
+      mode: 'multiple-transactions',
+    })
+    expect(view?.data).toEqual(input.prices)
+    expect(detectVisualizationState(state).primaryStockProfitArrayName).toBe(
+      'prices'
+    )
+  })
+
   it('does not classify unrelated price summaries as stock-profit traces', () => {
     const state = executeCode(
       `

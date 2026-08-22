@@ -239,6 +239,45 @@ function getMultipleTransactionExpectedProgress(
   })
 }
 
+function escapeRegExp(value: string): string {
+  return value.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function hasSourceDifferenceEvidence({
+  steps,
+  sourceName,
+  indexName,
+  differenceName,
+}: {
+  steps: ExecutionState['steps']
+  sourceName: string
+  indexName: string
+  differenceName: string
+}): boolean {
+  const escapedSourceName = escapeRegExp(sourceName)
+  const escapedIndexName = escapeRegExp(indexName)
+  const escapedDifferenceName = escapeRegExp(differenceName)
+  const differenceAssignment = new RegExp(
+    `^(?:(?:const|let|var))?${escapedDifferenceName}=`
+  )
+  const currentPriceAccess = new RegExp(
+    `(?:^|[^a-zA-Z0-9_$])${escapedSourceName}\\[${escapedIndexName}\\]`
+  )
+  const previousPriceAccess = new RegExp(
+    `(?:^|[^a-zA-Z0-9_$])${escapedSourceName}\\[${escapedIndexName}-1\\]`
+  )
+
+  return steps.some((step) => {
+    const description = step.description.replaceAll(/\s/g, '')
+
+    return (
+      differenceAssignment.test(description) &&
+      currentPriceAccess.test(description) &&
+      previousPriceAccess.test(description)
+    )
+  })
+}
+
 function findMultipleTransactionCandidate(
   steps: ExecutionState['steps'],
   source: { name: string; data: number[] },
@@ -266,6 +305,16 @@ function findMultipleTransactionCandidate(
   for (const indexName of indexNames) {
     for (const differenceName of differenceNames) {
       if (differenceName === indexName) continue
+      if (
+        !hasSourceDifferenceEvidence({
+          steps,
+          sourceName: source.name,
+          indexName,
+          differenceName,
+        })
+      ) {
+        continue
+      }
 
       for (const profitName of profitNames) {
         if (profitName === indexName || profitName === differenceName) continue
