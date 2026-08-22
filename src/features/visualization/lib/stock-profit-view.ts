@@ -18,6 +18,9 @@ type StockProfitProgress = {
   difference?: number
 }
 
+type ExpectedStockProfitProgress = Omit<StockProfitProgress, 'stepIndex'>
+type NameTriple = readonly [string, string, string]
+
 /** Variable mapping inferred from a stock-profit execution trace. */
 export type StockProfitTraceCandidate = {
   /** Numeric price-array variable. */
@@ -114,7 +117,7 @@ function getNumericVariableNames(steps: ExecutionState['steps']): string[] {
 
 function getSingleTransactionExpectedProgress(
   data: number[]
-): Array<Omit<StockProfitProgress, 'stepIndex'>> {
+): ExpectedStockProfitProgress[] {
   let minimumPrice = Infinity
   let minimumIndex = 0
   let profit = 0
@@ -145,6 +148,45 @@ function getSingleTransactionExpectedProgress(
   })
 }
 
+function getDistinctNameTriples(
+  firstNames: string[],
+  secondNames: string[],
+  thirdNames: string[]
+): NameTriple[] {
+  const namePairs = firstNames.flatMap((firstName) =>
+    secondNames.map((secondName) => [firstName, secondName] as const)
+  )
+
+  return namePairs
+    .flatMap(([firstName, secondName]) =>
+      thirdNames.map((thirdName) => [firstName, secondName, thirdName] as const)
+    )
+    .filter((names) => new Set(names).size === names.length)
+}
+
+function matchExpectedProgress(
+  expectedProgress: ExpectedStockProfitProgress[],
+  findStepIndex: (
+    expected: ExpectedStockProfitProgress,
+    progressIndex: number,
+    previousStepIndex: number
+  ) => number
+): StockProfitProgress[] | undefined {
+  const progress: StockProfitProgress[] = []
+  let previousStepIndex = -1
+
+  for (let index = 0; index < expectedProgress.length; index += 1) {
+    const expected = expectedProgress[index]
+    const stepIndex = findStepIndex(expected, index, previousStepIndex)
+    if (stepIndex < 0) return undefined
+
+    progress.push({ ...expected, stepIndex })
+    previousStepIndex = stepIndex
+  }
+
+  return progress
+}
+
 function findSingleTransactionCandidate(
   steps: ExecutionState['steps'],
   source: { name: string; data: number[] },
@@ -170,48 +212,42 @@ function findSingleTransactionCandidate(
     normalizedNameIncludes(name, profitNameHints)
   )
   const expectedProgress = getSingleTransactionExpectedProgress(source.data)
+  const variableMappings = getDistinctNameTriples(
+    priceNames,
+    minimumNames,
+    profitNames
+  )
 
-  for (const priceName of priceNames) {
-    for (const minimumName of minimumNames) {
-      if (minimumName === priceName) continue
+  for (const [priceName, minimumName, profitName] of variableMappings) {
+    const progress = matchExpectedProgress(
+      expectedProgress,
+      (expected, index) => {
+        const start = loopEntries[index].stepIndex
+        const end = loopEntries[index + 1]?.stepIndex ?? steps.length
 
-      for (const profitName of profitNames) {
-        if (profitName === priceName || profitName === minimumName) continue
-
-        const progress: StockProfitProgress[] = []
-
-        for (let index = 0; index < loopEntries.length; index += 1) {
-          const start = loopEntries[index].stepIndex
-          const end = loopEntries[index + 1]?.stepIndex ?? steps.length
-          const expected = expectedProgress[index]
-          const completedStepIndex = steps.findIndex(
-            (step, stepIndex) =>
-              stepIndex >= start &&
-              stepIndex < end &&
-              step.variables[priceName] === expected.currentPrice &&
-              step.variables[minimumName] === expected.minimumPrice &&
-              step.variables[profitName] === expected.profit
-          )
-
-          if (completedStepIndex < 0) break
-          progress.push({ ...expected, stepIndex: completedStepIndex })
-        }
-
-        if (progress.length !== source.data.length) continue
-
-        return {
-          candidate: {
-            name: source.name,
-            stepIndex: progress[0].stepIndex,
-            mode: 'single-transaction',
-            profitName,
-            priceName,
-            minimumName,
-          },
-          data: source.data,
-          progress,
-        }
+        return steps.findIndex(
+          (step, stepIndex) =>
+            stepIndex >= start &&
+            stepIndex < end &&
+            step.variables[priceName] === expected.currentPrice &&
+            step.variables[minimumName] === expected.minimumPrice &&
+            step.variables[profitName] === expected.profit
+        )
       }
+    )
+    if (!progress) continue
+
+    return {
+      candidate: {
+        name: source.name,
+        stepIndex: progress[0].stepIndex,
+        mode: 'single-transaction',
+        profitName,
+        priceName,
+        minimumName,
+      },
+      data: source.data,
+      progress,
     }
   }
 
@@ -220,7 +256,7 @@ function findSingleTransactionCandidate(
 
 function getMultipleTransactionExpectedProgress(
   data: number[]
-): Array<Omit<StockProfitProgress, 'stepIndex'>> {
+): ExpectedStockProfitProgress[] {
   let profit = 0
 
   return data.slice(1).map((currentPrice, offset) => {
@@ -301,56 +337,44 @@ function findMultipleTransactionCandidate(
     normalizedNameIncludes(name, profitNameHints)
   )
   const expectedProgress = getMultipleTransactionExpectedProgress(source.data)
+  const variableMappings = getDistinctNameTriples(
+    indexNames,
+    differenceNames,
+    profitNames
+  ).filter(([indexName, differenceName]) =>
+    hasSourceDifferenceEvidence({
+      steps,
+      sourceName: source.name,
+      indexName,
+      differenceName,
+    })
+  )
 
-  for (const indexName of indexNames) {
-    for (const differenceName of differenceNames) {
-      if (differenceName === indexName) continue
-      if (
-        !hasSourceDifferenceEvidence({
-          steps,
-          sourceName: source.name,
-          indexName,
-          differenceName,
-        })
-      ) {
-        continue
-      }
+  for (const [indexName, differenceName, profitName] of variableMappings) {
+    const progress = matchExpectedProgress(
+      expectedProgress,
+      (expected, _index, previousStepIndex) =>
+        steps.findIndex(
+          (step, stepIndex) =>
+            stepIndex > previousStepIndex &&
+            step.variables[indexName] === expected.currentIndex &&
+            step.variables[differenceName] === expected.difference &&
+            step.variables[profitName] === expected.profit
+        )
+    )
+    if (!progress) continue
 
-      for (const profitName of profitNames) {
-        if (profitName === indexName || profitName === differenceName) continue
-
-        const progress: StockProfitProgress[] = []
-        let previousStepIndex = -1
-
-        for (const expected of expectedProgress) {
-          const completedStepIndex = steps.findIndex(
-            (step, stepIndex) =>
-              stepIndex > previousStepIndex &&
-              step.variables[indexName] === expected.currentIndex &&
-              step.variables[differenceName] === expected.difference &&
-              step.variables[profitName] === expected.profit
-          )
-
-          if (completedStepIndex < 0) break
-          progress.push({ ...expected, stepIndex: completedStepIndex })
-          previousStepIndex = completedStepIndex
-        }
-
-        if (progress.length !== expectedProgress.length) continue
-
-        return {
-          candidate: {
-            name: source.name,
-            stepIndex: progress[0].stepIndex,
-            mode: 'multiple-transactions',
-            profitName,
-            indexName,
-            differenceName,
-          },
-          data: source.data,
-          progress,
-        }
-      }
+    return {
+      candidate: {
+        name: source.name,
+        stepIndex: progress[0].stepIndex,
+        mode: 'multiple-transactions',
+        profitName,
+        indexName,
+        differenceName,
+      },
+      data: source.data,
+      progress,
     }
   }
 
