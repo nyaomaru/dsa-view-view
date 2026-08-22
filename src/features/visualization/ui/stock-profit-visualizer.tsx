@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react'
 import { Card } from '@/shared/ui'
+import { oneOfValues } from '@/shared/lib/guards'
 import type { StockProfitVisualizationState } from '../lib/stock-profit-view'
+
+type PriceStatus = 'current' | 'buy' | 'sell' | 'processed' | 'pending'
+
+const isLabeledPriceStatus = oneOfValues('current', 'buy', 'sell')
 
 type StockProfitVisualizerProps = {
   /** Source-array variable name. */
@@ -46,7 +51,7 @@ function getPriceStatus({
 }: {
   index: number
   state: StockProfitVisualizationState
-}): string {
+}): PriceStatus {
   if (index === state.currentIndex) return 'current'
   if (index === state.buyIndex) return 'buy'
   if (index === state.sellIndex && state.profit > 0) return 'sell'
@@ -54,7 +59,7 @@ function getPriceStatus({
   return 'pending'
 }
 
-function getPriceClass(status: string): string {
+function getPriceClass(status: PriceStatus): string {
   switch (status) {
     case 'current':
       return 'border-primary bg-primary text-primary-foreground shadow-sm'
@@ -136,9 +141,7 @@ export function StockProfitVisualizer({
                   aria-label={`Day ${index}: price ${price}, ${status}`}
                   className="relative flex flex-col items-center gap-1"
                 >
-                  {(status === 'current' ||
-                    status === 'buy' ||
-                    status === 'sell') && (
+                  {isLabeledPriceStatus(status) && (
                     <span
                       className={[
                         'absolute -top-6 font-mono text-xs font-semibold',
