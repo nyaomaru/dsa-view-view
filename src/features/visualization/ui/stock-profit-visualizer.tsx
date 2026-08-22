@@ -45,6 +45,12 @@ function Metric({
   )
 }
 
+function hasExecutedTrade(state: StockProfitVisualizationState): boolean {
+  return state.mode === 'single-transaction'
+    ? state.profit > 0
+    : (state.difference ?? 0) > 0
+}
+
 function getPriceStatus({
   index,
   state,
@@ -52,9 +58,11 @@ function getPriceStatus({
   index: number
   state: StockProfitVisualizationState
 }): PriceStatus {
+  const showsTradeMarker = hasExecutedTrade(state)
+
   if (index === state.currentIndex) return 'current'
-  if (index === state.buyIndex) return 'buy'
-  if (index === state.sellIndex && state.profit > 0) return 'sell'
+  if (showsTradeMarker && index === state.buyIndex) return 'buy'
+  if (showsTradeMarker && index === state.sellIndex) return 'sell'
   if (index < state.currentIndex) return 'processed'
   return 'pending'
 }

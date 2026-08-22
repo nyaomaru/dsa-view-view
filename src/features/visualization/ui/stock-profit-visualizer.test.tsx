@@ -66,6 +66,52 @@ describe('StockProfitVisualizer', () => {
     expect(screen.getByText('Daily change')).toBeInTheDocument()
     expect(screen.getByText('Total profit')).toBeInTheDocument()
     expect(screen.getByText('diff')).toBeInTheDocument()
+    expect(screen.getByLabelText('Day 3: price 3, buy')).toBeInTheDocument()
     expect(screen.getByText('3 > 0 → add the gain')).toBeInTheDocument()
+  })
+
+  it.each([
+    {
+      label: 'flat',
+      data: [5, 5],
+      currentIndex: 1,
+      currentPrice: 5,
+      profit: 0,
+      difference: 0,
+    },
+    {
+      label: 'falling after an earlier gain',
+      data: [1, 5, 3],
+      currentIndex: 2,
+      currentPrice: 3,
+      profit: 4,
+      difference: -2,
+    },
+  ])('does not label a skipped $label pair as a buy', (state) => {
+    const buyIndex = state.currentIndex - 1
+
+    render(
+      <StockProfitVisualizer
+        name="prices"
+        state={{
+          ...state,
+          mode: 'multiple-transactions',
+          buyIndex,
+          sellIndex: state.currentIndex,
+          variableNames: {
+            profitName: 'profit',
+            indexName: 'i',
+            differenceName: 'diff',
+          },
+        }}
+      />
+    )
+
+    expect(
+      screen.getByLabelText(
+        `Day ${buyIndex}: price ${state.data[buyIndex]}, processed`
+      )
+    ).toBeInTheDocument()
+    expect(screen.queryByText('buy')).not.toBeInTheDocument()
   })
 })
