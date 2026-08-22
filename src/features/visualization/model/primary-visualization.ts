@@ -54,6 +54,14 @@ export function getPrimaryVisualization(
     }
   }
 
+  if (detection.primaryStockProfitArrayName) {
+    return {
+      type: 'stock-profit',
+      targetVariable: detection.primaryStockProfitArrayName,
+      targetStepIndex: detection.primaryStockProfitStepIndex,
+    }
+  }
+
   if (detection.primaryBinarySearchArrayName) {
     return {
       type: 'binary-search',

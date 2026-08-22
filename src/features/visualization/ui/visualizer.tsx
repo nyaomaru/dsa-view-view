@@ -78,6 +78,8 @@ export function Visualizer({
     primaryAreaStepIndex,
     primaryMaxSubarrayArrayName,
     primaryMaxSubarrayStepIndex,
+    primaryStockProfitArrayName,
+    primaryStockProfitStepIndex,
     primaryBinarySearchArrayName,
     primaryBinarySearchStepIndex,
     primarySlidingWindowStringName,
@@ -248,6 +250,8 @@ export function Visualizer({
         primaryAreaStepIndex={primaryAreaStepIndex}
         primaryMaxSubarrayArrayName={primaryMaxSubarrayArrayName}
         primaryMaxSubarrayStepIndex={primaryMaxSubarrayStepIndex}
+        primaryStockProfitArrayName={primaryStockProfitArrayName}
+        primaryStockProfitStepIndex={primaryStockProfitStepIndex}
         primaryBinarySearchArrayName={primaryBinarySearchArrayName}
         primaryBinarySearchStepIndex={primaryBinarySearchStepIndex}
         primarySlidingWindowStringName={primarySlidingWindowStringName}

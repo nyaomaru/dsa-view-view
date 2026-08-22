@@ -7,6 +7,7 @@ import {
 import { isSlidingWindowCandidate } from '../../lib/sliding-window-view'
 import { isRollingDpCandidate } from '../../lib/rolling-dp-view'
 import { getMaxSubarrayTraceCandidate } from '../../lib/max-subarray-view'
+import { getStockProfitTraceCandidate } from '../../lib/stock-profit-view'
 import { getExecutionStepSearchOrder } from '../../lib/execution-step-search'
 import {
   findIndexedVariableCandidate,
@@ -34,6 +35,16 @@ export function getPrimaryMaxSubarrayCandidate(
   executionState: ExecutionState
 ): IndexedVariableCandidate | undefined {
   const candidate = getMaxSubarrayTraceCandidate(executionState)
+
+  return candidate
+    ? { name: candidate.name, stepIndex: candidate.stepIndex }
+    : undefined
+}
+
+export function getPrimaryStockProfitCandidate(
+  executionState: ExecutionState
+): IndexedVariableCandidate | undefined {
+  const candidate = getStockProfitTraceCandidate(executionState)
 
   return candidate
     ? { name: candidate.name, stepIndex: candidate.stepIndex }

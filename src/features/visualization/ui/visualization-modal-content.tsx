@@ -21,6 +21,7 @@ import {
 } from '../lib/binary-search-view'
 import { getAreaVisualizationState } from '../lib/area-view'
 import { getMaxSubarrayVisualizationState } from '../lib/max-subarray-view'
+import { getStockProfitVisualizationState } from '../lib/stock-profit-view'
 import { getSlidingWindowVisualizationState } from '../lib/sliding-window-view'
 import { getRollingDpState, isRollingDpCandidate } from '../lib/rolling-dp-view'
 import { getGraphNodeAdjacencyRecord } from '../lib/graph-view'
@@ -36,6 +37,7 @@ import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
 import { BarChartVisualizer } from './bar-chart-visualizer'
 import { AreaVisualizer } from './area-visualizer'
 import { MaxSubarrayVisualizer } from './max-subarray-visualizer'
+import { StockProfitVisualizer } from './stock-profit-visualizer'
 import { BinarySearchVisualizer } from './binary-search-visualizer'
 import { SlidingWindowVisualizer } from './sliding-window-visualizer'
 import { DpVisualizer } from './dp-visualizer'
@@ -297,6 +299,22 @@ export function VisualizationModalContent({
         />
       ) : (
         <div>Maximum-subarray state is not available.</div>
+      )
+    }
+
+    case 'stock-profit': {
+      const visualizationState = getStockProfitVisualizationState({
+        executionState,
+        variableName: targetVariable,
+      })
+
+      return visualizationState ? (
+        <StockProfitVisualizer
+          name={targetVariable}
+          state={visualizationState}
+        />
+      ) : (
+        <div>Stock-profit state is not available.</div>
       )
     }
 

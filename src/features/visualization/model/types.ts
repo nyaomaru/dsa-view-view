@@ -9,6 +9,7 @@ export type VisualizationType =
   | 'map'
   | 'area'
   | 'max-subarray'
+  | 'stock-profit'
   | 'binary-search'
   | 'sliding-window'
   | 'bar-chart'
