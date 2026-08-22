@@ -41,6 +41,38 @@ describe('StockProfitVisualizer', () => {
     ).toBeInTheDocument()
   })
 
+  it.each([
+    { label: 'flat', data: [5, 5], currentPrice: 5, minimumPrice: 5 },
+    { label: 'decreasing', data: [5, 3], currentPrice: 3, minimumPrice: 3 },
+  ])('reports no trade for $label single-transaction prices', (state) => {
+    render(
+      <StockProfitVisualizer
+        name="prices"
+        state={{
+          data: state.data,
+          mode: 'single-transaction',
+          currentIndex: 1,
+          currentPrice: state.currentPrice,
+          profit: 0,
+          buyIndex: 0,
+          sellIndex: 0,
+          minimumPrice: state.minimumPrice,
+          variableNames: {
+            profitName: 'maxProfit',
+            priceName: 'price',
+            minimumName: 'min',
+          },
+        }}
+      />
+    )
+
+    expect(screen.getByText('no profitable trade')).toBeInTheDocument()
+    expect(screen.queryByText(/buy day/)).not.toBeInTheDocument()
+    expect(
+      screen.getByLabelText(`Day 0: price ${state.data[0]}, processed`)
+    ).toBeInTheDocument()
+  })
+
   it('shows adjacent change and total profit for repeated transactions', () => {
     render(
       <StockProfitVisualizer

@@ -51,6 +51,16 @@ function hasExecutedTrade(state: StockProfitVisualizationState): boolean {
     : (state.difference ?? 0) > 0
 }
 
+function getStrategySummary(state: StockProfitVisualizationState): string {
+  if (state.mode === 'single-transaction') {
+    return hasExecutedTrade(state)
+      ? `buy day ${state.buyIndex} · sell day ${state.sellIndex} · profit ${state.profit}`
+      : 'no profitable trade'
+  }
+
+  return `${state.difference} > 0${hasExecutedTrade(state) ? ' → add the gain' : ' → skip the loss'}`
+}
+
 function getPriceStatus({
   index,
   state,
@@ -179,9 +189,7 @@ export function StockProfitVisualizer({
         </div>
 
         <div className="rounded-md bg-muted/40 px-3 py-2 font-mono text-xs text-muted-foreground">
-          {isSingleTransaction
-            ? `buy day ${state.buyIndex} · sell day ${state.sellIndex} · profit ${state.profit}`
-            : `${state.difference} > 0${(state.difference ?? 0) > 0 ? ' → add the gain' : ' → skip the loss'}`}
+          {getStrategySummary(state)}
         </div>
       </div>
     </Card>
