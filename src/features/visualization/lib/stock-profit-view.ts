@@ -5,8 +5,6 @@ import {
   isNumber,
 } from '@/shared/lib/guards'
 
-type StockProfitMode = 'single-transaction' | 'multiple-transactions'
-
 type StockProfitProgress = {
   stepIndex: number
   currentIndex: number
@@ -21,32 +19,41 @@ type StockProfitProgress = {
 type ExpectedStockProfitProgress = Omit<StockProfitProgress, 'stepIndex'>
 type NameTriple = readonly [string, string, string]
 
-/** Variable mapping inferred from a stock-profit execution trace. */
-export type StockProfitTraceCandidate = {
+type StockProfitTraceCandidateBase = {
   /** Numeric price-array variable. */
   name: string
   /** First step containing a completed price update. */
   stepIndex: number
-  /** Stock-profit strategy represented by the trace. */
-  mode: StockProfitMode
   /** Variable holding accumulated or best profit. */
   profitName: string
-  /** Loop index variable for adjacent-difference strategies. */
-  indexName?: string
-  /** Current price variable for for-of strategies. */
-  priceName?: string
-  /** Running minimum-price variable for one-transaction strategies. */
-  minimumName?: string
-  /** Adjacent price-difference variable for multi-transaction strategies. */
-  differenceName?: string
 }
 
-/** Values displayed by the stock-profit visualization. */
-export type StockProfitVisualizationState = {
+type SingleTransactionTraceCandidate = StockProfitTraceCandidateBase & {
+  /** Single buy-and-sell strategy. */
+  mode: 'single-transaction'
+  /** Current price variable for for-of strategies. */
+  priceName: string
+  /** Running minimum-price variable. */
+  minimumName: string
+}
+
+type MultipleTransactionTraceCandidate = StockProfitTraceCandidateBase & {
+  /** Repeated adjacent-gain strategy. */
+  mode: 'multiple-transactions'
+  /** Loop index variable. */
+  indexName: string
+  /** Adjacent price-difference variable. */
+  differenceName: string
+}
+
+/** Variable mapping inferred from a stock-profit execution trace. */
+export type StockProfitTraceCandidate =
+  | SingleTransactionTraceCandidate
+  | MultipleTransactionTraceCandidate
+
+type StockProfitVisualizationStateBase = {
   /** Numeric source prices. */
   data: number[]
-  /** Stock-profit strategy represented by the trace. */
-  mode: StockProfitMode
   /** Current price-array index. */
   currentIndex: number
   /** Price at the current index. */
@@ -57,13 +64,32 @@ export type StockProfitVisualizationState = {
   buyIndex: number
   /** Sell index for the current best transaction or adjacent trade. */
   sellIndex: number
-  /** Running minimum price for one-transaction strategies. */
-  minimumPrice?: number
-  /** Current adjacent difference for multi-transaction strategies. */
-  difference?: number
-  /** Runtime variable names shown alongside semantic labels. */
-  variableNames: Omit<StockProfitTraceCandidate, 'name' | 'stepIndex' | 'mode'>
 }
+
+/** Values displayed by the stock-profit visualization. */
+export type StockProfitVisualizationState =
+  | (StockProfitVisualizationStateBase & {
+      /** Single buy-and-sell strategy. */
+      mode: 'single-transaction'
+      /** Running minimum price. */
+      minimumPrice: number
+      /** Runtime variable names shown alongside semantic labels. */
+      variableNames: Pick<
+        SingleTransactionTraceCandidate,
+        'profitName' | 'priceName' | 'minimumName'
+      >
+    })
+  | (StockProfitVisualizationStateBase & {
+      /** Repeated adjacent-gain strategy. */
+      mode: 'multiple-transactions'
+      /** Current adjacent price difference. */
+      difference: number
+      /** Runtime variable names shown alongside semantic labels. */
+      variableNames: Pick<
+        MultipleTransactionTraceCandidate,
+        'profitName' | 'indexName' | 'differenceName'
+      >
+    })
 
 type IndexedStockProfitCandidate = {
   candidate: StockProfitTraceCandidate
@@ -445,21 +471,39 @@ export function getStockProfitVisualizationState({
   if (!progress) return undefined
 
   const { candidate } = analysis
-  return {
+  const visualizationState = {
     data: analysis.data,
-    mode: candidate.mode,
     currentIndex: progress.currentIndex,
     currentPrice: progress.currentPrice,
     profit: progress.profit,
     buyIndex: progress.buyIndex,
     sellIndex: progress.sellIndex,
-    minimumPrice: progress.minimumPrice,
+  }
+
+  if (candidate.mode === 'single-transaction') {
+    if (!isNumber(progress.minimumPrice)) return undefined
+
+    return {
+      ...visualizationState,
+      mode: candidate.mode,
+      minimumPrice: progress.minimumPrice,
+      variableNames: {
+        profitName: candidate.profitName,
+        priceName: candidate.priceName,
+        minimumName: candidate.minimumName,
+      },
+    }
+  }
+
+  if (!isNumber(progress.difference)) return undefined
+
+  return {
+    ...visualizationState,
+    mode: candidate.mode,
     difference: progress.difference,
     variableNames: {
       profitName: candidate.profitName,
       indexName: candidate.indexName,
-      priceName: candidate.priceName,
-      minimumName: candidate.minimumName,
       differenceName: candidate.differenceName,
     },
   }
