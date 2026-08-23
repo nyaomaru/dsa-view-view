@@ -26,6 +26,15 @@ type StockProfitVisualizerProps = {
   state: StockProfitVisualizationState
 }
 
+type PriceProgressItemProps = {
+  /** Price value shown for this day. */
+  price: number
+  /** Zero-based day index. */
+  index: number
+  /** Strategy state used to derive the day's status. */
+  state: StockProfitVisualizationState
+}
+
 function Metric({
   label,
   variableName,
@@ -60,7 +69,7 @@ function Metric({
 function hasExecutedTrade(state: StockProfitVisualizationState): boolean {
   return state.mode === 'single-transaction'
     ? state.profit > 0
-    : (state.difference ?? 0) > 0
+    : state.difference > 0
 }
 
 function getStrategySummary(state: StockProfitVisualizationState): string {
@@ -117,12 +126,46 @@ function getPriceClass(status: PriceStatus): string {
   }
 }
 
+function PriceProgressItem({ price, index, state }: PriceProgressItemProps) {
+  const status = getPriceStatus({ index, state })
+
+  return (
+    <li
+      aria-current={isCurrentPriceStatus(status) ? 'step' : undefined}
+      aria-label={`Day ${index}: price ${price}, ${getAccessiblePriceStatus(status)}`}
+      className="relative flex flex-col items-center gap-1"
+    >
+      {isLabeledPriceStatus(status) && (
+        <span
+          className={[
+            'absolute -top-6 font-mono text-xs font-semibold',
+            status === 'sell' ? 'text-secondary-foreground' : 'text-primary',
+          ].join(' ')}
+        >
+          {getPriceStatusLabel(status)}
+        </span>
+      )}
+      <div
+        className={[
+          'flex h-14 w-14 items-center justify-center rounded-md border-2 font-mono text-base transition-colors',
+          getPriceClass(status),
+        ].join(' ')}
+      >
+        {price}
+      </div>
+      <span className="font-mono text-xs text-muted-foreground">{index}</span>
+    </li>
+  )
+}
+
 export function StockProfitVisualizer({
   name,
   state,
 }: StockProfitVisualizerProps) {
   const isSingleTransaction = state.mode === 'single-transaction'
-  const indexVariable = state.variableNames.indexName ?? 'day'
+  const indexVariable = isSingleTransaction
+    ? 'day'
+    : state.variableNames.indexName
 
   return (
     <Card className="w-full border-0 shadow-none">
@@ -140,7 +183,9 @@ export function StockProfitVisualizer({
           <Metric
             label="Current price"
             variableName={
-              state.variableNames.priceName ?? `${name}[${indexVariable}]`
+              isSingleTransaction
+                ? state.variableNames.priceName
+                : `${name}[${indexVariable}]`
             }
           >
             {state.currentPrice}
@@ -148,14 +193,14 @@ export function StockProfitVisualizer({
           {isSingleTransaction ? (
             <Metric
               label="Lowest price"
-              variableName={state.variableNames.minimumName ?? 'minimum'}
+              variableName={state.variableNames.minimumName}
             >
               {state.minimumPrice}
             </Metric>
           ) : (
             <Metric
               label="Daily change"
-              variableName={state.variableNames.differenceName ?? 'difference'}
+              variableName={state.variableNames.differenceName}
             >
               {state.difference}
             </Metric>
@@ -174,44 +219,14 @@ export function StockProfitVisualizer({
             aria-label={`${name} stock profit progress`}
             className="flex min-w-max gap-2 pt-6"
           >
-            {state.data.map((price, index) => {
-              const status = getPriceStatus({ index, state })
-
-              return (
-                <li
-                  key={index}
-                  aria-current={
-                    isCurrentPriceStatus(status) ? 'step' : undefined
-                  }
-                  aria-label={`Day ${index}: price ${price}, ${getAccessiblePriceStatus(status)}`}
-                  className="relative flex flex-col items-center gap-1"
-                >
-                  {isLabeledPriceStatus(status) && (
-                    <span
-                      className={[
-                        'absolute -top-6 font-mono text-xs font-semibold',
-                        status === 'sell'
-                          ? 'text-secondary-foreground'
-                          : 'text-primary',
-                      ].join(' ')}
-                    >
-                      {getPriceStatusLabel(status)}
-                    </span>
-                  )}
-                  <div
-                    className={[
-                      'flex h-14 w-14 items-center justify-center rounded-md border-2 font-mono text-base transition-colors',
-                      getPriceClass(status),
-                    ].join(' ')}
-                  >
-                    {price}
-                  </div>
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {index}
-                  </span>
-                </li>
-              )
-            })}
+            {state.data.map((price, index) => (
+              <PriceProgressItem
+                key={index}
+                price={price}
+                index={index}
+                state={state}
+              />
+            ))}
           </ol>
         </div>
 
