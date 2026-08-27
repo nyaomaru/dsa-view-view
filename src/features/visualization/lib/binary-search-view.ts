@@ -14,7 +14,7 @@ const isResultVariableName = equals('result')
 export type BinarySearchIndexState = {
   /** Inclusive left boundary. */
   left: number
-  /** Inclusive right boundary. */
+  /** Current right boundary. */
   right: number
   /** Optional current midpoint. */
   mid?: number
@@ -76,16 +76,31 @@ function isIndexStateWithinArray(
   return isInclusiveRangeOrTerminalCrossing && isMidWithinArray
 }
 
-/** Detects whether a trace uses an inclusive or exclusive right boundary. */
+/** Detects the right-boundary convention used by the active binary search. */
 export function getBinarySearchRangeMode(
   executionState: ExecutionState,
-  variableName: string
+  variableName: string,
+  activeStepIndex: number
 ): BinarySearchRangeMode {
-  const usesExclusiveUpperBound = executionState.steps.some((step) => {
+  const activeStep = executionState.steps[activeStepIndex]
+  const activeFrameId = activeStep?.metadata?.callFrame?.frameId
+  const stepsInActiveSearch = isInteger(activeFrameId)
+    ? executionState.steps
+        .slice(0, activeStepIndex + 1)
+        .filter((step) => step.metadata?.callFrame?.frameId === activeFrameId)
+    : activeStep
+      ? [activeStep]
+      : []
+  const usesExclusiveUpperBound = stepsInActiveSearch.some((step) => {
+    const visibleVariableNames = step.metadata?.callFrame?.visibleVariableNames
     const data = step.variables[variableName]
     const indexState = getBinarySearchIndexState(step.variables)
 
     return (
+      (isUndefined(visibleVariableNames) ||
+        [variableName, ...BINARY_SEARCH_INDEX_NAMES].every((name) =>
+          visibleVariableNames.includes(name)
+        )) &&
       isNumericArray(data) &&
       !isNull(indexState) &&
       indexState.right === data.length

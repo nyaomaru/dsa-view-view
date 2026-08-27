@@ -338,23 +338,27 @@ export function VisualizationModalContent({
     }
 
     case 'binary-search': {
-      const fallbackStep =
-        executionState.steps[targetStepIndex ?? executionState.currentStep]
+      const fallbackStepIndex = targetStepIndex ?? executionState.currentStep
       const currentStepData = currentStep?.variables[targetVariable]
-      const binarySearchStep =
+      const binarySearchStepIndex =
         currentStep &&
         isBinarySearchArrayCandidate(
           targetVariable,
           currentStepData,
           currentStep.variables
         )
-          ? currentStep
-          : fallbackStep
+          ? executionState.currentStep
+          : fallbackStepIndex
+      const binarySearchStep = executionState.steps[binarySearchStepIndex]
       const data = binarySearchStep?.variables[targetVariable]
       const indexState = getBinarySearchIndexState(
         binarySearchStep?.variables ?? {}
       )
-      const rangeMode = getBinarySearchRangeMode(executionState, targetVariable)
+      const rangeMode = getBinarySearchRangeMode(
+        executionState,
+        targetVariable,
+        binarySearchStepIndex
+      )
 
       return isNumericArray(data) && indexState ? (
         <BinarySearchVisualizer
