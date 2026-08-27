@@ -54,8 +54,7 @@ export type CapacityPackageState = {
   load: number
 }
 
-/** Values displayed by the capacity-search visualization. */
-export type CapacitySearchVisualizationState = {
+type CapacitySearchVisualizationStateBase = {
   /** Current lower capacity bound. */
   left: number
   /** Current upper capacity bound. */
@@ -70,19 +69,37 @@ export type CapacitySearchVisualizationState = {
   totalWeight: number
   /** Maximum allowed shipping days. */
   targetDays: number
-  /** Current package-array index. */
-  currentIndex: number
-  /** Weight at the current package-array index. */
-  currentWeight: number
   /** Greedy package placement for the active capacity. */
   packages: CapacityPackageState[]
-  /** Number of days needed through the current package. */
-  requiredDays: number
-  /** Current day's load after the current package. */
-  currentLoad: number
   /** Whether the active capacity can ship every package in time. */
   canShip: boolean
 }
+
+/** Values displayed by the capacity-search visualization. */
+export type CapacitySearchVisualizationState =
+  CapacitySearchVisualizationStateBase &
+    (
+      | {
+          /** No package iteration has executed for the candidate capacity. */
+          phase: 'pending'
+          currentIndex?: never
+          currentWeight?: never
+          requiredDays: 0
+          currentLoad: 0
+        }
+      | {
+          /** Package iterations are being evaluated or the search has converged. */
+          phase: 'checking' | 'complete'
+          /** Current package-array index. */
+          currentIndex: number
+          /** Weight at the current package-array index. */
+          currentWeight: number
+          /** Number of days needed through the current package. */
+          requiredDays: number
+          /** Current day's load after the current package. */
+          currentLoad: number
+        }
+    )
 
 const analysisCache = new WeakMap<
   ExecutionState['steps'],
@@ -300,7 +317,7 @@ function getProgressAtStep({
     }
   }
 
-  return matchingProgress[0] ?? progress.at(-1)
+  return undefined
 }
 
 /** Detects a capacity binary search with an inner package feasibility pass. */
@@ -334,29 +351,48 @@ export function getCapacitySearchVisualizationState({
     currentStep: executionState.currentStep,
     mid: bounds.mid,
   })
-  if (!progress) return undefined
 
   const isConverged = bounds.left === bounds.right
-  const capacity = isConverged ? bounds.left : progress.capacity
-  const currentIndex = isConverged
-    ? analysis.data.length - 1
-    : progress.currentIndex
+  const capacity = isConverged
+    ? bounds.left
+    : (progress?.capacity ?? bounds.mid)
   const packages = getCapacityPackages(analysis.data, capacity)
-  const currentPackage = packages[currentIndex]
   const finalPackage = packages.at(-1)
-  if (!currentPackage || !finalPackage) return undefined
+  if (!finalPackage) return undefined
 
-  return {
+  const baseState: CapacitySearchVisualizationStateBase = {
     ...bounds,
     capacity,
     isConverged,
     totalWeight: analysis.totalWeight,
     targetDays: analysis.targetDays,
+    packages,
+    canShip: finalPackage.day <= analysis.targetDays,
+  }
+
+  if (!progress && !isConverged) {
+    return {
+      ...baseState,
+      phase: 'pending',
+      requiredDays: 0,
+      currentLoad: 0,
+    }
+  }
+
+  const currentIndex = isConverged
+    ? analysis.data.length - 1
+    : progress?.currentIndex
+  if (!isInteger(currentIndex)) return undefined
+
+  const currentPackage = packages[currentIndex]
+  if (!currentPackage) return undefined
+
+  return {
+    ...baseState,
+    phase: isConverged ? 'complete' : 'checking',
     currentIndex,
     currentWeight: currentPackage.weight,
-    packages,
     requiredDays: currentPackage.day,
     currentLoad: currentPackage.load,
-    canShip: finalPackage.day <= analysis.targetDays,
   }
 }

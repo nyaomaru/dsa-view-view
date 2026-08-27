@@ -1,4 +1,5 @@
 import { Card } from '@/shared/ui'
+import { isUndefined } from '@/shared/lib/guards'
 import type {
   CapacityPackageState,
   CapacitySearchVisualizationState,
@@ -70,8 +71,11 @@ function CapacityBound({
 
 function getPackageClass(
   packageState: CapacityPackageState,
-  currentIndex: number
+  currentIndex?: number
 ): string {
+  if (isUndefined(currentIndex)) {
+    return 'border-border bg-muted/30 text-muted-foreground'
+  }
   if (packageState.index === currentIndex) {
     return 'border-primary bg-primary text-primary-foreground shadow-sm'
   }
@@ -88,9 +92,10 @@ function PackageProgressItem({
 }: {
   packageState: CapacityPackageState
   previousDay?: number
-  currentIndex: number
+  currentIndex?: number
 }) {
-  const isCurrent = packageState.index === currentIndex
+  const isCurrent =
+    !isUndefined(currentIndex) && packageState.index === currentIndex
   const startsDay = previousDay !== packageState.day
 
   return (
@@ -124,7 +129,12 @@ export function CapacitySearchVisualizer({
   name,
   state,
 }: CapacitySearchVisualizerProps) {
-  const status = state.canShip ? 'fits' : 'needs more days'
+  const status =
+    state.phase === 'pending'
+      ? 'pending'
+      : state.canShip
+        ? 'fits'
+        : 'needs more days'
 
   return (
     <Card className="w-full border-0 shadow-none">
@@ -183,8 +193,9 @@ export function CapacitySearchVisualizer({
         </div>
 
         <div className="rounded-md bg-muted/40 px-3 py-2 font-mono text-xs text-muted-foreground">
-          {name}[{state.currentIndex}] = {state.currentWeight} · day{' '}
-          {state.requiredDays} load = {state.currentLoad}
+          {state.phase === 'pending'
+            ? 'Waiting for the first package iteration'
+            : `${name}[${state.currentIndex}] = ${state.currentWeight} · day ${state.requiredDays} load = ${state.currentLoad}`}
         </div>
       </div>
     </Card>

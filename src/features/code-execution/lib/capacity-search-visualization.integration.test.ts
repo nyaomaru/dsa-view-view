@@ -80,6 +80,7 @@ describe('Capacity-search visualization integration', () => {
       mid: 32,
       capacity: 32,
       isConverged: false,
+      phase: 'checking',
       totalWeight: 55,
       targetDays: 5,
       currentIndex: 4,
@@ -98,6 +99,29 @@ describe('Capacity-search visualization integration', () => {
       targetStepIndex: firstLoopStepIndex,
     })
 
+    const nextMidStepIndex = state.steps.findIndex(
+      (step, stepIndex) =>
+        stepIndex > firstPassIndexes[firstPassIndexes.length - 1] &&
+        step.variables.left === 10 &&
+        step.variables.right === 32 &&
+        step.variables.mid === 21
+    )
+    const pendingView = getCapacitySearchVisualizationState({
+      executionState: { ...state, currentStep: nextMidStepIndex },
+      variableName: 'weights',
+    })
+
+    expect(nextMidStepIndex).toBeGreaterThan(
+      firstPassIndexes[firstPassIndexes.length - 1]
+    )
+    expect(pendingView).toMatchObject({
+      capacity: 21,
+      phase: 'pending',
+      requiredDays: 0,
+      currentLoad: 0,
+    })
+    expect(pendingView?.currentIndex).toBeUndefined()
+
     const finalView = getCapacitySearchVisualizationState({
       executionState: {
         ...state,
@@ -112,6 +136,7 @@ describe('Capacity-search visualization integration', () => {
       mid: 14,
       capacity: 15,
       isConverged: true,
+      phase: 'complete',
       currentIndex: 9,
       currentWeight: 10,
       currentLoad: 10,
