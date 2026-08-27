@@ -11,6 +11,8 @@ type BinarySearchVisualizerProps = {
 }
 
 function getClampedRange(indexState: BinarySearchIndexState, length: number) {
+  if (indexState.left > indexState.right) return null
+
   const left = Math.max(0, Math.min(indexState.left, length - 1))
   const right = Math.max(0, Math.min(indexState.right, length - 1))
 

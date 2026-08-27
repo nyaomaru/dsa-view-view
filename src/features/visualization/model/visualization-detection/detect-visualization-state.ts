@@ -98,9 +98,12 @@ export function detectVisualizationState(
           metadata.mutatedNumericArrayNames
         )
       : undefined)
+  const primaryCapacitySearchCandidate =
+    getPrimaryCapacitySearchCandidate(executionState)
   const primaryBinarySearchCandidate = getPrimaryBinarySearchCandidate(
     executionState,
-    initialVariableNames
+    initialVariableNames,
+    primaryCapacitySearchCandidate?.name
   )
   const primaryAreaCandidate = getPrimaryAreaCandidate(
     executionState,
@@ -110,8 +113,6 @@ export function detectVisualizationState(
     getPrimaryMaxSubarrayCandidate(executionState)
   const primaryStockProfitCandidate =
     getPrimaryStockProfitCandidate(executionState)
-  const primaryCapacitySearchCandidate =
-    getPrimaryCapacitySearchCandidate(executionState)
   const primarySlidingWindowCandidate =
     getPrimarySlidingWindowCandidate(executionState)
   const primaryDpName =

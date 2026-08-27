@@ -60,16 +60,17 @@ function isIndexStateWithinArray(
   indexState: BinarySearchIndexState,
   length: number
 ): boolean {
-  const isMidWithinRange =
+  const isMidWithinArray =
     isUndefined(indexState.mid) ||
-    (indexState.mid >= indexState.left && indexState.mid <= indexState.right)
-
-  return (
+    (indexState.mid >= 0 && indexState.mid < length)
+  const isInclusiveRangeOrTerminalCrossing =
     indexState.left >= 0 &&
-    indexState.left <= indexState.right &&
+    indexState.left <= length &&
+    indexState.right >= -1 &&
     indexState.right < length &&
-    isMidWithinRange
-  )
+    indexState.left <= indexState.right + 1
+
+  return isInclusiveRangeOrTerminalCrossing && isMidWithinArray
 }
 
 /**

@@ -128,7 +128,7 @@ describe('Capacity-search visualization integration', () => {
   it('tracks duplicate weights by call-frame iteration order', () => {
     const state = executeCode(
       shipWithinDaysCode,
-      { weights: [3, 3, 3, 3], days: 2 },
+      { weights: [1, 1, 1, 1], days: 2 },
       'shipWithinDays'
     )
     const loopStepIndexes = state.steps.flatMap((step, stepIndex) =>
@@ -148,7 +148,11 @@ describe('Capacity-search visualization integration', () => {
         })?.currentIndex
     )
 
-    expect(state.returnValue).toBe(6)
+    const detection = detectVisualizationState(state)
+
+    expect(state.returnValue).toBe(2)
     expect(indexes).toEqual([0, 1, 2, 3])
+    expect(detection.primaryCapacitySearchArrayName).toBe('weights')
+    expect(detection.primaryBinarySearchArrayName).toBeUndefined()
   })
 })

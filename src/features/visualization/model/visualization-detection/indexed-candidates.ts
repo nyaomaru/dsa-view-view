@@ -18,7 +18,8 @@ import {
 
 export function getPrimaryBinarySearchCandidate(
   executionState: ExecutionState,
-  initialVariableNames: Set<string>
+  initialVariableNames: Set<string>,
+  excludedArrayName?: string
 ): IndexedVariableCandidate | undefined {
   return findIndexedVariableCandidate(
     executionState,
@@ -27,6 +28,7 @@ export function getPrimaryBinarySearchCandidate(
       preferPastSteps: true,
     }),
     (name, value, variables) =>
+      name !== excludedArrayName &&
       initialVariableNames.has(name) &&
       isBinarySearchArrayCandidate(name, value, variables)
   )

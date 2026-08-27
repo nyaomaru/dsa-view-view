@@ -959,7 +959,7 @@ describe('Visualizer return value display', () => {
         description: 'const mid = Math.floor((left + right) / 2)',
         variables: {
           nums: [1, 3, 5, 7, 9, 11],
-          target: 9,
+          target: 8,
           left: 0,
           right: 5,
           mid: 2,
@@ -970,14 +970,29 @@ describe('Visualizer return value display', () => {
       {
         stepNumber: 1,
         type: 'assignment',
-        line: 6,
-        description: 'const mid = Math.floor((left + right) / 2)',
+        line: 10,
+        description: 'left = mid + 1',
         variables: {
           nums: [1, 3, 5, 7, 9, 11],
-          target: 9,
+          target: 8,
           left: 3,
           right: 5,
-          mid: 4,
+          mid: 2,
+        },
+        timestamp: Date.now(),
+        callStack: ['root', 'binarySearch'],
+      },
+      {
+        stepNumber: 2,
+        type: 'assignment',
+        line: 10,
+        description: 'left = mid + 1',
+        variables: {
+          nums: [1, 3, 5, 7, 9, 11],
+          target: 8,
+          left: 4,
+          right: 3,
+          mid: 3,
         },
         timestamp: Date.now(),
         callStack: ['root', 'binarySearch'],
@@ -1024,9 +1039,30 @@ describe('Visualizer return value display', () => {
 
     expect(screen.getByText('left: 3')).toBeInTheDocument()
     expect(screen.getByText('right: 5')).toBeInTheDocument()
-    expect(screen.getByText('mid: 4')).toBeInTheDocument()
+    expect(screen.getByText('mid: 2')).toBeInTheDocument()
     expect(screen.queryByText('left: 0')).not.toBeInTheDocument()
-    expect(screen.queryByText('mid: 2')).not.toBeInTheDocument()
+
+    rerender(
+      <Visualizer
+        executionState={{
+          ...createExecutionStateWithSteps(steps),
+          currentStep: 2,
+        }}
+        isRunning={false}
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    expect(screen.getByText('left: 4')).toBeInTheDocument()
+    expect(screen.getByText('right: 3')).toBeInTheDocument()
+    expect(screen.getByText('mid: 3')).toBeInTheDocument()
+    expect(screen.queryByText('left: 3')).not.toBeInTheDocument()
   })
 
   it('auto-opens sliding-window strings instead of stack visualization', async () => {
