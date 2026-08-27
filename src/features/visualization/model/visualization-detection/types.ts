@@ -31,6 +31,10 @@ export type VisualizationDetection = {
   primaryStockProfitArrayName: string | undefined
   /** Step index where initialized stock-profit state is available. */
   primaryStockProfitStepIndex: number | undefined
+  /** Primary package-weight array used by a capacity binary search. */
+  primaryCapacitySearchArrayName: string | undefined
+  /** Step index where package-capacity state is first available. */
+  primaryCapacitySearchStepIndex: number | undefined
   /** Primary numeric array to show in binary-search index view. */
   primaryBinarySearchArrayName: string | undefined
   /** Step index where binary-search indexes are available. */

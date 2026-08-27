@@ -62,6 +62,14 @@ export function getPrimaryVisualization(
     }
   }
 
+  if (detection.primaryCapacitySearchArrayName) {
+    return {
+      type: 'capacity-search',
+      targetVariable: detection.primaryCapacitySearchArrayName,
+      targetStepIndex: detection.primaryCapacitySearchStepIndex,
+    }
+  }
+
   if (detection.primaryBinarySearchArrayName) {
     return {
       type: 'binary-search',

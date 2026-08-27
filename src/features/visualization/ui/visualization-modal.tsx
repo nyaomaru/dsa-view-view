@@ -98,6 +98,8 @@ function getVisualizationTitle({
       return `Maximum Subarray View: ${targetVariable}`
     case 'stock-profit':
       return `Stock Profit View: ${targetVariable}`
+    case 'capacity-search':
+      return `Capacity View: ${targetVariable}`
     case 'binary-search':
       return `Index View: ${targetVariable}`
     case 'sliding-window':
@@ -152,6 +154,8 @@ function getVisualizationDescription(
       return 'Follow the current position, best sum ending here, and best sum seen so far.'
     case 'stock-profit':
       return 'Follow prices, the current day, and the profit accumulated by the strategy.'
+    case 'capacity-search':
+      return 'Follow the candidate capacity, package loading, and shipping-day count.'
     case 'binary-search':
       return 'Visualize the current binary-search range and mid index.'
     case 'sliding-window':

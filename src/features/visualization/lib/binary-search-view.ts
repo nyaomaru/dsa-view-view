@@ -1,5 +1,11 @@
 import type { ExecutionStep } from '@/entities/execution'
-import { equals, isInteger, isNull, isNumericArray } from '@/shared/lib/guards'
+import {
+  equals,
+  isInteger,
+  isNull,
+  isNumericArray,
+  isUndefined,
+} from '@/shared/lib/guards'
 
 const BINARY_SEARCH_INDEX_NAMES = ['left', 'right', 'mid'] as const
 const isResultVariableName = equals('result')
@@ -63,12 +69,19 @@ export function isBinarySearchArrayCandidate(
   value: unknown,
   variables: ExecutionStep['variables']
 ): boolean {
+  const indexState = getBinarySearchIndexState(variables)
+
   return (
     !isResultVariableName(name) &&
     isNumericArray(value) &&
     value.length > 0 &&
     hasBinarySearchIndexVariables(variables) &&
-    hasBinarySearchIndexState(variables)
+    !isNull(indexState) &&
+    indexState.left >= 0 &&
+    indexState.left <= indexState.right &&
+    indexState.right < value.length &&
+    (isUndefined(indexState.mid) ||
+      (indexState.mid >= indexState.left && indexState.mid <= indexState.right))
   )
 }
 
