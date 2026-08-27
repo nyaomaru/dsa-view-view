@@ -8,7 +8,6 @@ describe('CapacitySearchVisualizer', () => {
       <CapacitySearchVisualizer
         name="weights"
         state={{
-          data: [1, 2, 3, 4, 5],
           left: 10,
           right: 10,
           mid: 9,
@@ -17,6 +16,7 @@ describe('CapacitySearchVisualizer', () => {
           totalWeight: 15,
           targetDays: 2,
           currentIndex: 3,
+          currentWeight: 4,
           packages: [
             { index: 0, weight: 1, day: 1, load: 1 },
             { index: 1, weight: 2, day: 1, load: 3 },

@@ -56,6 +56,22 @@ export function hasBinarySearchIndexState(
   return !isNull(getBinarySearchIndexState(variables))
 }
 
+function isIndexStateWithinArray(
+  indexState: BinarySearchIndexState,
+  length: number
+): boolean {
+  const isMidWithinRange =
+    isUndefined(indexState.mid) ||
+    (indexState.mid >= indexState.left && indexState.mid <= indexState.right)
+
+  return (
+    indexState.left >= 0 &&
+    indexState.left <= indexState.right &&
+    indexState.right < length &&
+    isMidWithinRange
+  )
+}
+
 /**
  * Checks whether a value should use the binary-search visualization.
  *
@@ -77,11 +93,7 @@ export function isBinarySearchArrayCandidate(
     value.length > 0 &&
     hasBinarySearchIndexVariables(variables) &&
     !isNull(indexState) &&
-    indexState.left >= 0 &&
-    indexState.left <= indexState.right &&
-    indexState.right < value.length &&
-    (isUndefined(indexState.mid) ||
-      (indexState.mid >= indexState.left && indexState.mid <= indexState.right))
+    isIndexStateWithinArray(indexState, value.length)
   )
 }
 

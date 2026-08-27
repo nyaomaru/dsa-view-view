@@ -21,7 +21,17 @@ type CapacityProgress = {
 type IndexedCapacityCandidate = {
   candidate: CapacitySearchTraceCandidate
   data: number[]
+  totalWeight: number
+  targetDays: number
   progress: CapacityProgress[]
+}
+
+type InitialCapacityPass = {
+  name: string
+  data: number[]
+  totalWeight: number
+  targetDays: number
+  loopDescription: string
 }
 
 /** Capacity-search trace inferred from a shipping feasibility check. */
@@ -46,8 +56,6 @@ export type CapacityPackageState = {
 
 /** Values displayed by the capacity-search visualization. */
 export type CapacitySearchVisualizationState = {
-  /** Package weights in shipping order. */
-  data: number[]
   /** Current lower capacity bound. */
   left: number
   /** Current upper capacity bound. */
@@ -64,6 +72,8 @@ export type CapacitySearchVisualizationState = {
   targetDays: number
   /** Current package-array index. */
   currentIndex: number
+  /** Weight at the current package-array index. */
+  currentWeight: number
   /** Greedy package placement for the active capacity. */
   packages: CapacityPackageState[]
   /** Number of days needed through the current package. */
@@ -112,88 +122,127 @@ function getCapacityPackages(
   })
 }
 
-function findCandidate(
-  steps: ExecutionState['steps']
-): IndexedCapacityCandidate | undefined {
-  for (let stepIndex = 0; stepIndex < steps.length; stepIndex += 1) {
-    const step = steps[stepIndex]
-    const match = /^for \(\.\.\. of ([A-Za-z_$][\w$]*)\)$/.exec(
-      step.description
-    )
-    if (!match) continue
+function getInitialCapacityPass(
+  step: ExecutionStep
+): InitialCapacityPass | undefined {
+  const match = /^for \(\.\.\. of ([A-Za-z_$][\w$]*)\)$/.exec(step.description)
+  if (!match) return undefined
 
-    const name = match[1]
-    const source = step.variables[name]
-    const bounds = getCapacityBounds(step.variables)
+  const name = match[1]
+  const source = step.variables[name]
+  const bounds = getCapacityBounds(step.variables)
+  const capacity = step.variables.capacity
+  const targetDays = step.variables.days
+  const requiredDays = step.variables.requiredDays
+  const currentLoad = step.variables.current
+  const currentWeight = step.variables.weight
+
+  if (
+    !isNonEmptyNumericArray(source) ||
+    !bounds ||
+    !isNumber(capacity) ||
+    !isInteger(targetDays) ||
+    !isInteger(requiredDays) ||
+    !isNumber(currentLoad) ||
+    !isNumber(currentWeight) ||
+    targetDays <= 0
+  ) {
+    return undefined
+  }
+
+  const data = source.map(Number)
+  const totalWeight = data.reduce((sum, weight) => sum + weight, 0)
+  const maximumWeight = Math.max(...data)
+
+  if (
+    bounds.left !== maximumWeight ||
+    bounds.right !== totalWeight ||
+    bounds.mid !== capacity
+  ) {
+    return undefined
+  }
+
+  return {
+    name,
+    data,
+    totalWeight,
+    targetDays,
+    loopDescription: step.description,
+  }
+}
+
+function collectCapacityProgress({
+  steps,
+  initialStepIndex,
+  initialPass,
+}: {
+  steps: ExecutionState['steps']
+  initialStepIndex: number
+  initialPass: InitialCapacityPass
+}): CapacityProgress[] {
+  const frameIndexes = new Map<number, number>()
+  const progress: CapacityProgress[] = []
+
+  for (
+    let stepIndex = initialStepIndex;
+    stepIndex < steps.length;
+    stepIndex += 1
+  ) {
+    const step = steps[stepIndex]
+    if (step.description !== initialPass.loopDescription) continue
+
+    const loopData = step.variables[initialPass.name]
+    const frameId = step.metadata?.callFrame?.frameId
     const capacity = step.variables.capacity
-    const targetDays = step.variables.days
-    const requiredDays = step.variables.requiredDays
-    const currentLoad = step.variables.current
-    const currentWeight = step.variables.weight
+    const weight = step.variables.weight
 
     if (
-      !isNonEmptyNumericArray(source) ||
-      !bounds ||
+      !isNonEmptyNumericArray(loopData) ||
+      !isInteger(frameId) ||
       !isNumber(capacity) ||
-      !isInteger(targetDays) ||
-      !isInteger(requiredDays) ||
-      !isNumber(currentLoad) ||
-      !isNumber(currentWeight)
+      !isNumber(weight)
     ) {
       continue
     }
 
-    const data = source.map(Number)
-    const totalWeight = data.reduce((sum, weight) => sum + weight, 0)
-    const maximumWeight = Math.max(...data)
-    const isInitialCapacityPass =
-      bounds.left === maximumWeight &&
-      bounds.right === totalWeight &&
-      bounds.mid === capacity
-
-    if (!isInitialCapacityPass || targetDays <= 0) continue
-
-    const loopDescription = step.description
-    const frameIndexes = new Map<number, number>()
-    const progress: CapacityProgress[] = []
-
-    for (let index = stepIndex; index < steps.length; index += 1) {
-      const loopStep = steps[index]
-      if (loopStep.description !== loopDescription) continue
-
-      const loopData = loopStep.variables[name]
-      const frameId = loopStep.metadata?.callFrame?.frameId
-      const loopCapacity = loopStep.variables.capacity
-      const loopWeight = loopStep.variables.weight
-
-      if (
-        !isNonEmptyNumericArray(loopData) ||
-        !isInteger(frameId) ||
-        !isNumber(loopCapacity) ||
-        !isNumber(loopWeight)
-      ) {
-        continue
-      }
-
-      const currentIndex = frameIndexes.get(frameId) ?? 0
-      if (currentIndex >= data.length || data[currentIndex] !== loopWeight) {
-        continue
-      }
-
-      progress.push({
-        stepIndex: index,
-        frameId,
-        capacity: loopCapacity,
-        currentIndex,
-      })
-      frameIndexes.set(frameId, currentIndex + 1)
+    const currentIndex = frameIndexes.get(frameId) ?? 0
+    if (
+      currentIndex >= initialPass.data.length ||
+      initialPass.data[currentIndex] !== weight
+    ) {
+      continue
     }
+
+    progress.push({ stepIndex, frameId, capacity, currentIndex })
+    frameIndexes.set(frameId, currentIndex + 1)
+  }
+
+  return progress
+}
+
+function findCandidate(
+  steps: ExecutionState['steps']
+): IndexedCapacityCandidate | undefined {
+  for (let stepIndex = 0; stepIndex < steps.length; stepIndex += 1) {
+    const initialPass = getInitialCapacityPass(steps[stepIndex])
+    if (!initialPass) continue
+
+    const progress = collectCapacityProgress({
+      steps,
+      initialStepIndex: stepIndex,
+      initialPass,
+    })
 
     if (progress.length === 0) continue
 
     return {
-      candidate: { name, stepIndex: progress[0].stepIndex },
-      data,
+      candidate: {
+        name: initialPass.name,
+        stepIndex: progress[0].stepIndex,
+      },
+      data: initialPass.data,
+      totalWeight: initialPass.totalWeight,
+      targetDays: initialPass.targetDays,
       progress,
     }
   }
@@ -287,30 +336,27 @@ export function getCapacitySearchVisualizationState({
   })
   if (!progress) return undefined
 
-  const fallbackStep = executionState.steps[analysis.candidate.stepIndex]
-  const currentStep = executionState.steps[executionState.currentStep]
-  const targetDaysValue =
-    currentStep?.variables.days ?? fallbackStep.variables.days
-  if (!isInteger(targetDaysValue)) return undefined
-
   const isConverged = bounds.left === bounds.right
   const capacity = isConverged ? bounds.left : progress.capacity
+  const currentIndex = isConverged
+    ? analysis.data.length - 1
+    : progress.currentIndex
   const packages = getCapacityPackages(analysis.data, capacity)
-  const currentPackage = packages[progress.currentIndex]
+  const currentPackage = packages[currentIndex]
   const finalPackage = packages.at(-1)
   if (!currentPackage || !finalPackage) return undefined
 
   return {
-    data: analysis.data,
     ...bounds,
     capacity,
     isConverged,
-    totalWeight: analysis.data.reduce((sum, weight) => sum + weight, 0),
-    targetDays: targetDaysValue,
-    currentIndex: progress.currentIndex,
+    totalWeight: analysis.totalWeight,
+    targetDays: analysis.targetDays,
+    currentIndex,
+    currentWeight: currentPackage.weight,
     packages,
     requiredDays: currentPackage.day,
     currentLoad: currentPackage.load,
-    canShip: finalPackage.day <= targetDaysValue,
+    canShip: finalPackage.day <= analysis.targetDays,
   }
 }

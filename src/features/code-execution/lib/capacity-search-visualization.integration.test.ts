@@ -79,6 +79,7 @@ describe('Capacity-search visualization integration', () => {
       right: 55,
       mid: 32,
       capacity: 32,
+      isConverged: false,
       totalWeight: 55,
       targetDays: 5,
       currentIndex: 4,
@@ -111,6 +112,9 @@ describe('Capacity-search visualization integration', () => {
       mid: 14,
       capacity: 15,
       isConverged: true,
+      currentIndex: 9,
+      currentWeight: 10,
+      currentLoad: 10,
       requiredDays: 5,
       canShip: true,
     })

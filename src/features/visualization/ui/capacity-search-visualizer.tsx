@@ -37,6 +37,37 @@ function Metric({
   )
 }
 
+function CapacityBound({
+  label,
+  value,
+  emphasized = false,
+}: {
+  label: string
+  value: number
+  emphasized?: boolean
+}) {
+  return (
+    <div
+      className={[
+        'rounded border px-2 py-2',
+        emphasized
+          ? 'border-primary bg-primary/10 font-bold text-primary'
+          : 'border-border bg-background',
+      ].join(' ')}
+    >
+      <span
+        className={[
+          'block text-[0.6875rem]',
+          emphasized ? '' : 'text-muted-foreground',
+        ].join(' ')}
+      >
+        {label}
+      </span>
+      {value}
+    </div>
+  )
+}
+
 function getPackageClass(
   packageState: CapacityPackageState,
   currentIndex: number
@@ -48,6 +79,45 @@ function getPackageClass(
     return 'border-primary/30 bg-primary/5 text-foreground'
   }
   return 'border-border bg-muted/30 text-muted-foreground'
+}
+
+function PackageProgressItem({
+  packageState,
+  previousDay,
+  currentIndex,
+}: {
+  packageState: CapacityPackageState
+  previousDay?: number
+  currentIndex: number
+}) {
+  const isCurrent = packageState.index === currentIndex
+  const startsDay = previousDay !== packageState.day
+
+  return (
+    <li
+      aria-current={isCurrent ? 'step' : undefined}
+      aria-label={`Index ${packageState.index}: weight ${packageState.weight}, day ${packageState.day}${isCurrent ? ', current' : ''}`}
+      className={[
+        'relative flex flex-col items-center gap-1',
+        startsDay ? 'ml-3 border-l border-dashed border-primary pl-3' : '',
+      ].join(' ')}
+    >
+      <span className="absolute -top-6 whitespace-nowrap font-mono text-[0.6875rem] font-semibold text-primary">
+        {startsDay ? `day ${packageState.day}` : ''}
+      </span>
+      <div
+        className={[
+          'flex h-14 w-14 items-center justify-center rounded-md border-2 font-mono text-base transition-colors',
+          getPackageClass(packageState, currentIndex),
+        ].join(' ')}
+      >
+        {packageState.weight}
+      </div>
+      <span className="font-mono text-xs text-muted-foreground">
+        {packageState.index}
+      </span>
+    </li>
+  )
 }
 
 export function CapacitySearchVisualizer({
@@ -72,24 +142,13 @@ export function CapacitySearchVisualizer({
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2 text-center font-mono">
-            <div className="rounded border border-border bg-background px-2 py-2">
-              <span className="block text-[0.6875rem] text-muted-foreground">
-                left
-              </span>
-              {state.left}
-            </div>
-            <div className="rounded border border-primary bg-primary/10 px-2 py-2 font-bold text-primary">
-              <span className="block text-[0.6875rem]">
-                {state.isConverged ? 'result · capacity' : 'mid · capacity'}
-              </span>
-              {state.capacity}
-            </div>
-            <div className="rounded border border-border bg-background px-2 py-2">
-              <span className="block text-[0.6875rem] text-muted-foreground">
-                right
-              </span>
-              {state.right}
-            </div>
+            <CapacityBound label="left" value={state.left} />
+            <CapacityBound
+              label={state.isConverged ? 'result · capacity' : 'mid · capacity'}
+              value={state.capacity}
+              emphasized
+            />
+            <CapacityBound label="right" value={state.right} />
           </div>
         </div>
 
@@ -112,46 +171,19 @@ export function CapacitySearchVisualizer({
             aria-label={`${name} capacity progress`}
             className="flex min-w-max gap-2 pt-6"
           >
-            {state.packages.map((packageState) => {
-              const isCurrent = packageState.index === state.currentIndex
-              const startsDay =
-                packageState.index === 0 ||
-                state.packages[packageState.index - 1]?.day !== packageState.day
-
-              return (
-                <li
-                  key={packageState.index}
-                  aria-current={isCurrent ? 'step' : undefined}
-                  aria-label={`Index ${packageState.index}: weight ${packageState.weight}, day ${packageState.day}${isCurrent ? ', current' : ''}`}
-                  className={[
-                    'relative flex flex-col items-center gap-1',
-                    startsDay
-                      ? 'ml-3 border-l border-dashed border-primary pl-3'
-                      : '',
-                  ].join(' ')}
-                >
-                  <span className="absolute -top-6 whitespace-nowrap font-mono text-[0.6875rem] font-semibold text-primary">
-                    {startsDay ? `day ${packageState.day}` : ''}
-                  </span>
-                  <div
-                    className={[
-                      'flex h-14 w-14 items-center justify-center rounded-md border-2 font-mono text-base transition-colors',
-                      getPackageClass(packageState, state.currentIndex),
-                    ].join(' ')}
-                  >
-                    {packageState.weight}
-                  </div>
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {packageState.index}
-                  </span>
-                </li>
-              )
-            })}
+            {state.packages.map((packageState) => (
+              <PackageProgressItem
+                key={packageState.index}
+                packageState={packageState}
+                previousDay={state.packages[packageState.index - 1]?.day}
+                currentIndex={state.currentIndex}
+              />
+            ))}
           </ol>
         </div>
 
         <div className="rounded-md bg-muted/40 px-3 py-2 font-mono text-xs text-muted-foreground">
-          {name}[{state.currentIndex}] = {state.data[state.currentIndex]} · day{' '}
+          {name}[{state.currentIndex}] = {state.currentWeight} · day{' '}
           {state.requiredDays} load = {state.currentLoad}
         </div>
       </div>
