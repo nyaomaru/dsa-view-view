@@ -1,5 +1,6 @@
 import type { ExecutionState } from '@/entities/execution'
 import { isBinarySearchArrayCandidate } from '../../lib/binary-search-view'
+import { getCapacitySearchTraceCandidate } from '../../lib/capacity-search-view'
 import {
   isAreaViewCandidate,
   isHistogramAreaCandidate,
@@ -17,7 +18,8 @@ import {
 
 export function getPrimaryBinarySearchCandidate(
   executionState: ExecutionState,
-  initialVariableNames: Set<string>
+  initialVariableNames: Set<string>,
+  excludedArrayName?: string
 ): IndexedVariableCandidate | undefined {
   return findIndexedVariableCandidate(
     executionState,
@@ -26,6 +28,7 @@ export function getPrimaryBinarySearchCandidate(
       preferPastSteps: true,
     }),
     (name, value, variables) =>
+      name !== excludedArrayName &&
       initialVariableNames.has(name) &&
       isBinarySearchArrayCandidate(name, value, variables)
   )
@@ -45,6 +48,16 @@ export function getPrimaryStockProfitCandidate(
   executionState: ExecutionState
 ): IndexedVariableCandidate | undefined {
   const candidate = getStockProfitTraceCandidate(executionState)
+
+  return candidate
+    ? { name: candidate.name, stepIndex: candidate.stepIndex }
+    : undefined
+}
+
+export function getPrimaryCapacitySearchCandidate(
+  executionState: ExecutionState
+): IndexedVariableCandidate | undefined {
+  const candidate = getCapacitySearchTraceCandidate(executionState)
 
   return candidate
     ? { name: candidate.name, stepIndex: candidate.stepIndex }

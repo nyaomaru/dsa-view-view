@@ -62,6 +62,10 @@ type VariablesCardProps = {
   primaryStockProfitArrayName?: string
   /** Step index where stock-profit state is available. */
   primaryStockProfitStepIndex?: number
+  /** Primary package-weight array detected for capacity-search visualization. */
+  primaryCapacitySearchArrayName?: string
+  /** Step index where package-capacity state is available. */
+  primaryCapacitySearchStepIndex?: number
   /** Primary numeric array detected for binary-search index visualization. */
   primaryBinarySearchArrayName?: string
   /** Step index where binary-search indexes are available. */
@@ -115,6 +119,8 @@ export function VariablesCard({
   primaryMaxSubarrayStepIndex,
   primaryStockProfitArrayName,
   primaryStockProfitStepIndex,
+  primaryCapacitySearchArrayName,
+  primaryCapacitySearchStepIndex,
   primaryBinarySearchArrayName,
   primaryBinarySearchStepIndex,
   primarySlidingWindowStringName,
@@ -279,6 +285,23 @@ export function VariablesCard({
             >
               <BarChart2 className="w-4 h-4" />
               Stock Profit View
+            </Button>
+          )}
+          {primaryCapacitySearchArrayName && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                onOpenVisualization(
+                  'capacity-search',
+                  primaryCapacitySearchArrayName,
+                  primaryCapacitySearchStepIndex
+                )
+              }
+            >
+              <Search className="w-4 h-4" />
+              Capacity View
             </Button>
           )}
           {primaryBinarySearchArrayName && (

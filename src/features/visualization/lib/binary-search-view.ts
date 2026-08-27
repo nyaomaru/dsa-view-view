@@ -1,5 +1,11 @@
-import type { ExecutionStep } from '@/entities/execution'
-import { equals, isInteger, isNull, isNumericArray } from '@/shared/lib/guards'
+import type { ExecutionState, ExecutionStep } from '@/entities/execution'
+import {
+  equals,
+  isInteger,
+  isNull,
+  isNumericArray,
+  isUndefined,
+} from '@/shared/lib/guards'
 
 const BINARY_SEARCH_INDEX_NAMES = ['left', 'right', 'mid'] as const
 const isResultVariableName = equals('result')
@@ -8,11 +14,14 @@ const isResultVariableName = equals('result')
 export type BinarySearchIndexState = {
   /** Inclusive left boundary. */
   left: number
-  /** Inclusive right boundary. */
+  /** Current right boundary. */
   right: number
   /** Optional current midpoint. */
   mid?: number
 }
+
+/** Boundary convention used by a binary-search trace. */
+export type BinarySearchRangeMode = 'inclusive' | 'half-open'
 
 /**
  * Reads binary-search indexes from execution variables.
@@ -50,6 +59,57 @@ export function hasBinarySearchIndexState(
   return !isNull(getBinarySearchIndexState(variables))
 }
 
+function isIndexStateWithinArray(
+  indexState: BinarySearchIndexState,
+  length: number
+): boolean {
+  const isMidWithinArray =
+    isUndefined(indexState.mid) ||
+    (indexState.mid >= 0 && indexState.mid < length)
+  const isInclusiveRangeOrTerminalCrossing =
+    indexState.left >= 0 &&
+    indexState.left <= length &&
+    indexState.right >= -1 &&
+    indexState.right <= length &&
+    indexState.left <= indexState.right + 1
+
+  return isInclusiveRangeOrTerminalCrossing && isMidWithinArray
+}
+
+/** Detects the right-boundary convention used by the active binary search. */
+export function getBinarySearchRangeMode(
+  executionState: ExecutionState,
+  variableName: string,
+  activeStepIndex: number
+): BinarySearchRangeMode {
+  const activeStep = executionState.steps[activeStepIndex]
+  const activeFrameId = activeStep?.metadata?.callFrame?.frameId
+  const stepsInActiveSearch = isInteger(activeFrameId)
+    ? executionState.steps
+        .slice(0, activeStepIndex + 1)
+        .filter((step) => step.metadata?.callFrame?.frameId === activeFrameId)
+    : activeStep
+      ? [activeStep]
+      : []
+  const usesExclusiveUpperBound = stepsInActiveSearch.some((step) => {
+    const visibleVariableNames = step.metadata?.callFrame?.visibleVariableNames
+    const data = step.variables[variableName]
+    const indexState = getBinarySearchIndexState(step.variables)
+
+    return (
+      (isUndefined(visibleVariableNames) ||
+        [variableName, ...BINARY_SEARCH_INDEX_NAMES].every((name) =>
+          visibleVariableNames.includes(name)
+        )) &&
+      isNumericArray(data) &&
+      !isNull(indexState) &&
+      indexState.right === data.length
+    )
+  })
+
+  return usesExclusiveUpperBound ? 'half-open' : 'inclusive'
+}
+
 /**
  * Checks whether a value should use the binary-search visualization.
  *
@@ -63,12 +123,15 @@ export function isBinarySearchArrayCandidate(
   value: unknown,
   variables: ExecutionStep['variables']
 ): boolean {
+  const indexState = getBinarySearchIndexState(variables)
+
   return (
     !isResultVariableName(name) &&
     isNumericArray(value) &&
     value.length > 0 &&
     hasBinarySearchIndexVariables(variables) &&
-    hasBinarySearchIndexState(variables)
+    !isNull(indexState) &&
+    isIndexStateWithinArray(indexState, value.length)
   )
 }
 

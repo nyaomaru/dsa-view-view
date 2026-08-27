@@ -13,6 +13,7 @@ import {
 import {
   getPrimaryAreaCandidate,
   getPrimaryBinarySearchCandidate,
+  getPrimaryCapacitySearchCandidate,
   getPrimaryMaxSubarrayCandidate,
   getPrimaryRollingDpName,
   getPrimarySlidingWindowCandidate,
@@ -97,9 +98,12 @@ export function detectVisualizationState(
           metadata.mutatedNumericArrayNames
         )
       : undefined)
+  const primaryCapacitySearchCandidate =
+    getPrimaryCapacitySearchCandidate(executionState)
   const primaryBinarySearchCandidate = getPrimaryBinarySearchCandidate(
     executionState,
-    initialVariableNames
+    initialVariableNames,
+    primaryCapacitySearchCandidate?.name
   )
   const primaryAreaCandidate = getPrimaryAreaCandidate(
     executionState,
@@ -169,6 +173,8 @@ export function detectVisualizationState(
     primaryMaxSubarrayStepIndex: primaryMaxSubarrayCandidate?.stepIndex,
     primaryStockProfitArrayName: primaryStockProfitCandidate?.name,
     primaryStockProfitStepIndex: primaryStockProfitCandidate?.stepIndex,
+    primaryCapacitySearchArrayName: primaryCapacitySearchCandidate?.name,
+    primaryCapacitySearchStepIndex: primaryCapacitySearchCandidate?.stepIndex,
     primaryBinarySearchArrayName: primaryBinarySearchCandidate?.name,
     primaryBinarySearchStepIndex: primaryBinarySearchCandidate?.stepIndex,
     primarySlidingWindowStringName: primarySlidingWindowCandidate?.name,

@@ -17,11 +17,13 @@ import {
 import { safeStringify } from '@/shared/lib/safe-stringify'
 import {
   getBinarySearchIndexState,
+  getBinarySearchRangeMode,
   isBinarySearchArrayCandidate,
 } from '../lib/binary-search-view'
 import { getAreaVisualizationState } from '../lib/area-view'
 import { getMaxSubarrayVisualizationState } from '../lib/max-subarray-view'
 import { getStockProfitVisualizationState } from '../lib/stock-profit-view'
+import { getCapacitySearchVisualizationState } from '../lib/capacity-search-view'
 import { getSlidingWindowVisualizationState } from '../lib/sliding-window-view'
 import { getRollingDpState, isRollingDpCandidate } from '../lib/rolling-dp-view'
 import { getGraphNodeAdjacencyRecord } from '../lib/graph-view'
@@ -38,6 +40,7 @@ import { BarChartVisualizer } from './bar-chart-visualizer'
 import { AreaVisualizer } from './area-visualizer'
 import { MaxSubarrayVisualizer } from './max-subarray-visualizer'
 import { StockProfitVisualizer } from './stock-profit-visualizer'
+import { CapacitySearchVisualizer } from './capacity-search-visualizer'
 import { BinarySearchVisualizer } from './binary-search-visualizer'
 import { SlidingWindowVisualizer } from './sliding-window-visualizer'
 import { DpVisualizer } from './dp-visualizer'
@@ -318,22 +321,43 @@ export function VisualizationModalContent({
       )
     }
 
+    case 'capacity-search': {
+      const visualizationState = getCapacitySearchVisualizationState({
+        executionState,
+        variableName: targetVariable,
+      })
+
+      return visualizationState ? (
+        <CapacitySearchVisualizer
+          name={targetVariable}
+          state={visualizationState}
+        />
+      ) : (
+        <div>Capacity-search state is not available.</div>
+      )
+    }
+
     case 'binary-search': {
-      const fallbackStep =
-        executionState.steps[targetStepIndex ?? executionState.currentStep]
+      const fallbackStepIndex = targetStepIndex ?? executionState.currentStep
       const currentStepData = currentStep?.variables[targetVariable]
-      const binarySearchStep =
+      const binarySearchStepIndex =
         currentStep &&
         isBinarySearchArrayCandidate(
           targetVariable,
           currentStepData,
           currentStep.variables
         )
-          ? currentStep
-          : fallbackStep
+          ? executionState.currentStep
+          : fallbackStepIndex
+      const binarySearchStep = executionState.steps[binarySearchStepIndex]
       const data = binarySearchStep?.variables[targetVariable]
       const indexState = getBinarySearchIndexState(
         binarySearchStep?.variables ?? {}
+      )
+      const rangeMode = getBinarySearchRangeMode(
+        executionState,
+        targetVariable,
+        binarySearchStepIndex
       )
 
       return isNumericArray(data) && indexState ? (
@@ -341,6 +365,7 @@ export function VisualizationModalContent({
           data={data.map((value) => Number(value))}
           name={targetVariable}
           indexState={indexState}
+          rangeMode={rangeMode}
         />
       ) : (
         <div>Binary search indexes are not available.</div>

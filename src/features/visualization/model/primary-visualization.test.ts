@@ -19,6 +19,8 @@ const emptyDetection: VisualizationDetection = {
   primaryMaxSubarrayStepIndex: undefined,
   primaryStockProfitArrayName: undefined,
   primaryStockProfitStepIndex: undefined,
+  primaryCapacitySearchArrayName: undefined,
+  primaryCapacitySearchStepIndex: undefined,
   primaryBinarySearchArrayName: undefined,
   primaryBinarySearchStepIndex: undefined,
   primarySlidingWindowStringName: undefined,
@@ -130,6 +132,22 @@ describe('getPrimaryVisualization', () => {
       type: 'stock-profit',
       targetVariable: 'prices',
       targetStepIndex: 4,
+    })
+  })
+
+  it('selects capacity-search state instead of a generic index view', () => {
+    expect(
+      getPrimaryVisualization({
+        ...emptyDetection,
+        primaryCapacitySearchArrayName: 'weights',
+        primaryCapacitySearchStepIndex: 5,
+        primaryBinarySearchArrayName: 'weights',
+        primaryBinarySearchStepIndex: 5,
+      })
+    ).toEqual({
+      type: 'capacity-search',
+      targetVariable: 'weights',
+      targetStepIndex: 5,
     })
   })
 

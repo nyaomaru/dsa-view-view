@@ -10,6 +10,7 @@ export type VisualizationType =
   | 'area'
   | 'max-subarray'
   | 'stock-profit'
+  | 'capacity-search'
   | 'binary-search'
   | 'sliding-window'
   | 'bar-chart'

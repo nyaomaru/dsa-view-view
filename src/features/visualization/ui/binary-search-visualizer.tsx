@@ -1,5 +1,8 @@
 import { Card } from '@/shared/ui'
-import type { BinarySearchIndexState } from '../lib/binary-search-view'
+import type {
+  BinarySearchIndexState,
+  BinarySearchRangeMode,
+} from '../lib/binary-search-view'
 
 type BinarySearchVisualizerProps = {
   /** Numeric array being searched. */
@@ -8,11 +11,21 @@ type BinarySearchVisualizerProps = {
   name: string
   /** Current left/right/mid index state. */
   indexState: BinarySearchIndexState
+  /** Whether the right boundary is included in the active range. */
+  rangeMode: BinarySearchRangeMode
 }
 
-function getClampedRange(indexState: BinarySearchIndexState, length: number) {
+function getClampedRange(
+  indexState: BinarySearchIndexState,
+  length: number,
+  rangeMode: BinarySearchRangeMode
+) {
+  const inclusiveRight =
+    rangeMode === 'half-open' ? indexState.right - 1 : indexState.right
+  if (indexState.left > inclusiveRight) return null
+
   const left = Math.max(0, Math.min(indexState.left, length - 1))
-  const right = Math.max(0, Math.min(indexState.right, length - 1))
+  const right = Math.max(0, Math.min(inclusiveRight, length - 1))
 
   return left <= right ? { left, right } : null
 }
@@ -21,8 +34,9 @@ export function BinarySearchVisualizer({
   data,
   name,
   indexState,
+  rangeMode,
 }: BinarySearchVisualizerProps) {
-  const activeRange = getClampedRange(indexState, data.length)
+  const activeRange = getClampedRange(indexState, data.length, rangeMode)
 
   return (
     <Card className="h-full border-0 shadow-none">
@@ -36,7 +50,8 @@ export function BinarySearchVisualizer({
               left: {indexState.left}
             </span>
             <span className="border border-primary px-2 py-1">
-              right: {indexState.right}
+              right{rangeMode === 'half-open' ? ' (exclusive)' : ''}:{' '}
+              {indexState.right}
             </span>
             <span className="border border-primary px-2 py-1">
               mid: {indexState.mid ?? '-'}
@@ -63,6 +78,7 @@ export function BinarySearchVisualizer({
               return (
                 <div key={index} className="flex flex-col items-center gap-2">
                   <div
+                    aria-label={`Index ${index}: value ${value}, ${isMid ? 'midpoint' : isInRange ? 'in range' : 'out of range'}`}
                     className={[
                       'flex h-14 w-full min-w-14 items-center justify-center border font-mono text-base font-bold transition-colors',
                       isMid
