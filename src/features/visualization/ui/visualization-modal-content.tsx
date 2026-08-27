@@ -17,6 +17,7 @@ import {
 import { safeStringify } from '@/shared/lib/safe-stringify'
 import {
   getBinarySearchIndexState,
+  getBinarySearchRangeMode,
   isBinarySearchArrayCandidate,
 } from '../lib/binary-search-view'
 import { getAreaVisualizationState } from '../lib/area-view'
@@ -353,12 +354,14 @@ export function VisualizationModalContent({
       const indexState = getBinarySearchIndexState(
         binarySearchStep?.variables ?? {}
       )
+      const rangeMode = getBinarySearchRangeMode(executionState, targetVariable)
 
       return isNumericArray(data) && indexState ? (
         <BinarySearchVisualizer
           data={data.map((value) => Number(value))}
           name={targetVariable}
           indexState={indexState}
+          rangeMode={rangeMode}
         />
       ) : (
         <div>Binary search indexes are not available.</div>

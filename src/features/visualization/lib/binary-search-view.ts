@@ -1,4 +1,4 @@
-import type { ExecutionStep } from '@/entities/execution'
+import type { ExecutionState, ExecutionStep } from '@/entities/execution'
 import {
   equals,
   isInteger,
@@ -19,6 +19,9 @@ export type BinarySearchIndexState = {
   /** Optional current midpoint. */
   mid?: number
 }
+
+/** Boundary convention used by a binary-search trace. */
+export type BinarySearchRangeMode = 'inclusive' | 'half-open'
 
 /**
  * Reads binary-search indexes from execution variables.
@@ -67,10 +70,29 @@ function isIndexStateWithinArray(
     indexState.left >= 0 &&
     indexState.left <= length &&
     indexState.right >= -1 &&
-    indexState.right < length &&
+    indexState.right <= length &&
     indexState.left <= indexState.right + 1
 
   return isInclusiveRangeOrTerminalCrossing && isMidWithinArray
+}
+
+/** Detects whether a trace uses an inclusive or exclusive right boundary. */
+export function getBinarySearchRangeMode(
+  executionState: ExecutionState,
+  variableName: string
+): BinarySearchRangeMode {
+  const usesExclusiveUpperBound = executionState.steps.some((step) => {
+    const data = step.variables[variableName]
+    const indexState = getBinarySearchIndexState(step.variables)
+
+    return (
+      isNumericArray(data) &&
+      !isNull(indexState) &&
+      indexState.right === data.length
+    )
+  })
+
+  return usesExclusiveUpperBound ? 'half-open' : 'inclusive'
 }
 
 /**
