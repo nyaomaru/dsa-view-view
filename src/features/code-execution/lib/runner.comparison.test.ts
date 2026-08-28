@@ -61,6 +61,31 @@ function compare(status: string): boolean {
     })
   })
 
+  it('does not invoke getters while capturing comparison operands', () => {
+    const state = executeCode(
+      `
+function compare(): { calls: number; matched: boolean } {
+  let calls = 0
+  const matched = ({
+    get x() {
+      calls += 1
+      return 1
+    },
+  }) === null
+
+  return { calls, matched }
+}
+`,
+      {},
+      'compare'
+    )
+    const comparison = state.steps.find((step) => step.metadata?.comparison)
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual({ calls: 0, matched: false })
+    expect(comparison?.metadata?.comparison?.left.value).toBe('[Object]')
+  })
+
   it('preserves the variable environment of direct eval operands', () => {
     const state = executeCode(
       `

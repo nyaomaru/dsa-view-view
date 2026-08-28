@@ -6,9 +6,10 @@ import {
   type CallFrameStepMetadata,
   type ExecutionStep,
   type InputValues,
+  type RuntimeComparison,
 } from '@/entities/execution'
 import { deepClone } from '@/shared/lib/deep-clone'
-import { isInteger, isString } from '@/shared/lib/guards'
+import { isFunction, isInteger, isObject, isString } from '@/shared/lib/guards'
 import { MAX_STEPS, StepLimitError } from './execution-errors'
 import { CALL_FRAME_ID_LABEL } from './frame-identity'
 import { createHeapTraceCollector, type HeapTraceCollector } from './heap-trace'
@@ -240,6 +241,28 @@ function createStepWithLazyVariables(
   return step
 }
 
+/** Captures references without reading user-defined properties or traps. */
+function captureComparisonValue(value: unknown): unknown {
+  if (isFunction(value)) return '[Function]'
+  if (isObject(value)) return '[Object]'
+  return value
+}
+
+function captureComparison(comparison: RuntimeComparison): RuntimeComparison {
+  return {
+    left: {
+      expression: comparison.left.expression,
+      value: captureComparisonValue(comparison.left.value),
+    },
+    operator: comparison.operator,
+    right: {
+      expression: comparison.right.expression,
+      value: captureComparisonValue(comparison.right.value),
+    },
+    result: comparison.result,
+  }
+}
+
 export function recordExecutionStep(
   context: ExecutionContext,
   type: ExecutionStep['type'],
@@ -269,7 +292,7 @@ export function recordExecutionStep(
     visibleVariableNames: Object.keys(visibleStepVariables),
   })
   const comparison = isRuntimeComparison(instrumentationMetadata?.comparison)
-    ? deepClone(instrumentationMetadata.comparison)
+    ? captureComparison(instrumentationMetadata.comparison)
     : undefined
 
   Object.assign(context.variables, visibleStepVariables)
