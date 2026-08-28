@@ -34,6 +34,33 @@ function compare(): { calls: number; first: boolean; second: boolean } {
     })
   })
 
+  it('records comparisons containing template literals', () => {
+    const state = executeCode(
+      `
+function compare(status: string): boolean {
+  return \`ready\` === status
+}
+`,
+      { status: 'ready' },
+      'compare'
+    )
+    const comparison = state.steps.find((step) => step.metadata?.comparison)
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(true)
+    expect(comparison).toMatchObject({
+      description: 'Compare `ready` === status -> true',
+      metadata: {
+        comparison: {
+          left: { expression: '`ready`', value: 'ready' },
+          operator: '===',
+          right: { expression: 'status', value: 'ready' },
+          result: true,
+        },
+      },
+    })
+  })
+
   it('does not read a for-loop binding from its own initializer', () => {
     const state = executeCode(
       `

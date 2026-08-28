@@ -117,15 +117,10 @@ export function createComparisonVisitor(context: InstrumentationContext) {
         const resultId = path.scope.generateUidIdentifier(
           'algorithmVisualizerComparisonResult'
         )
-        const description = t.templateLiteral(
-          [
-            t.templateElement({
-              raw: `Compare ${trace.source} -> `,
-              cooked: `Compare ${trace.source} -> `,
-            }),
-            t.templateElement({ raw: '', cooked: '' }, true),
-          ],
-          [resultId]
+        const description = t.binaryExpression(
+          '+',
+          t.stringLiteral(`Compare ${trace.source} -> `),
+          resultId
         )
         const comparisonMetadata = t.objectExpression([
           t.objectProperty(
