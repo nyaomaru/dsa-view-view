@@ -70,6 +70,21 @@ function hasSuspendingOperand(path: NodePath<t.BinaryExpression>): boolean {
   return hasSuspendingOperand
 }
 
+function hasDirectEvalOperand(path: NodePath<t.BinaryExpression>): boolean {
+  let hasDirectEvalOperand = false
+
+  path.traverse({
+    CallExpression(callPath) {
+      if (!t.isIdentifier(callPath.node.callee, { name: 'eval' })) return
+
+      hasDirectEvalOperand = true
+      callPath.stop()
+    },
+  })
+
+  return hasDirectEvalOperand
+}
+
 function createOperandMetadata(
   expression: string,
   valueIdentifier: t.Identifier
@@ -102,7 +117,11 @@ export function createComparisonVisitor(context: InstrumentationContext) {
         })
       },
       exit(path: NodePath<t.BinaryExpression>) {
-        if (context.isInstrumented(path.node) || hasSuspendingOperand(path)) {
+        if (
+          context.isInstrumented(path.node) ||
+          hasSuspendingOperand(path) ||
+          hasDirectEvalOperand(path)
+        ) {
           return
         }
 

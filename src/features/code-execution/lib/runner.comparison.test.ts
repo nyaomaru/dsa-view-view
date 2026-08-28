@@ -61,6 +61,24 @@ function compare(status: string): boolean {
     })
   })
 
+  it('preserves the variable environment of direct eval operands', () => {
+    const state = executeCode(
+      `
+function compare(): number {
+  eval('var observed = 1; 0') === 0
+
+  return observed
+}
+`,
+      {},
+      'compare'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(1)
+    expect(state.steps.some((step) => step.metadata?.comparison)).toBe(false)
+  })
+
   it('does not read a for-loop binding from its own initializer', () => {
     const state = executeCode(
       `
