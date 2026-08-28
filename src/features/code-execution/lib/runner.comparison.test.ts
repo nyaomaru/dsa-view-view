@@ -109,6 +109,52 @@ function choose(n = 1, start = n > 0 ? 0 : 1): number {
 
   it.each([
     {
+      method: 'object',
+      code: `
+function choose(flag: boolean): string {
+  const methods = {
+    [flag === true ? 'a' : 'b'](value: string): string {
+      return value
+    },
+  }
+
+  return methods.a('object')
+}
+`,
+      expected: 'object',
+    },
+    {
+      method: 'class',
+      code: `
+function choose(flag: boolean): string {
+  class Methods {
+    [flag === true ? 'a' : 'b'](value: string): string {
+      return value
+    }
+  }
+
+  return new Methods().a('class')
+}
+`,
+      expected: 'class',
+    },
+  ])(
+    'does not read $method method bindings from its computed key',
+    ({ code, expected }) => {
+      const state = executeCode(code, { flag: true }, 'choose')
+
+      expect(state.error).toBeUndefined()
+      expect(state.returnValue).toBe(expected)
+      expect(
+        state.steps.some(
+          (step) => step.metadata?.comparison?.left.expression === 'flag'
+        )
+      ).toBe(false)
+    }
+  )
+
+  it.each([
+    {
       loop: 'for...of',
       code: `
 function collect(s: string): string[] {

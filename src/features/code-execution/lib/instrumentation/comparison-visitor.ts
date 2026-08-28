@@ -22,10 +22,11 @@ function runsBeforeTrackedBindingsInitialize(
   ])
 
   for (const ancestor of ancestry) {
-    if (ancestor.isFunction()) {
-      return ancestor.node.params.some((parameter) =>
-        containingNodes.has(parameter)
-      )
+    if (
+      ancestor.isFunction() &&
+      !containingNodes.has(ancestor.node.body)
+    ) {
+      return true
     }
 
     if (
