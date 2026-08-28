@@ -12,9 +12,15 @@ import {
   type Guard,
 } from '@/shared/lib/guards'
 import type { ExecutionState, ExecutionStep } from './types'
-import { STEP_TYPES } from './constants'
+import { RUNTIME_COMPARISON_OPERATORS, STEP_TYPES } from './constants'
+import type { RuntimeComparison } from './types'
 
 const isExecutionStepType = oneOfValues(Object.values(STEP_TYPES))
+export const isRuntimeComparisonOperator = oneOfValues(
+  ...RUNTIME_COMPARISON_OPERATORS
+)
+const hasRuntimeComparisonKeys = hasKeys('left', 'operator', 'right', 'result')
+const hasRuntimeComparisonOperandKeys = hasKeys('expression', 'value')
 const hasExecutionStepKeys = hasKeys(
   'stepNumber',
   'type',
@@ -29,6 +35,29 @@ const hasExecutionStateKeys = hasKeys(
   'steps',
   'isComplete'
 )
+
+export const isRuntimeComparison: Guard<RuntimeComparison> =
+  define<RuntimeComparison>((value) => {
+    if (!isNonArrayObject(value) || !hasRuntimeComparisonKeys(value)) {
+      return false
+    }
+
+    const { left, right } = value
+    if (
+      !isNonArrayObject(left) ||
+      !hasRuntimeComparisonOperandKeys(left) ||
+      !isString(left.expression) ||
+      !isNonArrayObject(right) ||
+      !hasRuntimeComparisonOperandKeys(right) ||
+      !isString(right.expression)
+    ) {
+      return false
+    }
+
+    return (
+      isRuntimeComparisonOperator(value.operator) && isBoolean(value.result)
+    )
+  })
 
 export const isExecutionStep: Guard<ExecutionStep> = define<ExecutionStep>(
   (value) => {

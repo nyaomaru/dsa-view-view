@@ -1,6 +1,7 @@
 import {
   CLASS_RECEIVER_LABEL,
   FUNCTION_NAME_LABEL,
+  isRuntimeComparison,
   STEP_TYPES,
   type CallFrameStepMetadata,
   type ExecutionStep,
@@ -244,7 +245,8 @@ export function recordExecutionStep(
   type: ExecutionStep['type'],
   line: number,
   description: string,
-  stepVariables: Record<string, unknown>
+  stepVariables: Record<string, unknown>,
+  instrumentationMetadata?: ExecutionStep['metadata']
 ): ExecutionStep {
   if (context.stepNumber >= MAX_STEPS) {
     throw new StepLimitError(MAX_STEPS)
@@ -266,6 +268,9 @@ export function recordExecutionStep(
     frameId,
     visibleVariableNames: Object.keys(visibleStepVariables),
   })
+  const comparison = isRuntimeComparison(instrumentationMetadata?.comparison)
+    ? deepClone(instrumentationMetadata.comparison)
+    : undefined
 
   Object.assign(context.variables, visibleStepVariables)
   const variablesForStep =
@@ -295,10 +300,16 @@ export function recordExecutionStep(
       timestamp: Date.now(),
       callStack: getFrameCallStack(context, callStackFrameId),
       metadata:
-        heapTrace || callFrame
+        heapTrace || callFrame || comparison
           ? {
               ...(heapTrace ? { heapTrace: deepClone(heapTrace) } : {}),
               ...(callFrame ? { callFrame } : {}),
+              ...(comparison
+                ? {
+                    comparison,
+                    conditionResult: comparison.result,
+                  }
+                : {}),
             }
           : undefined,
     },

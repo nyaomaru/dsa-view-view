@@ -56,8 +56,9 @@ export function getPrimaryStackName(
     return (
       (isResultLikeName(name) || hasStackSemantics) &&
       isArray(value) &&
-      value.length > 0 &&
-      (!isNumericArray(value) ||
+      (value.length > 0 || hasStackSemantics) &&
+      (hasStackSemantics ||
+        !isNumericArray(value) ||
         (options.includeNumericResultArrays &&
           options.mutatedNumericArrayNames?.has(name)))
     )

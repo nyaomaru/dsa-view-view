@@ -131,6 +131,16 @@ describe('detectVisualizationState', () => {
     expect(detection.primaryStackName).toBe('stack')
   })
 
+  it('keeps an empty named stack available for runtime comparisons', () => {
+    const state = createExecutionState([
+      createStep(0, 'Compare stack.pop() !== pairs.get(char) -> true', {
+        stack: [],
+      }),
+    ])
+
+    expect(detectVisualizationState(state).primaryStackName).toBe('stack')
+  })
+
   it('selects a mutated numeric array only for sorting traces', () => {
     const sortingState = createExecutionState([
       createStep(0, 'Initial values', { nums: [2, 1] }),

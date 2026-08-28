@@ -244,7 +244,11 @@ export function VisualizationModalContent({
       })?.variables[targetVariable]
 
       return isArray(data) ? (
-        <StackVisualizer data={data} name={targetVariable} />
+        <StackVisualizer
+          data={data}
+          name={targetVariable}
+          comparison={currentStep?.metadata?.comparison}
+        />
       ) : (
         <div>Variable is not an array</div>
       )

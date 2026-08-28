@@ -6,6 +6,19 @@ export const YIELD_INPUT_LABEL = 'yield input'
 export const CLASS_RECEIVER_LABEL = '__algorithmVisualizerClassReceiver'
 export const FUNCTION_NAME_LABEL = '__algorithmVisualizerFunctionName'
 
+export const RUNTIME_COMPARISON_OPERATORS = [
+  '===',
+  '!==',
+  '==',
+  '!=',
+  '<',
+  '<=',
+  '>',
+  '>=',
+  'in',
+  'instanceof',
+] as const
+
 export const STEP_TYPES = {
   FUNCTION_CALL: 'function-call',
   FUNCTION_ENTRY: 'function-entry',
