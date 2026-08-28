@@ -94,9 +94,7 @@ export function StackVisualizer({
           Bottom
         </span>
       </div>
-      {comparison && (
-        <RuntimeComparisonView comparison={comparison} className="mt-5" />
-      )}
+      <RuntimeComparisonView comparison={comparison} className="mt-5" />
     </div>
   )
 }

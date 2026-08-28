@@ -5,14 +5,14 @@ import type { ExecutionState } from '@/entities/execution'
 import { VisualizationModalContent } from './visualization-modal-content'
 
 describe('StackVisualizer', () => {
-  it('shows the active runtime comparison alongside an empty stack', () => {
+  it('keeps the latest runtime comparison visible on following steps', () => {
     const comparison = {
       left: { expression: 'stack.pop()', value: undefined },
       operator: '!==',
       right: { expression: 'pairs.get(char)', value: '(' },
       result: true,
     } as const
-    const currentStep: ExecutionState['steps'][number] = {
+    const comparisonStep: ExecutionState['steps'][number] = {
       stepNumber: 0,
       type: 'condition',
       line: 1,
@@ -21,10 +21,18 @@ describe('StackVisualizer', () => {
       timestamp: 0,
       metadata: { comparison },
     }
+    const currentStep: ExecutionState['steps'][number] = {
+      stepNumber: 1,
+      type: 'array-mutation',
+      line: 2,
+      description: 'stack.pop()',
+      variables: { stack: [] },
+      timestamp: 1,
+    }
     const executionState: ExecutionState = {
-      currentStep: 0,
-      totalSteps: 1,
-      steps: [currentStep],
+      currentStep: 1,
+      totalSteps: 2,
+      steps: [comparisonStep, currentStep],
       isComplete: false,
     }
 

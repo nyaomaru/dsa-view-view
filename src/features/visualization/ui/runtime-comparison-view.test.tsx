@@ -4,6 +4,17 @@ import { describe, expect, it } from 'vite-plus/test'
 import { RuntimeComparisonView } from './runtime-comparison-view'
 
 describe('RuntimeComparisonView', () => {
+  it('keeps a stable placeholder before the first comparison', () => {
+    render(<RuntimeComparisonView />)
+
+    const view = screen.getByLabelText('Runtime comparison')
+
+    expect(within(view).getByText('Waiting')).toBeInTheDocument()
+    expect(
+      within(view).getByText('No comparison evaluated yet.')
+    ).toBeInTheDocument()
+  })
+
   it('renders explicit undefined operands and a true result', () => {
     render(
       <RuntimeComparisonView
