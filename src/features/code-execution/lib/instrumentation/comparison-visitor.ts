@@ -12,6 +12,42 @@ type ComparisonTrace = {
   source: string
 }
 
+function runsBeforeTrackedBindingsInitialize(
+  path: NodePath<t.BinaryExpression>
+): boolean {
+  const ancestry = path.getAncestry()
+  const containingNodes = new Set<t.Node>([
+    path.node,
+    ...ancestry.map((ancestor) => ancestor.node),
+  ])
+
+  for (const ancestor of ancestry) {
+    if (ancestor.isFunction()) {
+      return ancestor.node.params.some((parameter) =>
+        containingNodes.has(parameter)
+      )
+    }
+
+    if (
+      ancestor.isForStatement() &&
+      t.isVariableDeclaration(ancestor.node.init) &&
+      containingNodes.has(ancestor.node.init)
+    ) {
+      return true
+    }
+
+    if (
+      (ancestor.isForInStatement() || ancestor.isForOfStatement()) &&
+      t.isVariableDeclaration(ancestor.node.left) &&
+      containingNodes.has(ancestor.node.left)
+    ) {
+      return true
+    }
+  }
+
+  return false
+}
+
 function hasSuspendingOperand(path: NodePath<t.BinaryExpression>): boolean {
   let hasSuspendingOperand = false
 
@@ -51,7 +87,8 @@ export function createComparisonVisitor(context: InstrumentationContext) {
       enter(path: NodePath<t.BinaryExpression>) {
         if (
           context.isInstrumented(path.node) ||
-          !isRuntimeComparisonOperator(path.node.operator)
+          !isRuntimeComparisonOperator(path.node.operator) ||
+          runsBeforeTrackedBindingsInitialize(path)
         ) {
           return
         }

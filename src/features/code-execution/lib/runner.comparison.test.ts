@@ -33,4 +33,50 @@ function compare(): { calls: number; first: boolean; second: boolean } {
       },
     })
   })
+
+  it('does not read a for-loop binding from its own initializer', () => {
+    const state = executeCode(
+      `
+function collect(n: number): number[] {
+  const values: number[] = []
+
+  for (let i = n > 0 ? 0 : 1; i < 1; i += 1) {
+    values.push(i)
+  }
+
+  return values
+}
+`,
+      { n: 1 },
+      'collect'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toEqual([0])
+    expect(
+      state.steps.some(
+        (step) => step.metadata?.comparison?.left.expression === 'n'
+      )
+    ).toBe(false)
+  })
+
+  it('does not read parameters or frame bindings from a default parameter', () => {
+    const state = executeCode(
+      `
+function choose(n = 1, start = n > 0 ? 0 : 1): number {
+  return start
+}
+`,
+      { n: undefined, start: undefined },
+      'choose'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(0)
+    expect(
+      state.steps.some(
+        (step) => step.metadata?.comparison?.left.expression === 'n'
+      )
+    ).toBe(false)
+  })
 })
