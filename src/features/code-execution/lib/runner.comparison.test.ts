@@ -79,4 +79,55 @@ function choose(n = 1, start = n > 0 ? 0 : 1): number {
       )
     ).toBe(false)
   })
+
+  it.each([
+    {
+      loop: 'for...of',
+      code: `
+function collect(s: string): string[] {
+  const values: string[] = []
+
+  for (const char of s.length > 0 ? s : '') {
+    values.push(char)
+  }
+
+  return values
+}
+`,
+      inputs: { s: 'ab' },
+      expected: ['a', 'b'],
+      leftExpression: 's.length',
+    },
+    {
+      loop: 'for...in',
+      code: `
+function collect(items: Record<string, number>): string[] {
+  const keys: string[] = []
+
+  for (const key in Object.keys(items).length > 0 ? items : {}) {
+    keys.push(key)
+  }
+
+  return keys
+}
+`,
+      inputs: { items: { first: 1 } },
+      expected: ['first'],
+      leftExpression: 'Object.keys(items).length',
+    },
+  ])(
+    'does not read a $loop binding while evaluating its right-hand expression',
+    ({ code, inputs, expected, leftExpression }) => {
+      const state = executeCode(code, inputs, 'collect')
+
+      expect(state.error).toBeUndefined()
+      expect(state.returnValue).toEqual(expected)
+      expect(
+        state.steps.some(
+          (step) =>
+            step.metadata?.comparison?.left.expression === leftExpression
+        )
+      ).toBe(false)
+    }
+  )
 })

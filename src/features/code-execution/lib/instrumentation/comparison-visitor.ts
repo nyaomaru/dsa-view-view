@@ -39,7 +39,8 @@ function runsBeforeTrackedBindingsInitialize(
     if (
       (ancestor.isForInStatement() || ancestor.isForOfStatement()) &&
       t.isVariableDeclaration(ancestor.node.left) &&
-      containingNodes.has(ancestor.node.left)
+      (containingNodes.has(ancestor.node.left) ||
+        containingNodes.has(ancestor.node.right))
     ) {
       return true
     }
