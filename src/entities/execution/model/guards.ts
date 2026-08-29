@@ -3,12 +3,17 @@ import {
   hasKeys,
   isArray,
   isBoolean,
+  isFunction,
   isInteger,
   isNonArrayObject,
+  isObject,
+  isPrimitive,
   isString,
   isStringArray,
   isUndefined,
   oneOfValues,
+  or,
+  struct,
   type Guard,
 } from '@/shared/lib/guards'
 import type { ExecutionState, ExecutionStep } from './types'
@@ -19,8 +24,11 @@ const isExecutionStepType = oneOfValues(Object.values(STEP_TYPES))
 export const isRuntimeComparisonOperator = oneOfValues(
   ...RUNTIME_COMPARISON_OPERATORS
 )
-const hasRuntimeComparisonKeys = hasKeys('left', 'operator', 'right', 'result')
-const hasRuntimeComparisonOperandKeys = hasKeys('expression', 'value')
+const isRuntimeComparisonValue = or(isPrimitive, isObject, isFunction)
+const isRuntimeComparisonOperand = struct({
+  expression: isString,
+  value: isRuntimeComparisonValue,
+})
 const hasExecutionStepKeys = hasKeys(
   'stepNumber',
   'type',
@@ -36,28 +44,12 @@ const hasExecutionStateKeys = hasKeys(
   'isComplete'
 )
 
-export const isRuntimeComparison: Guard<RuntimeComparison> =
-  define<RuntimeComparison>((value) => {
-    if (!isNonArrayObject(value) || !hasRuntimeComparisonKeys(value)) {
-      return false
-    }
-
-    const { left, right } = value
-    if (
-      !isNonArrayObject(left) ||
-      !hasRuntimeComparisonOperandKeys(left) ||
-      !isString(left.expression) ||
-      !isNonArrayObject(right) ||
-      !hasRuntimeComparisonOperandKeys(right) ||
-      !isString(right.expression)
-    ) {
-      return false
-    }
-
-    return (
-      isRuntimeComparisonOperator(value.operator) && isBoolean(value.result)
-    )
-  })
+export const isRuntimeComparison: Guard<RuntimeComparison> = struct({
+  left: isRuntimeComparisonOperand,
+  operator: isRuntimeComparisonOperator,
+  right: isRuntimeComparisonOperand,
+  result: isBoolean,
+})
 
 export const isExecutionStep: Guard<ExecutionStep> = define<ExecutionStep>(
   (value) => {
