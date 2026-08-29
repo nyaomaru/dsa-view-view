@@ -86,6 +86,32 @@ function compare(): { calls: number; matched: boolean } {
     expect(comparison?.metadata?.comparison?.left.value).toBe('[Object]')
   })
 
+  it('does not invoke getters from comparison scope snapshots', () => {
+    const state = executeCode(
+      `
+function compare(): number {
+  let calls = 0
+  const obj: Record<string, unknown> = {}
+  Object.defineProperty(obj, 'x', {
+    enumerable: true,
+    get() {
+      calls += 1
+      return 1
+    },
+  })
+
+  1 === 1
+  return calls
+}
+`,
+      {},
+      'compare'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(0)
+  })
+
   it('preserves the variable environment of direct eval operands', () => {
     const state = executeCode(
       `

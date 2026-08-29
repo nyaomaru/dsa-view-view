@@ -55,4 +55,19 @@ describe('deepClone', () => {
     expect(clone.items[0]).toBe(clone.items[1])
     expect(clone.items[2]).toBe(clone.items)
   })
+
+  it('does not invoke enumerable getters', () => {
+    let calls = 0
+    const value = {
+      get result() {
+        calls += 1
+        return 1
+      },
+    }
+
+    const clone = deepClone(value)
+
+    expect(calls).toBe(0)
+    expect(clone).toEqual({ result: '[Getter]' })
+  })
 })

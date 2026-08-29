@@ -263,6 +263,17 @@ function captureComparison(comparison: RuntimeComparison): RuntimeComparison {
   }
 }
 
+/** Keeps comparison snapshots from traversing scoped user references. */
+function captureComparisonScopeVariables(
+  variables: Record<string, unknown>
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(variables).filter(
+      ([, value]) => !isObject(value) && !isFunction(value)
+    )
+  )
+}
+
 export function recordExecutionStep(
   context: ExecutionContext,
   type: ExecutionStep['type'],
@@ -296,8 +307,11 @@ export function recordExecutionStep(
     : undefined
 
   Object.assign(context.variables, visibleStepVariables)
-  const variablesForStep =
+  const changedVariables =
     context.stepNumber === 0 ? context.variables : visibleStepVariables
+  const variablesForStep = comparison
+    ? captureComparisonScopeVariables(changedVariables)
+    : changedVariables
   const variableDelta = deepClone(variablesForStep)
 
   updateActiveFrame(context, type, callFrame)
