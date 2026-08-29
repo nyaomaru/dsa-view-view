@@ -12,6 +12,13 @@ import {
 const isIntlCollator = isInstanceOf(
   Intl.Collator as unknown as abstract new (...args: unknown[]) => Intl.Collator
 )
+const mapForEach = Reflect.get(Map.prototype, 'forEach') as Map<
+  unknown,
+  unknown
+>['forEach']
+const setForEach = Reflect.get(Set.prototype, 'forEach') as Set<
+  unknown
+>['forEach']
 
 function hasEnumerableAccessor(
   value: unknown,
@@ -24,7 +31,7 @@ function hasEnumerableAccessor(
 
   if (isMap(value)) {
     let found = false
-    value.forEach((item, key) => {
+    mapForEach.call(value, (item, key) => {
       found ||=
         hasEnumerableAccessor(key, seen) ||
         hasEnumerableAccessor(item, seen)
@@ -34,7 +41,7 @@ function hasEnumerableAccessor(
 
   if (isSet(value)) {
     let found = false
-    value.forEach((item) => {
+    setForEach.call(value, (item) => {
       found ||= hasEnumerableAccessor(item, seen)
     })
     return found
@@ -98,7 +105,7 @@ function cloneWithoutStructuredClone<T>(
   if (isMap(value)) {
     const clone = new Map<unknown, unknown>()
     seen.set(value, clone)
-    value.forEach((item, key) => {
+    mapForEach.call(value, (item, key) => {
       clone.set(
         cloneWithoutStructuredClone(key, seen),
         cloneWithoutStructuredClone(item, seen)
@@ -110,7 +117,9 @@ function cloneWithoutStructuredClone<T>(
   if (isSet(value)) {
     const clone = new Set<unknown>()
     seen.set(value, clone)
-    value.forEach((item) => clone.add(cloneWithoutStructuredClone(item, seen)))
+    setForEach.call(value, (item) =>
+      clone.add(cloneWithoutStructuredClone(item, seen))
+    )
     return clone as T
   }
 

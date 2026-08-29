@@ -70,4 +70,27 @@ describe('deepClone', () => {
     expect(calls).toBe(0)
     expect(clone).toEqual({ result: '[Getter]' })
   })
+
+  it('does not call overridden Map or Set forEach methods', () => {
+    let calls = 0
+    const map = new Map([[1, { count: 2 }]])
+    const set = new Set(['a'])
+
+    Object.defineProperty(map, 'forEach', {
+      value: () => {
+        calls += 1
+      },
+    })
+    Object.defineProperty(set, 'forEach', {
+      value: () => {
+        calls += 1
+      },
+    })
+
+    const clone = deepClone({ fn: () => null, map, set })
+
+    expect(calls).toBe(0)
+    expect(clone.map.get(1)).toEqual({ count: 2 })
+    expect([...clone.set]).toEqual(['a'])
+  })
 })
