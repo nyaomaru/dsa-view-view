@@ -1,13 +1,15 @@
 import {
   CLASS_RECEIVER_LABEL,
   FUNCTION_NAME_LABEL,
+  isRuntimeComparison,
   STEP_TYPES,
   type CallFrameStepMetadata,
   type ExecutionStep,
   type InputValues,
+  type RuntimeComparison,
 } from '@/entities/execution'
 import { deepClone } from '@/shared/lib/deep-clone'
-import { isInteger, isString } from '@/shared/lib/guards'
+import { isFunction, isInteger, isObject, isString } from '@/shared/lib/guards'
 import { MAX_STEPS, StepLimitError } from './execution-errors'
 import { CALL_FRAME_ID_LABEL } from './frame-identity'
 import { createHeapTraceCollector, type HeapTraceCollector } from './heap-trace'
@@ -239,12 +241,46 @@ function createStepWithLazyVariables(
   return step
 }
 
+/** Captures references without reading user-defined properties or traps. */
+function captureComparisonValue(value: unknown): unknown {
+  if (isFunction(value)) return '[Function]'
+  if (isObject(value)) return '[Object]'
+  return value
+}
+
+function captureComparison(comparison: RuntimeComparison): RuntimeComparison {
+  return {
+    left: {
+      expression: comparison.left.expression,
+      value: captureComparisonValue(comparison.left.value),
+    },
+    operator: comparison.operator,
+    right: {
+      expression: comparison.right.expression,
+      value: captureComparisonValue(comparison.right.value),
+    },
+    result: comparison.result,
+  }
+}
+
+/** Keeps comparison snapshots from traversing scoped user references. */
+function captureComparisonScopeVariables(
+  variables: Record<string, unknown>
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(variables).filter(
+      ([, value]) => !isObject(value) && !isFunction(value)
+    )
+  )
+}
+
 export function recordExecutionStep(
   context: ExecutionContext,
   type: ExecutionStep['type'],
   line: number,
   description: string,
-  stepVariables: Record<string, unknown>
+  stepVariables: Record<string, unknown>,
+  instrumentationMetadata?: ExecutionStep['metadata']
 ): ExecutionStep {
   if (context.stepNumber >= MAX_STEPS) {
     throw new StepLimitError(MAX_STEPS)
@@ -266,10 +302,16 @@ export function recordExecutionStep(
     frameId,
     visibleVariableNames: Object.keys(visibleStepVariables),
   })
+  const comparison = isRuntimeComparison(instrumentationMetadata?.comparison)
+    ? captureComparison(instrumentationMetadata.comparison)
+    : undefined
 
   Object.assign(context.variables, visibleStepVariables)
-  const variablesForStep =
+  const changedVariables =
     context.stepNumber === 0 ? context.variables : visibleStepVariables
+  const variablesForStep = comparison
+    ? captureComparisonScopeVariables(changedVariables)
+    : changedVariables
   const variableDelta = deepClone(variablesForStep)
 
   updateActiveFrame(context, type, callFrame)
@@ -295,10 +337,16 @@ export function recordExecutionStep(
       timestamp: Date.now(),
       callStack: getFrameCallStack(context, callStackFrameId),
       metadata:
-        heapTrace || callFrame
+        heapTrace || callFrame || comparison
           ? {
               ...(heapTrace ? { heapTrace: deepClone(heapTrace) } : {}),
               ...(callFrame ? { callFrame } : {}),
+              ...(comparison
+                ? {
+                    comparison,
+                    conditionResult: comparison.result,
+                  }
+                : {}),
             }
           : undefined,
     },

@@ -104,9 +104,17 @@ export function* createTypeScriptExecutionRunner(
     type: ExecutionStep['type'],
     line: number,
     description: string,
-    stepVariables: Record<string, unknown>
+    stepVariables: Record<string, unknown>,
+    metadata?: ExecutionStep['metadata']
   ): ExecutionStep =>
-    recordExecutionStep(context, type, line, description, stepVariables)
+    recordExecutionStep(
+      context,
+      type,
+      line,
+      description,
+      stepVariables,
+      metadata
+    )
   attachInstrumentationIntrinsics(recordStep)
 
   try {
@@ -179,9 +187,17 @@ export async function* createAsyncTypeScriptExecutionRunner(
     type: ExecutionStep['type'],
     line: number,
     description: string,
-    stepVariables: Record<string, unknown>
+    stepVariables: Record<string, unknown>,
+    metadata?: ExecutionStep['metadata']
   ): ExecutionStep =>
-    recordExecutionStep(context, type, line, description, stepVariables)
+    recordExecutionStep(
+      context,
+      type,
+      line,
+      description,
+      stepVariables,
+      metadata
+    )
   attachInstrumentationIntrinsics(recordStep)
 
   try {

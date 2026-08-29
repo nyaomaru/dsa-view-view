@@ -32,6 +32,7 @@ import { getExecutionStepSearchOrder } from '../lib/execution-step-search'
 import { getHeapVisualizationState } from '../lib/heap-view'
 import { getWordLadderVisualizationState } from '../lib/word-ladder-view'
 import { getExpressionVisualizationState } from '../lib/expression-view'
+import { getLatestRuntimeComparison } from '../lib/runtime-comparison'
 import { hasCallFrameMetadata } from '../lib/call-frame-inspector'
 import type { VisualizationType } from '../model/types'
 import { StackVisualizer } from './stack-visualizer'
@@ -244,7 +245,11 @@ export function VisualizationModalContent({
       })?.variables[targetVariable]
 
       return isArray(data) ? (
-        <StackVisualizer data={data} name={targetVariable} />
+        <StackVisualizer
+          data={data}
+          name={targetVariable}
+          comparison={getLatestRuntimeComparison(executionState)}
+        />
       ) : (
         <div>Variable is not an array</div>
       )

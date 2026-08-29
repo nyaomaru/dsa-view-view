@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion'
+import type { RuntimeComparison } from '@/entities/execution'
 import { Card, Badge } from '@/shared/ui'
 import { isArray } from '@/shared/lib/guards'
+import { RuntimeComparisonView } from './runtime-comparison-view'
 
 const STACK_CONTAINER_MIN_HEIGHT_CLASS = 'min-h-[18.75rem]'
 const STACK_ITEM_ENTER_Y_OFFSET = -50
@@ -18,9 +20,15 @@ type StackVisualizerProps = {
   data: unknown
   /** Optional variable name shown above the stack. */
   name?: string
+  /** Runtime comparison evaluated at the current playback step. */
+  comparison?: RuntimeComparison
 }
 
-export function StackVisualizer({ data, name }: StackVisualizerProps) {
+export function StackVisualizer({
+  data,
+  name,
+  comparison,
+}: StackVisualizerProps) {
   // Ensure data is an array
   const stackData = isArray(data) ? data : []
 
@@ -86,6 +94,7 @@ export function StackVisualizer({ data, name }: StackVisualizerProps) {
           Bottom
         </span>
       </div>
+      <RuntimeComparisonView comparison={comparison} className="mt-5" />
     </div>
   )
 }

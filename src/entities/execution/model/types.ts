@@ -1,4 +1,28 @@
 import type { ExecutionStepType } from './constants'
+import type { RUNTIME_COMPARISON_OPERATORS } from './constants'
+
+export type RuntimeComparisonOperator =
+  (typeof RUNTIME_COMPARISON_OPERATORS)[number]
+
+/** One evaluated side of a runtime comparison. */
+export type RuntimeComparisonOperand = {
+  /** Source expression evaluated for this operand. */
+  expression: string
+  /** Runtime value produced by the expression, including explicit undefined. */
+  value: unknown
+}
+
+/** Evaluated operands and outcome captured for one runtime comparison. */
+export type RuntimeComparison = {
+  /** Evaluated left-hand operand. */
+  left: RuntimeComparisonOperand
+  /** Comparison operator applied to both operands. */
+  operator: RuntimeComparisonOperator
+  /** Evaluated right-hand operand. */
+  right: RuntimeComparisonOperand
+  /** Boolean result produced by the comparison. */
+  result: boolean
+}
 
 export type HeapKind = 'min' | 'max'
 
@@ -72,6 +96,8 @@ export type ExecutionStep = {
     loopIteration?: number
     /** Condition expression result. */
     conditionResult?: boolean
+    /** Evaluated operands and result for a runtime comparison. */
+    comparison?: RuntimeComparison
     /** Related function name. */
     functionName?: string
     /** Normalized state for MinHeap and MaxHeap instances. */

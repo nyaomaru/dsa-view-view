@@ -48,6 +48,7 @@ export {
   lazy,
   recordOf,
   safeJsonParse,
+  struct,
 } from 'is-kit'
 
 export type { Guard } from 'is-kit'

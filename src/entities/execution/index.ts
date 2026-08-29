@@ -2,6 +2,7 @@ export {
   FUNCTION_ARGUMENTS_LABEL,
   FUNCTION_NAME_LABEL,
   CLASS_RECEIVER_LABEL,
+  RUNTIME_COMPARISON_OPERATORS,
   RETURN_LOCATION_LABEL,
   RETURN_VALUE_LABEL,
   YIELD_INPUT_LABEL,
@@ -17,6 +18,14 @@ export type {
   HeapSnapshot,
   HeapTraceSnapshot,
   InputValues,
+  RuntimeComparison,
+  RuntimeComparisonOperand,
+  RuntimeComparisonOperator,
 } from './model/types'
 export type { ExecutionStepType } from './model/constants'
-export { isExecutionState, isExecutionStep } from './model/guards'
+export {
+  isExecutionState,
+  isExecutionStep,
+  isRuntimeComparison,
+  isRuntimeComparisonOperator,
+} from './model/guards'

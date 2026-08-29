@@ -1,6 +1,7 @@
 export * from './visualizer'
 export * from './visualization-modal'
 export * from './stack-visualizer'
+export * from './runtime-comparison-view'
 export * from './recursion-tree-visualizer'
 export * from './bar-chart-visualizer'
 export * from './area-visualizer'
