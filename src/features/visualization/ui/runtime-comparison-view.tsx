@@ -14,6 +14,7 @@ function formatOperand(value: unknown): string {
   return formatDisplayValue(value, {
     nullLabel: 'null',
     undefinedLabel: 'undefined',
+    quoteStrings: true,
   })
 }
 

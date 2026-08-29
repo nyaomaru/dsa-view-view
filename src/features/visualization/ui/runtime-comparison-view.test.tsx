@@ -35,7 +35,7 @@ describe('RuntimeComparisonView', () => {
     expect(within(left).getByText('undefined')).toBeInTheDocument()
     expect(within(view).getByText('!==')).toBeInTheDocument()
     expect(within(right).getByText('pairs.get(char)')).toBeInTheDocument()
-    expect(within(right).getByText('(')).toBeInTheDocument()
+    expect(within(right).getByText('"("')).toBeInTheDocument()
     expect(within(view).getByText('true')).toBeInTheDocument()
   })
 })
