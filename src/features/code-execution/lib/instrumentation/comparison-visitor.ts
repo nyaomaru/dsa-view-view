@@ -100,6 +100,7 @@ function declareComparisonTemporary(
   path: NodePath<t.BinaryExpression>,
   identifier: t.Identifier
 ): void {
+  context.registerInternalBinding(identifier.name)
   path.scope.push({ id: identifier, kind: 'var' })
 
   const declaration = path.scope.getBinding(identifier.name)?.path.parentPath

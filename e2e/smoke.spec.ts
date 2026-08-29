@@ -272,8 +272,9 @@ test('visualizes array and rolling DP examples', async ({ page, isMobile }) => {
         name: `DP View: ${example.variable}`,
       }),
     })
-    if (await dpDialog.isVisible()) {
-      await dpDialog.getByTitle('Skip to End').click()
+    const openDialog = page.getByRole('dialog')
+    if (await openDialog.isVisible()) {
+      await openDialog.getByTitle('Skip to End').click()
     } else {
       await page.getByTitle('Skip to End').first().click()
     }
@@ -329,8 +330,9 @@ test('visualizes semantic Map updates', async ({ page }) => {
         name: `Map View: ${example.map}`,
       }),
     })
-    if (await mapDialog.isVisible()) {
-      await mapDialog.getByTitle('Skip to End').click()
+    const openDialog = page.getByRole('dialog')
+    if (await openDialog.isVisible()) {
+      await openDialog.getByTitle('Skip to End').click()
     } else {
       await page.getByTitle('Skip to End').first().click()
     }

@@ -21,6 +21,7 @@ export class InstrumentationContext {
   > = []
   private readonly tracedGeneratorStack: boolean[] = []
   private readonly instrumentedNodes = new WeakSet<t.Node>()
+  private readonly internalBindingNames = new Set<string>()
   private readonly intrinsicsIdentifier: t.Identifier
 
   constructor(intrinsicsIdentifier: t.Identifier) {
@@ -34,6 +35,14 @@ export class InstrumentationContext {
   markInstrumented<T extends t.Node>(node: T): T {
     this.instrumentedNodes.add(node)
     return node
+  }
+
+  registerInternalBinding(name: string): void {
+    this.internalBindingNames.add(name)
+  }
+
+  isInternalBinding(name: string): boolean {
+    return this.internalBindingNames.has(name)
   }
 
   createIntrinsicReference(

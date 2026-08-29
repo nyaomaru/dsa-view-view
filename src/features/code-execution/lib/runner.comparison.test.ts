@@ -125,6 +125,45 @@ function compare(): boolean {
     expect(state.error).toBeUndefined()
     expect(state.returnValue).toBe(true)
     expect(comparison?.metadata?.comparison?.result).toBe(true)
+    expect(
+      state.steps.some((step) =>
+        Object.keys(step.variables).some((name) =>
+          name.includes('algorithmVisualizerComparison')
+        )
+      )
+    ).toBe(false)
+  })
+
+  it('does not expose comparison temporaries in loop snapshots', () => {
+    const state = executeCode(
+      `
+function coinChange(coins: number[], amount: number): number {
+  const dp = Array(amount + 1).fill(amount + 1)
+  dp[0] = 0
+
+  for (const coin of coins) {
+    for (let x = coin; x <= amount; x++) {
+      dp[x] = Math.min(dp[x], dp[x - coin] + 1)
+    }
+  }
+
+  return dp[amount] > amount ? -1 : dp[amount]
+}
+`,
+      { coins: [1, 2, 5], amount: 11 },
+      'coinChange'
+    )
+    const internalNames = new Set(
+      state.steps.flatMap((step) =>
+        Object.keys(step.variables).filter((name) =>
+          name.includes('algorithmVisualizerComparison')
+        )
+      )
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(3)
+    expect([...internalNames]).toEqual([])
   })
 
   it('does not read a for-loop binding from its own initializer', () => {

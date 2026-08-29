@@ -28,6 +28,20 @@ const shouldSkipVariableDeclarationStep = (
   ((path.parentPath.isForOfStatement() || path.parentPath.isForInStatement()) &&
     path.key === 'left')
 
+const isInternalVariableDeclaration = (
+  context: InstrumentationContext,
+  declaration: t.VariableDeclaration
+): boolean => {
+  const bindingNames = declaration.declarations.flatMap((declarator) =>
+    collectBindingNames(declarator.id)
+  )
+
+  return (
+    bindingNames.length > 0 &&
+    bindingNames.every((name) => context.isInternalBinding(name))
+  )
+}
+
 const getAssignmentTargetName = (
   target: t.AssignmentExpression['left']
 ): string => {
@@ -78,7 +92,12 @@ export const createMutationVisitors = (context: InstrumentationContext) => {
   return {
     VariableDeclaration: {
       enter(path: NodePath<t.VariableDeclaration>) {
-        if (context.isInstrumented(path.node)) return
+        if (
+          context.isInstrumented(path.node) ||
+          isInternalVariableDeclaration(context, path.node)
+        ) {
+          return
+        }
 
         const lastDeclaration = path.node.declarations.at(-1)
         if (lastDeclaration) {
@@ -91,6 +110,7 @@ export const createMutationVisitors = (context: InstrumentationContext) => {
       exit(path: NodePath<t.VariableDeclaration>) {
         if (
           context.isInstrumented(path.node) ||
+          isInternalVariableDeclaration(context, path.node) ||
           shouldSkipVariableDeclarationStep(path)
         ) {
           return
