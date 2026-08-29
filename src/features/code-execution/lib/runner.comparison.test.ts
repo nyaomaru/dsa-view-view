@@ -104,6 +104,29 @@ function compare(): number {
     expect(state.steps.some((step) => step.metadata?.comparison)).toBe(false)
   })
 
+  it('preserves the caller of comparison operand calls', () => {
+    const state = executeCode(
+      `
+function inspect(): string | undefined {
+  return inspect.caller?.name
+}
+
+function compare(): boolean {
+  return inspect() === 'compare'
+}
+`,
+      {},
+      'compare'
+    )
+    const comparison = state.steps.find(
+      (step) => step.metadata?.comparison?.left.expression === 'inspect()'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(true)
+    expect(comparison?.metadata?.comparison?.result).toBe(true)
+  })
+
   it('does not read a for-loop binding from its own initializer', () => {
     const state = executeCode(
       `

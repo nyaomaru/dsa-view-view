@@ -95,6 +95,19 @@ function createOperandMetadata(
   ])
 }
 
+function declareComparisonTemporary(
+  context: InstrumentationContext,
+  path: NodePath<t.BinaryExpression>,
+  identifier: t.Identifier
+): void {
+  path.scope.push({ id: identifier, kind: 'var' })
+
+  const declaration = path.scope.getBinding(identifier.name)?.path.parentPath
+  if (declaration?.isVariableDeclaration()) {
+    context.markInstrumented(declaration.node)
+  }
+}
+
 /** Records evaluated operands and outcomes for synchronous comparisons. */
 export function createComparisonVisitor(context: InstrumentationContext) {
   const comparisonTraces = new WeakMap<t.BinaryExpression, ComparisonTrace>()
@@ -137,6 +150,10 @@ export function createComparisonVisitor(context: InstrumentationContext) {
         const resultId = path.scope.generateUidIdentifier(
           'algorithmVisualizerComparisonResult'
         )
+        declareComparisonTemporary(context, path, leftId)
+        declareComparisonTemporary(context, path, rightId)
+        declareComparisonTemporary(context, path, resultId)
+
         const description = t.binaryExpression(
           '+',
           t.stringLiteral(`Compare ${trace.source} -> `),
@@ -162,36 +179,36 @@ export function createComparisonVisitor(context: InstrumentationContext) {
             ])
           ),
         ])
-        const wrapper = context.markInstrumented(
-          t.arrowFunctionExpression(
-            [],
-            t.blockStatement([
-              t.variableDeclaration('const', [
-                t.variableDeclarator(leftId, path.node.left),
-              ]),
-              t.variableDeclaration('const', [
-                t.variableDeclarator(rightId, path.node.right),
-              ]),
-              t.variableDeclaration('const', [
-                t.variableDeclarator(
-                  resultId,
-                  t.binaryExpression(path.node.operator, leftId, rightId)
-                ),
-              ]),
-              createRecordStepStatement(
-                STEP_TYPES.CONDITION,
-                getLineNumber(path.node),
-                description,
-                context.createScopeProperties(),
-                comparisonMetadata
-              ),
-              t.returnStatement(resultId),
-            ])
-          )
+        const comparisonResult = context.markInstrumented(
+          t.binaryExpression(path.node.operator, leftId, rightId)
+        )
+        const recordStep = createRecordStepStatement(
+          STEP_TYPES.CONDITION,
+          getLineNumber(path.node),
+          description,
+          context.createScopeProperties(),
+          comparisonMetadata
+        )
+        const leftAssignment = context.markInstrumented(
+          t.assignmentExpression('=', leftId, path.node.left)
+        )
+        const rightAssignment = context.markInstrumented(
+          t.assignmentExpression('=', rightId, path.node.right)
+        )
+        const resultAssignment = context.markInstrumented(
+          t.assignmentExpression('=', resultId, comparisonResult)
         )
 
         path.replaceWith(
-          context.markInstrumented(t.callExpression(wrapper, []))
+          context.markInstrumented(
+            t.sequenceExpression([
+              leftAssignment,
+              rightAssignment,
+              resultAssignment,
+              recordStep.expression,
+              resultId,
+            ])
+          )
         )
       },
     },
