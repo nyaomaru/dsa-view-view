@@ -112,6 +112,18 @@ describe('view view animation state', () => {
     expect(pickViewViewAnimationSource('verification', () => 0)).toBe(
       '/view-view-animation/nomal.gif'
     )
+    expect(pickViewViewAnimationSource('normal', () => 0.2)).toBe(
+      '/view-view-animation/calm.gif'
+    )
+    expect(pickViewViewAnimationSource('idle', () => 0.99)).toBe(
+      '/view-view-animation/calm.gif'
+    )
+    expect(pickViewViewAnimationSource('runtime', () => 0.99)).toBe(
+      '/view-view-animation/beam.gif'
+    )
+    expect(pickViewViewAnimationSource('verification', () => 0.99)).toBe(
+      '/view-view-animation/beam.gif'
+    )
   })
 
   it('mixes runtime completion with normal animations without repeating ok', () => {
@@ -136,6 +148,7 @@ describe('view view animation state', () => {
     )
     expect(VIEW_VIEW_RUNTIME_COMPLETE_FALLBACK_SOURCES).toEqual([
       '/view-view-animation/nomal.gif',
+      '/view-view-animation/calm.gif',
       '/view-view-animation/thinking.gif',
       '/view-view-animation/whiskers.gif',
       '/view-view-animation/passing.gif',
@@ -166,6 +179,12 @@ describe('view view animation state', () => {
         '/view-view-animation/passing 2.gif'
       ]
     ).toBe(4_200)
+    expect(
+      VIEW_VIEW_ANIMATION_LOOP_DURATIONS_MS['/view-view-animation/beam.gif']
+    ).toBe(2_500)
+    expect(
+      VIEW_VIEW_ANIMATION_LOOP_DURATIONS_MS['/view-view-animation/calm.gif']
+    ).toBe(2_200)
   })
 
   it('shows wait before switching to a different gif loop', () => {
@@ -264,7 +283,7 @@ describe('view view animation state', () => {
       vi.advanceTimersByTime(VIEW_VIEW_ANIMATION_WAIT_MS)
     })
 
-    expect(result.current).toBe('/view-view-animation/thinking.gif?loop=2')
+    expect(result.current).toBe('/view-view-animation/calm.gif?loop=2')
   })
 
   it('falls back to a different animation after showing runtime complete ok', () => {
@@ -305,13 +324,11 @@ describe('view view animation state', () => {
       vi.advanceTimersByTime(VIEW_VIEW_ANIMATION_WAIT_MS)
     })
 
-    expect(result.current).toBe('/view-view-animation/thinking.gif?loop=3')
+    expect(result.current).toBe('/view-view-animation/calm.gif?loop=3')
 
     act(() => {
       vi.advanceTimersByTime(
-        VIEW_VIEW_ANIMATION_LOOP_DURATIONS_MS[
-          '/view-view-animation/thinking.gif'
-        ]
+        VIEW_VIEW_ANIMATION_LOOP_DURATIONS_MS['/view-view-animation/calm.gif']
       )
     })
 
