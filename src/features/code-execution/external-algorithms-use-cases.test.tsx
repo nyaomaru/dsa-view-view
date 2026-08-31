@@ -105,12 +105,24 @@ function validAnagram(s: string, t: string): boolean {
 `,
   'stack/parentheses.ts': `
 function isValid(s: string): boolean {
-  const pairs: Record<string, string> = { ')': '(', ']': '[', '}': '{' }
+  const pairs = new Map<string, string>([
+    [')', '('],
+    [']', '['],
+    ['}', '{'],
+  ])
   const stack: string[] = []
+
   for (const char of s) {
-    if (char === '(' || char === '[' || char === '{') stack.push(char)
-    else if (stack.pop() !== pairs[char]) return false
+    if (char === '(' || char === '[' || char === '{') {
+      stack.push(char)
+      continue
+    }
+
+    if (stack.length === 0) return false
+
+    if (stack.pop() !== pairs.get(char)) return false
   }
+
   return stack.length === 0
 }
 `,

@@ -253,6 +253,8 @@ export const ALGORITHM_EXAMPLE_SOURCES = {
       continue
     }
 
+    if (stack.length === 0) return false
+
     if (stack.pop() !== pairs.get(char)) return false
   }
 
