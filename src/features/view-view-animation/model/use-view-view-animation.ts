@@ -89,6 +89,7 @@ export const VIEW_VIEW_ANIMATION_SOURCES: Record<
 > = {
   normal: [
     VIEW_VIEW_ANIMATION_NORMAL_SOURCE,
+    '/view-view-animation/calm.gif',
     '/view-view-animation/thinking.gif',
     '/view-view-animation/whiskers.gif',
     '/view-view-animation/passing.gif',
@@ -107,6 +108,7 @@ export const VIEW_VIEW_ANIMATION_SOURCES: Record<
     '/view-view-animation/crying.gif',
     '/view-view-animation/awkward.gif',
     '/view-view-animation/sakana.gif',
+    '/view-view-animation/calm.gif',
   ],
   'compile-success': [
     '/view-view-animation/laugh.gif',
@@ -128,6 +130,7 @@ export const VIEW_VIEW_ANIMATION_SOURCES: Record<
     '/view-view-animation/boring.gif',
     VIEW_VIEW_ANIMATION_NORMAL_SOURCE,
     '/view-view-animation/fluffy.gif',
+    '/view-view-animation/beam.gif',
   ],
   'runtime-complete': [
     '/view-view-animation/ok.gif',
@@ -142,6 +145,7 @@ export const VIEW_VIEW_ANIMATION_SOURCES: Record<
     '/view-view-animation/boring.gif',
     '/view-view-animation/trembling.gif',
     '/view-view-animation/whiskers.gif',
+    '/view-view-animation/beam.gif',
   ],
 }
 
@@ -154,7 +158,9 @@ export const VIEW_VIEW_RUNTIME_COMPLETE_FALLBACK_SOURCES = Array.from(
 
 export const VIEW_VIEW_ANIMATION_LOOP_DURATIONS_MS: Record<string, number> = {
   '/view-view-animation/awkward.gif': 3_600,
+  '/view-view-animation/beam.gif': 2_500,
   '/view-view-animation/boring.gif': 2_500,
+  '/view-view-animation/calm.gif': 2_200,
   '/view-view-animation/crying.gif': 4_100,
   '/view-view-animation/dance.gif': 3_400,
   '/view-view-animation/dizzy.gif': 3_300,
