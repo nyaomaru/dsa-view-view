@@ -74,4 +74,29 @@ describe('Longest Substring visualization integration', () => {
       targetStepIndex: currentStep,
     })
   })
+
+  it('keeps Unicode characters aligned with visualization cells', () => {
+    const state = executeCode(
+      longestSubstringExample.sourceCode,
+      { s: '😀😀' },
+      'lengthOfLongestSubstring'
+    )
+    const currentStep = state.steps.length - 1
+    const view = getSlidingWindowVisualizationState({
+      executionState: { ...state, currentStep },
+      variableName: 's',
+    })
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(1)
+    expect(Array.from(view?.data ?? '')).toHaveLength(2)
+    expect(view?.windowState).toMatchObject({
+      left: 1,
+      right: 2,
+      rangeMode: 'half-open',
+      windowSize: 1,
+      setValues: ['😀'],
+      best: 1,
+    })
+  })
 })

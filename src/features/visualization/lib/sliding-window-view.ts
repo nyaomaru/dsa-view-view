@@ -71,14 +71,14 @@ function readUniqueCharacterSet(
 }
 
 function inferRangeMode(
-  value: string,
+  dataLength: number,
   left: number,
   right: number,
   setValues: readonly string[] | undefined
 ): SlidingWindowRangeMode {
   if (
     setValues !== undefined &&
-    (right === value.length || setValues.length === right - left)
+    (right === dataLength || setValues.length === right - left)
   ) {
     return 'half-open'
   }
@@ -106,7 +106,10 @@ function getTraceRangeMode(
       continue
     }
 
-    if (right === value.length || setValues.length === right - left) {
+    if (
+      right === Array.from(value).length ||
+      setValues.length === right - left
+    ) {
       return 'half-open'
     }
 
@@ -138,11 +141,12 @@ export function getSlidingWindowState(
     return null
   }
 
+  const dataLength = Array.from(value).length
   const rangeMode =
-    rangeModeOverride ?? inferRangeMode(value, left, right, setValues)
+    rangeModeOverride ?? inferRangeMode(dataLength, left, right, setValues)
 
   const maximumBoundary =
-    rangeMode === 'half-open' ? value.length : value.length - 1
+    rangeMode === 'half-open' ? dataLength : dataLength - 1
 
   if (
     left < 0 ||

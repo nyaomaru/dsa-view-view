@@ -78,4 +78,31 @@ describe('getSlidingWindowState', () => {
       best: 3,
     })
   })
+
+  it('validates boundaries using Unicode code points', () => {
+    expect(
+      getSlidingWindowState('😀😀', {
+        s: '😀😀',
+        set: new Set(['😀']),
+        left: 1,
+        right: 2,
+        best: 1,
+      })
+    ).toMatchObject({
+      left: 1,
+      right: 2,
+      rangeMode: 'half-open',
+      windowSize: 1,
+    })
+
+    expect(
+      getSlidingWindowState('😀😀', {
+        s: '😀😀',
+        set: new Set(['😀']),
+        left: 1,
+        right: 4,
+        best: 1,
+      })
+    ).toBeNull()
+  })
 })
