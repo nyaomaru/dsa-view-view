@@ -303,6 +303,28 @@ export const ALGORITHM_EXAMPLE_SOURCES = {
 
   return answer
 }`,
+  'longest-substring-without-repeating-characters': `function lengthOfLongestSubstring(s: string): number {
+  const chars = Array.from(s)
+  const set = new Set<string>()
+  let left = 0
+  let right = 0
+  let best = 0
+
+  while (right < chars.length) {
+    const char = chars[right]
+
+    if (!set.has(char)) {
+      set.add(char)
+      right++
+      best = Math.max(best, right - left)
+    } else {
+      set.delete(chars[left])
+      left++
+    }
+  }
+
+  return best
+}`,
   'trapping-rain-water': `function trap(height: number[]): number {
   let left = 0
   let right = height.length - 1

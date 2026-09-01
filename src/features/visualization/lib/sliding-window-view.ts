@@ -1,19 +1,32 @@
 import type { ExecutionState, ExecutionStep } from '@/entities/execution'
-import { isInteger, isNull, isString } from '@/shared/lib/guards'
+import {
+  isInteger,
+  isNull,
+  isSet,
+  isString,
+  isStringArray,
+} from '@/shared/lib/guards'
 
 const STRING_SOURCE_NAMES = new Set(['s', 'str', 'text'])
 const PATTERN_SOURCE_NAMES = ['p', 'pattern', 't', 'word'] as const
+type SlidingWindowRangeMode = 'inclusive' | 'half-open'
 
 /** Window boundaries and optional pattern metadata for one execution step. */
 export type SlidingWindowState = {
   /** Inclusive left boundary. */
   left: number
-  /** Inclusive right boundary. */
+  /** Inclusive right boundary, or exclusive boundary in half-open mode. */
   right: number
-  /** Optional algorithm-provided window size. */
+  /** Whether the window includes or excludes its right boundary. */
+  rangeMode: SlidingWindowRangeMode
+  /** Current window size when available. */
   windowSize?: number
   /** Optional pattern used by the window algorithm. */
   pattern?: string
+  /** Optional set of unique characters currently in the window. */
+  setValues?: readonly string[]
+  /** Best window length found so far. */
+  best?: number
 }
 
 /** Source string and boundaries required by the sliding-window visualization. */
@@ -44,6 +57,68 @@ function readPattern(
   return undefined
 }
 
+function readUniqueCharacterSet(
+  variables: ExecutionStep['variables']
+): readonly string[] | undefined {
+  const set = variables.set
+  const best = variables.best
+
+  if (!isSet(set) || !isInteger(best) || best < 0) return undefined
+
+  const values = Array.from(set)
+
+  return isStringArray(values) ? values : undefined
+}
+
+function inferRangeMode(
+  dataLength: number,
+  left: number,
+  right: number,
+  setValues: readonly string[] | undefined
+): SlidingWindowRangeMode {
+  if (
+    setValues !== undefined &&
+    (right === dataLength || setValues.length === right - left)
+  ) {
+    return 'half-open'
+  }
+
+  return 'inclusive'
+}
+
+function getTraceRangeMode(
+  executionState: ExecutionState,
+  variableName: string
+): SlidingWindowRangeMode | undefined {
+  for (let index = executionState.steps.length - 1; index >= 0; index--) {
+    const variables = executionState.steps[index]?.variables
+    const value = variables?.[variableName]
+    const left = variables?.left ?? variables?.l
+    const right = variables?.right ?? variables?.r
+    const setValues = variables && readUniqueCharacterSet(variables)
+
+    if (
+      !isString(value) ||
+      !isInteger(left) ||
+      !isInteger(right) ||
+      setValues === undefined
+    ) {
+      continue
+    }
+
+    if (
+      right === Array.from(value).length ||
+      setValues.length === right - left
+    ) {
+      return 'half-open'
+    }
+
+    if (setValues.length === right - left + 1) return 'inclusive'
+  }
+
+  return undefined
+}
+
 /**
  * Derives valid sliding-window boundaries from a value and execution variables.
  *
@@ -53,18 +128,32 @@ function readPattern(
  */
 export function getSlidingWindowState(
   value: unknown,
-  variables: ExecutionStep['variables']
+  variables: ExecutionStep['variables'],
+  rangeModeOverride?: SlidingWindowRangeMode
 ): SlidingWindowState | null {
   if (!isString(value) || value.length === 0) return null
 
   const left = variables.left ?? variables.l
   const right = variables.right ?? variables.r
+  const setValues = readUniqueCharacterSet(variables)
 
   if (!isInteger(left) || !isInteger(right)) {
     return null
   }
 
-  if (left < 0 || right < 0 || left >= value.length || right >= value.length) {
+  const dataLength = Array.from(value).length
+  const rangeMode =
+    rangeModeOverride ?? inferRangeMode(dataLength, left, right, setValues)
+
+  const maximumBoundary =
+    rangeMode === 'half-open' ? dataLength : dataLength - 1
+
+  if (
+    left < 0 ||
+    right < 0 ||
+    left > maximumBoundary ||
+    right > maximumBoundary
+  ) {
     return null
   }
 
@@ -75,8 +164,19 @@ export function getSlidingWindowState(
   return {
     left,
     right,
-    windowSize: readWindowSize(variables),
+    rangeMode,
+    windowSize:
+      rangeMode === 'half-open'
+        ? right - left
+        : setValues !== undefined
+          ? right - left + 1
+          : readWindowSize(variables),
     pattern: readPattern(variables),
+    setValues,
+    best:
+      setValues !== undefined && isInteger(variables.best)
+        ? variables.best
+        : undefined,
   }
 }
 
@@ -113,19 +213,22 @@ export function getSlidingWindowVisualizationState({
   variableName: string
   targetStepIndex?: number
 }): SlidingWindowVisualizationState | null {
+  const rangeMode = getTraceRangeMode(executionState, variableName)
   const currentStep = executionState.steps[executionState.currentStep]
   const fallbackStep =
     executionState.steps[targetStepIndex ?? executionState.currentStep]
   const currentValue = currentStep?.variables[variableName]
   const currentWindowState =
-    currentStep && getSlidingWindowState(currentValue, currentStep.variables)
+    currentStep &&
+    getSlidingWindowState(currentValue, currentStep.variables, rangeMode)
   const windowStep = currentWindowState ? currentStep : fallbackStep
   const data = windowStep?.variables[variableName]
 
   if (!isString(data) || !windowStep) return null
 
   const windowState =
-    currentWindowState ?? getSlidingWindowState(data, windowStep.variables)
+    currentWindowState ??
+    getSlidingWindowState(data, windowStep.variables, rangeMode)
 
   return isNull(windowState) ? null : { data, windowState }
 }

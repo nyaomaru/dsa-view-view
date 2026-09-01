@@ -26,6 +26,8 @@ export function SlidingWindowVisualizer({
   windowState,
 }: SlidingWindowVisualizerProps) {
   const chars = Array.from(data)
+  const isHalfOpen = windowState.rangeMode === 'half-open'
+  const cellCount = chars.length + (isHalfOpen ? 1 : 0)
 
   return (
     <Card className="h-full border-0 shadow-none">
@@ -38,6 +40,11 @@ export function SlidingWindowVisualizer({
             <span className="border border-primary px-2 py-1">
               right: {windowState.right}
             </span>
+            {isHalfOpen && (
+              <span className="border border-primary px-2 py-1">
+                range: [{windowState.left}, {windowState.right})
+              </span>
+            )}
             {windowState.windowSize !== undefined && (
               <span className="border border-primary px-2 py-1">
                 size: {windowState.windowSize}
@@ -48,6 +55,16 @@ export function SlidingWindowVisualizer({
                 pattern: {windowState.pattern}
               </span>
             )}
+            {windowState.setValues !== undefined && (
+              <span className="border border-primary px-2 py-1">
+                set: {'{'}{windowState.setValues.join(', ')}{'}'}
+              </span>
+            )}
+            {windowState.best !== undefined && (
+              <span className="border border-primary px-2 py-1">
+                best: {windowState.best}
+              </span>
+            )}
           </div>
         </div>
 
@@ -55,12 +72,15 @@ export function SlidingWindowVisualizer({
           <div
             className="mx-auto grid min-w-max gap-2 px-2"
             style={{
-              gridTemplateColumns: `repeat(${chars.length}, minmax(3rem, 1fr))`,
+              gridTemplateColumns: `repeat(${cellCount}, minmax(3rem, 1fr))`,
             }}
           >
             {chars.map((char, index) => {
               const isInWindow =
-                index >= windowState.left && index <= windowState.right
+                index >= windowState.left &&
+                (isHalfOpen
+                  ? index < windowState.right
+                  : index <= windowState.right)
               const isBoundary =
                 index === windowState.left || index === windowState.right
 
@@ -69,11 +89,13 @@ export function SlidingWindowVisualizer({
                   <div
                     className={[
                       'flex h-14 w-full min-w-12 items-center justify-center border font-mono text-base font-bold transition-colors',
-                      isBoundary
+                      isBoundary && isInWindow
                         ? 'border-primary bg-primary text-background'
-                        : isInWindow
-                          ? 'border-primary bg-primary/20 text-primary'
-                          : 'border-muted-foreground/40 bg-background text-muted-foreground/60',
+                        : isBoundary
+                          ? 'border-primary bg-background text-primary'
+                          : isInWindow
+                            ? 'border-primary bg-primary/20 text-primary'
+                            : 'border-muted-foreground/40 bg-background text-muted-foreground/60',
                     ].join(' ')}
                   >
                     {char}
@@ -87,6 +109,27 @@ export function SlidingWindowVisualizer({
                 </div>
               )
             })}
+            {isHalfOpen && (
+              <div className="flex flex-col items-center gap-2">
+                <div
+                  aria-label="End boundary"
+                  className={[
+                    'flex h-14 w-full min-w-12 items-center justify-center border font-mono text-base font-bold transition-colors',
+                    windowState.right === chars.length
+                      ? 'border-primary bg-background text-primary'
+                      : 'border-muted-foreground/40 bg-background text-muted-foreground/60',
+                  ].join(' ')}
+                >
+                  ∅
+                </div>
+                <div className="font-mono text-xs text-muted-foreground">
+                  {chars.length}
+                </div>
+                <div className="h-5 font-mono text-[0.6875rem] font-bold text-primary">
+                  {getMarkerLabel(chars.length, windowState)}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

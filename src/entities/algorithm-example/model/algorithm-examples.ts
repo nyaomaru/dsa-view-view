@@ -19,6 +19,7 @@ const EXAMPLE_CATEGORY_BY_ID = new Map<AlgorithmExampleSourceId, string>([
   ['binary-search', 'Binary Search'],
   ['search-rotated-array', 'Binary Search'],
   ['product-except-self', 'Array'],
+  ['longest-substring-without-repeating-characters', 'Sliding Window'],
   ['bubble-sort', 'Sorting'],
   ['selection-sort', 'Sorting'],
   ['insertion-sort', 'Sorting'],
@@ -179,6 +180,17 @@ const ALGORITHM_EXAMPLE_DEFINITIONS: AlgorithmExampleDefinition[] = [
       nums: '[1, 2, 3, 4]',
     },
     sourceCode: ALGORITHM_EXAMPLE_SOURCES['product-except-self'],
+  },
+  {
+    id: 'longest-substring-without-repeating-characters',
+    label: 'Longest Substring Without Repeating Characters',
+    defaultInputValues: {
+      s: 'abcabcbb',
+    },
+    sourceCode:
+      ALGORITHM_EXAMPLE_SOURCES[
+        'longest-substring-without-repeating-characters'
+      ],
   },
   {
     id: 'trapping-rain-water',

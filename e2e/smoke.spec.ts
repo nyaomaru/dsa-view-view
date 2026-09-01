@@ -209,6 +209,34 @@ test('visualizes trapped rain water between height bars', async ({ page }) => {
   await expect(page.getByText('water=6')).toBeVisible()
 })
 
+test('tracks the longest substring with a half-open window', async ({ page }) => {
+  await page.goto('/')
+
+  await page.getByRole('combobox', { name: 'Example' }).click()
+  await page.getByLabel('Search examples').fill('longest substring')
+  await page
+    .getByRole('option', {
+      name: 'Longest Substring Without Repeating Characters',
+      exact: true,
+    })
+    .click()
+
+  await expect(page.getByText('Input Parameters')).toBeVisible()
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+  await expect(page.getByText('All execution steps')).toBeVisible()
+
+  const slidingWindowDialog = page.getByRole('dialog').filter({
+    has: page.getByRole('heading', { name: 'Sliding Window View: s' }),
+  })
+  await expect(slidingWindowDialog).toBeVisible()
+  await slidingWindowDialog.getByTitle('Skip to End').click()
+
+  await expect(slidingWindowDialog.getByText('range: [7, 8)')).toBeVisible()
+  await expect(slidingWindowDialog.getByText('set: {b}')).toBeVisible()
+  await expect(slidingWindowDialog.getByText('best: 3')).toBeVisible()
+  await expect(slidingWindowDialog.getByLabel('End boundary')).toHaveText('∅')
+})
+
 test('tracks maximum-subarray state at each array position', async ({
   page,
 }) => {
