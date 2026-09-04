@@ -1,5 +1,6 @@
 /** Visualization content supported by the runtime modal. */
 export type VisualizationType =
+  | 'dfs-comparison'
   | 'expression'
   | 'stack'
   | 'tree'

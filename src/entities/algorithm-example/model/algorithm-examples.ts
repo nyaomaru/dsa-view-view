@@ -37,6 +37,7 @@ const EXAMPLE_CATEGORY_BY_ID = new Map<AlgorithmExampleSourceId, string>([
   ['house-robber', 'Dynamic Programming'],
   ['subsets', 'Backtracking'],
   ['number-of-islands', 'Matrix'],
+  ['number-of-islands-stack', 'Matrix'],
   ['flood-fill', 'Matrix'],
   ['rotate-image', 'Matrix'],
   ['set-matrix-zeroes', 'Matrix'],
@@ -268,11 +269,19 @@ const ALGORITHM_EXAMPLE_DEFINITIONS: AlgorithmExampleDefinition[] = [
   },
   {
     id: 'number-of-islands',
-    label: 'Number of Islands',
+    label: 'Number of Islands (Recursive DFS)',
     defaultInputValues: {
       grid: '[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]',
     },
     sourceCode: ALGORITHM_EXAMPLE_SOURCES['number-of-islands'],
+  },
+  {
+    id: 'number-of-islands-stack',
+    label: 'Number of Islands (Explicit Stack)',
+    defaultInputValues: {
+      grid: '[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]',
+    },
+    sourceCode: ALGORITHM_EXAMPLE_SOURCES['number-of-islands-stack'],
   },
   {
     id: 'flood-fill',
@@ -419,6 +428,40 @@ export const ALGORITHM_EXAMPLES: AlgorithmExample[] =
     ...example,
     category: EXAMPLE_CATEGORY_BY_ID.get(example.id) ?? 'Other',
   }))
+
+export type NumberOfIslandsDfsImplementation = 'recursive' | 'iterative'
+
+export type NumberOfIslandsDfsComparison = {
+  /** Recursive Number of Islands example. */
+  recursive: AlgorithmExample
+  /** Iterative Number of Islands example backed by an explicit stack. */
+  iterative: AlgorithmExample
+  /** Implementation currently selected in the editor. */
+  selectedImplementation: NumberOfIslandsDfsImplementation
+}
+
+/** Returns the paired DFS examples when either Number of Islands variant is selected. */
+export function getNumberOfIslandsDfsComparison(
+  exampleId: string
+): NumberOfIslandsDfsComparison | undefined {
+  const selectedImplementation =
+    exampleId === 'number-of-islands'
+      ? 'recursive'
+      : exampleId === 'number-of-islands-stack'
+        ? 'iterative'
+        : undefined
+  if (!selectedImplementation) return undefined
+
+  const recursive = ALGORITHM_EXAMPLES.find(
+    (example) => example.id === 'number-of-islands'
+  )
+  const iterative = ALGORITHM_EXAMPLES.find(
+    (example) => example.id === 'number-of-islands-stack'
+  )
+  if (!recursive || !iterative) return undefined
+
+  return { recursive, iterative, selectedImplementation }
+}
 
 export function getRandomExample(
   random: () => number = Math.random

@@ -5,6 +5,7 @@ import type {
   FunctionSignature,
 } from '@/entities/code'
 import type { ExecutionState, InputValues } from '@/entities/execution'
+import type { DfsComparisonExecution } from '@/features/visualization'
 
 export type AlgorithmExampleOption = {
   /** Stable example identifier. */
@@ -28,6 +29,8 @@ export type ControlPanelProps = {
   defaultInputValues?: Record<string, unknown>
   /** Current execution state, or null before running. */
   executionState: ExecutionState | null
+  /** Paired recursive and iterative Number of Islands traces. */
+  dfsComparison?: DfsComparisonExecution
   /** Whether execution playback is currently running. */
   isRunning: boolean
   /** Current playback interval in milliseconds. */
@@ -93,6 +96,7 @@ export type VerificationTabContentProps = Pick<
 export type RuntimeTabContentProps = Pick<
   ControlPanelProps,
   | 'executionState'
+  | 'dfsComparison'
   | 'isRunning'
   | 'playbackInterval'
   | 'autoOpenPrimaryVisualization'

@@ -35,6 +35,7 @@ import { getExpressionVisualizationState } from '../lib/expression-view'
 import { getLatestRuntimeComparison } from '../lib/runtime-comparison'
 import { hasCallFrameMetadata } from '../lib/call-frame-inspector'
 import type { VisualizationType } from '../model/types'
+import type { DfsComparisonExecution } from '../lib/dfs-comparison'
 import { StackVisualizer } from './stack-visualizer'
 import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
 import { BarChartVisualizer } from './bar-chart-visualizer'
@@ -54,6 +55,7 @@ import { HeapVisualizer } from './heap-visualizer'
 import { WordLadderVisualizer } from './word-ladder-visualizer'
 import { ExpressionVisualizer } from './expression-visualizer'
 import { CallFrameInspector } from './call-frame-inspector'
+import { DfsComparisonVisualizer } from './dfs-comparison-visualizer'
 
 type ExecutionStepSnapshot = ExecutionState['steps'][number]
 
@@ -72,6 +74,8 @@ type VisualizationContentProps = {
   treeGraphDisplayName?: string
   /** Whether the tree modal represents class-design operation calls. */
   isClassDesignTrace?: boolean
+  /** Paired Number of Islands traces used by the DFS comparison. */
+  dfsComparison?: DfsComparisonExecution
 }
 
 function findNumericArrayStep({
@@ -185,8 +189,17 @@ export function VisualizationModalContent({
   currentStep,
   treeGraphDisplayName,
   isClassDesignTrace = false,
+  dfsComparison,
 }: VisualizationContentProps): ReactNode {
   const getCurrentStepVariable = (name: string) => currentStep?.variables[name]
+
+  if (type === 'dfs-comparison') {
+    return dfsComparison ? (
+      <DfsComparisonVisualizer comparison={dfsComparison} />
+    ) : (
+      <div>DFS comparison traces are not available.</div>
+    )
+  }
 
   if (type === 'tree') {
     if (!isClassDesignTrace && hasCallFrameMetadata(executionState)) {

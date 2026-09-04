@@ -42,6 +42,7 @@ export function MainPage() {
     setLintErrors,
     functionSignature,
     highlightedLine,
+    dfsComparison,
     executionState,
     isRunning,
     playbackInterval,
@@ -149,6 +150,7 @@ export function MainPage() {
             lintErrors={lintErrors}
             functionSignature={functionSignature}
             executionState={executionState}
+            dfsComparison={dfsComparison}
             isRunning={isRunning}
             playbackInterval={playbackInterval}
             algorithmExamples={algorithmExamples}

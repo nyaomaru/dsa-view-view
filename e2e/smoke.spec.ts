@@ -182,6 +182,62 @@ test('visualizes Product Except Self answer growth', async ({ page }) => {
   await expect(stackDialog).toBeVisible()
 })
 
+test('compares recursive and explicit-stack Number of Islands DFS', async ({
+  page,
+}) => {
+  await page.goto('/?example=number-of-islands')
+
+  await expect(page.getByRole('combobox', { name: 'Example' })).toContainText(
+    'Number of Islands (Recursive DFS)'
+  )
+  await page.getByRole('button', { name: 'Compile Code' }).click()
+  await expect(page.getByText('Input Parameters')).toBeVisible()
+  await page.getByRole('button', { name: 'Run', exact: true }).click()
+
+  const comparisonDialog = page.getByRole('dialog').filter({
+    has: page.getByRole('heading', {
+      name: 'Recursive DFS vs Explicit Stack',
+    }),
+  })
+  await expect(comparisonDialog).toBeVisible()
+  await expect(
+    comparisonDialog.getByRole('heading', {
+      name: 'Recursive DFS',
+      exact: true,
+    })
+  ).toBeVisible()
+  await expect(
+    comparisonDialog.getByRole('heading', {
+      name: 'Iterative DFS',
+      exact: true,
+    })
+  ).toBeVisible()
+  await expect(
+    comparisonDialog.getByRole('grid', {
+      name: 'Recursive DFS visited grid',
+    })
+  ).toBeVisible()
+  await expect(
+    comparisonDialog.getByRole('grid', {
+      name: 'Iterative DFS visited grid',
+    })
+  ).toBeVisible()
+  await expect(
+    comparisonDialog.getByLabel('Recursive DFS pending work')
+  ).toBeVisible()
+  await expect(
+    comparisonDialog.getByLabel('Iterative DFS pending work')
+  ).toBeVisible()
+
+  await comparisonDialog.getByTitle('Skip to End').click()
+  await expect(comparisonDialog.getByText('Same result: 3')).toBeVisible()
+
+  await comparisonDialog.getByRole('button', { name: 'Close' }).click()
+  await expect(
+    page.getByRole('button', { name: 'DFS Comparison' })
+  ).toBeVisible()
+})
+
 test('visualizes trapped rain water between height bars', async ({ page }) => {
   await page.goto('/')
 
@@ -209,7 +265,9 @@ test('visualizes trapped rain water between height bars', async ({ page }) => {
   await expect(page.getByText('water=6')).toBeVisible()
 })
 
-test('tracks the longest substring with a half-open window', async ({ page }) => {
+test('tracks the longest substring with a half-open window', async ({
+  page,
+}) => {
   await page.goto('/')
 
   await page.getByRole('combobox', { name: 'Example' }).click()

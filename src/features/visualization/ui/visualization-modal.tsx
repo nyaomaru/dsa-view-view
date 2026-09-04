@@ -18,6 +18,7 @@ import { PlaybackControls } from './playback-controls'
 import { ReturnValueCard } from './return-value-card'
 import type { VisualizationType } from '../model/types'
 import { hasCallFrameMetadata } from '../lib/call-frame-inspector'
+import type { DfsComparisonExecution } from '../lib/dfs-comparison'
 
 /**
  * Props for VisualizationModal component
@@ -37,6 +38,8 @@ type VisualizationModalProps = {
   executionState: ExecutionState
   /** Whether the tree modal represents class-design operation calls. */
   isClassDesignTrace?: boolean
+  /** Paired Number of Islands traces used by the DFS comparison. */
+  dfsComparison?: DfsComparisonExecution
   /** Whether execution is currently running */
   isRunning: boolean
   /** Callback to pause execution */
@@ -72,6 +75,8 @@ function getVisualizationTitle({
   hasCallFrames: boolean
 }): ReactNode {
   switch (type) {
+    case 'dfs-comparison':
+      return 'Recursive DFS vs Explicit Stack'
     case 'expression':
       return 'Expression View'
     case 'stack':
@@ -128,6 +133,8 @@ function getVisualizationDescription(
   hasCallFrames: boolean
 ): string {
   switch (type) {
+    case 'dfs-comparison':
+      return 'Compare how recursive calls and an explicit stack represent pending DFS work.'
     case 'expression':
       return 'Follow the current character, accumulated result, and nested sign context.'
     case 'stack':
@@ -181,6 +188,7 @@ export function VisualizationModal({
   targetStepIndex,
   executionState,
   isClassDesignTrace = false,
+  dfsComparison,
   isRunning,
   onPause,
   onRunAll,
@@ -222,12 +230,19 @@ export function VisualizationModal({
       currentStep={currentStep}
       treeGraphDisplayName={treeGraphDisplayName}
       isClassDesignTrace={isClassDesignTrace}
+      dfsComparison={dfsComparison}
     />
   )
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="left-1 top-2 flex h-[calc(100dvh-1rem)] w-[calc(100vw-0.5rem)] max-w-none translate-x-0 translate-y-0 flex-col gap-0 bg-background p-1 sm:left-[50%] sm:top-[50%] sm:h-[min(80vh,calc(100dvh-2rem))] sm:w-[calc(100vw-2rem)] sm:max-w-3xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:gap-4 sm:p-6">
+      <DialogContent
+        className={cn(
+          'left-1 top-2 flex h-[calc(100dvh-1rem)] w-[calc(100vw-0.5rem)] max-w-none translate-x-0 translate-y-0 flex-col gap-0 bg-background p-1 sm:left-[50%] sm:top-[50%] sm:h-[min(80vh,calc(100dvh-2rem))] sm:w-[calc(100vw-2rem)] sm:max-w-3xl sm:translate-x-[-50%] sm:translate-y-[-50%] sm:gap-4 sm:p-6',
+          type === 'dfs-comparison' &&
+            'sm:h-[min(90vh,calc(100dvh-2rem))] sm:max-w-6xl'
+        )}
+      >
         <DialogHeader className="shrink-0 px-4 pb-3 pt-4 pr-14 text-left sm:p-0">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="hidden sm:block">
@@ -238,7 +253,8 @@ export function VisualizationModal({
         <div
           className={cn(
             'min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain px-4 py-3 sm:px-0 sm:py-4',
-            showsCallFrameInspector && 'lg:overflow-hidden',
+            (showsCallFrameInspector || type === 'dfs-comparison') &&
+              'lg:overflow-hidden',
             type === 'graph' &&
               'flex items-center justify-center overflow-hidden',
             (type === 'matrix' ||
@@ -257,7 +273,8 @@ export function VisualizationModal({
           {content}
         </div>
 
-        {executionState.isComplete &&
+        {type !== 'dfs-comparison' &&
+          executionState.isComplete &&
           !isUndefined(executionState.returnValue) && (
             <div className="shrink-0 px-4 pb-3 sm:px-0 sm:pb-0">
               <ReturnValueCard

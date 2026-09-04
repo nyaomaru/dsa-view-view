@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   convertInputValues,
   useAlgorithmExecution,
@@ -15,6 +15,7 @@ import type {
 import type { ExecutionState, InputValues } from '@/entities/execution'
 import {
   ALGORITHM_EXAMPLES,
+  getNumberOfIslandsDfsComparison,
   getRandomExample,
   type AlgorithmExample,
 } from '@/entities/algorithm-example'
@@ -23,6 +24,7 @@ import {
   readExampleFromUrl,
   readShareStateFromUrl,
 } from '@/features/shareable-url'
+import { createDfsComparisonExecution } from '@/features/visualization'
 import type { ShareStateDecodeErrorReason } from '@/entities/share-state'
 import {
   isArray,
@@ -128,6 +130,7 @@ export function useAppState() {
     useState<PendingSharedRuntime | null>(null)
 
   const execution = useAlgorithmExecution()
+  const comparisonExecution = useAlgorithmExecution()
   const {
     executionState,
     startExecution,
@@ -135,6 +138,11 @@ export function useAppState() {
     clearExecution,
     setExecutionState,
   } = execution
+  const {
+    executionState: comparisonExecutionState,
+    startExecution: startComparisonExecution,
+    clearExecution: clearComparisonExecution,
+  } = comparisonExecution
   const selectedExample = ALGORITHM_EXAMPLES.find(
     (example) => example.id === selectedExampleId
   )
@@ -144,7 +152,8 @@ export function useAppState() {
     setFunctionSignature(null)
     setLintErrors([])
     clearExecution()
-  }, [clearExecution])
+    clearComparisonExecution()
+  }, [clearComparisonExecution, clearExecution])
 
   const applyExample = useCallback((example: AlgorithmExample) => {
     const defaultInputValues = example.defaultInputValues ?? {}
@@ -165,6 +174,7 @@ export function useAppState() {
       const result = compileAndLint(nextSourceCode, activeLanguage)
       setCompilationResult(result)
       clearExecution()
+      clearComparisonExecution()
 
       if (result.success && result.code) {
         const signature = extractFunctionSignature(
@@ -179,7 +189,40 @@ export function useAppState() {
         return { result, signature: null }
       }
     },
-    [activeLanguage, clearExecution]
+    [activeLanguage, clearComparisonExecution, clearExecution]
+  )
+
+  const runDfsCounterpart = useCallback(
+    async (exampleId: string, inputs: InputValues) => {
+      const comparison = getNumberOfIslandsDfsComparison(exampleId)
+      if (!comparison) {
+        clearComparisonExecution()
+        return null
+      }
+
+      const counterpart =
+        comparison.selectedImplementation === 'recursive'
+          ? comparison.iterative
+          : comparison.recursive
+      const { extractFunctionSignature } =
+        await import('@/features/code-editing/parser')
+      const counterpartSignature = extractFunctionSignature(
+        counterpart.sourceCode,
+        activeLanguage
+      )
+      if (!counterpartSignature) {
+        clearComparisonExecution()
+        return null
+      }
+
+      return startComparisonExecution(
+        counterpart.sourceCode,
+        inputs,
+        counterpartSignature.name,
+        activeLanguage
+      )
+    },
+    [activeLanguage, clearComparisonExecution, startComparisonExecution]
   )
 
   const handleCompile = useCallback(async () => {
@@ -189,12 +232,15 @@ export function useAppState() {
   const handleRunCode = useCallback(
     async (values: InputValues) => {
       if (!compilationResult?.code) return
-      const executionResult = await startExecution(
-        sourceCode,
-        values,
-        functionSignature?.name,
-        activeLanguage
-      )
+      const [executionResult] = await Promise.all([
+        startExecution(
+          sourceCode,
+          values,
+          functionSignature?.name,
+          activeLanguage
+        ),
+        runDfsCounterpart(selectedExampleId, values),
+      ])
       if (!executionResult) return
       setMode('runtime')
     },
@@ -202,6 +248,8 @@ export function useAppState() {
       activeLanguage,
       compilationResult?.code,
       functionSignature?.name,
+      runDfsCounterpart,
+      selectedExampleId,
       sourceCode,
       startExecution,
     ]
@@ -247,18 +295,22 @@ export function useAppState() {
       signature.parameters,
       demoExample.defaultInputValues ?? {}
     )
-    const executionResult = await startExecutionAndPlayback(
-      demoExample.sourceCode,
-      inputs,
-      signature.name,
-      activeLanguage
-    )
+    const [executionResult] = await Promise.all([
+      startExecutionAndPlayback(
+        demoExample.sourceCode,
+        inputs,
+        signature.name,
+        activeLanguage
+      ),
+      runDfsCounterpart(demoExample.id, inputs),
+    ])
     if (!executionResult) return
     setMode('runtime')
   }, [
     activeLanguage,
     applyExample,
     compileSourceCode,
+    runDfsCounterpart,
     startExecutionAndPlayback,
   ])
 
@@ -404,12 +456,15 @@ export function useAppState() {
             return
           }
 
-          const executionResult = await startExecution(
-            restoredSource,
-            convertedInputs,
-            signature.name,
-            activeLanguage
-          )
+          const [executionResult] = await Promise.all([
+            startExecution(
+              restoredSource,
+              convertedInputs,
+              signature.name,
+              activeLanguage
+            ),
+            runDfsCounterpart(example?.id ?? '', convertedInputs),
+          ])
 
           if (cancelled || !executionResult) return
           setShareRestoreError(null)
@@ -430,9 +485,37 @@ export function useAppState() {
     return () => {
       cancelled = true
     }
-  }, [activeLanguage, compileSourceCode, setExecutionState, startExecution])
+  }, [
+    activeLanguage,
+    compileSourceCode,
+    runDfsCounterpart,
+    setExecutionState,
+    startExecution,
+  ])
 
   const highlightedLine = getRuntimeHighlightedLine(mode, executionState)
+  const dfsComparisonConfiguration = useMemo(
+    () => getNumberOfIslandsDfsComparison(selectedExampleId),
+    [selectedExampleId]
+  )
+  const dfsComparison = useMemo(() => {
+    if (
+      !dfsComparisonConfiguration ||
+      !executionState ||
+      !comparisonExecutionState
+    ) {
+      return undefined
+    }
+
+    return createDfsComparisonExecution({
+      primary: executionState,
+      counterpart: comparisonExecutionState,
+      primaryImplementation:
+        dfsComparisonConfiguration.selectedImplementation === 'recursive'
+          ? 'recursive'
+          : 'iterative',
+    })
+  }, [comparisonExecutionState, dfsComparisonConfiguration, executionState])
 
   return {
     activeLanguage,
@@ -456,6 +539,7 @@ export function useAppState() {
     setLintErrors,
     functionSignature,
     highlightedLine,
+    dfsComparison,
     handleCompile,
     handleRunCode,
     handleRunDemo,

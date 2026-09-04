@@ -12,6 +12,7 @@ import { useVisualizationDetection } from '../model/use-visualization-detection'
 import { isUndefined } from '@/shared/lib/guards'
 import type { VisualizationType } from '../model/types'
 import { getPrimaryVisualization } from '../model/primary-visualization'
+import type { DfsComparisonExecution } from '../lib/dfs-comparison'
 
 /**
  * Props for Visualizer component.
@@ -23,6 +24,8 @@ type VisualizerProps = {
   isRunning: boolean
   /** Whether to open the primary visualization modal automatically. */
   autoOpenPrimaryVisualization?: boolean
+  /** Paired Number of Islands DFS traces, when this execution has a counterpart. */
+  dfsComparison?: DfsComparisonExecution
   /** Callback to pause playback. */
   onPause: () => void
   /** Callback to run playback through all remaining steps. */
@@ -50,6 +53,7 @@ export function Visualizer({
   executionState,
   isRunning,
   autoOpenPrimaryVisualization = false,
+  dfsComparison,
   onPause,
   onRunAll,
   onReset,
@@ -197,7 +201,9 @@ export function Visualizer({
     if (autoOpenedStepsRef.current === executionState.steps) return
     if (isModalOpen) return
 
-    const primaryVisualization = getPrimaryVisualization(detection)
+    const primaryVisualization = dfsComparison
+      ? { type: 'dfs-comparison' as const }
+      : getPrimaryVisualization(detection)
     if (!primaryVisualization) return
 
     openModal(
@@ -210,6 +216,7 @@ export function Visualizer({
   }, [
     autoOpenPrimaryVisualization,
     detection,
+    dfsComparison,
     executionState.steps,
     isModalOpen,
   ])
@@ -243,6 +250,7 @@ export function Visualizer({
         variableEntries={variableEntries}
         expandedVariables={expandedVariables}
         hasRecursion={hasRecursion}
+        hasDfsComparison={Boolean(dfsComparison)}
         isClassDesignTrace={isClassDesignTrace}
         primaryHeapStepIndex={primaryHeapStepIndex}
         primaryWordLadderStepIndex={primaryWordLadderStepIndex}
@@ -306,6 +314,7 @@ export function Visualizer({
         targetStepIndex={targetStepIndex}
         executionState={executionState}
         isClassDesignTrace={isClassDesignTrace}
+        dfsComparison={dfsComparison}
         isRunning={isRunning}
         onPause={onPause}
         onRunAll={handleStartClick}
