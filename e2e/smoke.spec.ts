@@ -196,7 +196,7 @@ test('compares recursive and explicit-stack Number of Islands DFS', async ({
 
   const comparisonDialog = page.getByRole('dialog').filter({
     has: page.getByRole('heading', {
-      name: 'Recursive DFS vs Explicit Stack',
+      name: 'Recursive DFS vs Explicit-stack DFS',
     }),
   })
   await expect(comparisonDialog).toBeVisible()
@@ -208,7 +208,7 @@ test('compares recursive and explicit-stack Number of Islands DFS', async ({
   ).toBeVisible()
   await expect(
     comparisonDialog.getByRole('heading', {
-      name: 'Iterative DFS',
+      name: 'Explicit-stack DFS',
       exact: true,
     })
   ).toBeVisible()
@@ -219,14 +219,14 @@ test('compares recursive and explicit-stack Number of Islands DFS', async ({
   ).toBeVisible()
   await expect(
     comparisonDialog.getByRole('grid', {
-      name: 'Iterative DFS visited grid',
+      name: 'Explicit-stack DFS visited grid',
     })
   ).toBeVisible()
   await expect(
     comparisonDialog.getByLabel('Recursive DFS pending work')
   ).toBeVisible()
   await expect(
-    comparisonDialog.getByLabel('Iterative DFS pending work')
+    comparisonDialog.getByLabel('Explicit-stack DFS pending work')
   ).toBeVisible()
 
   await comparisonDialog.getByTitle('Skip to End').click()

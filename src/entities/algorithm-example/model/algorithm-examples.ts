@@ -277,7 +277,7 @@ const ALGORITHM_EXAMPLE_DEFINITIONS: AlgorithmExampleDefinition[] = [
   },
   {
     id: 'number-of-islands-stack',
-    label: 'Number of Islands (Explicit Stack)',
+    label: 'Number of Islands (Explicit-stack DFS)',
     defaultInputValues: {
       grid: '[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]',
     },

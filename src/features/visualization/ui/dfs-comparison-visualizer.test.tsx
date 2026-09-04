@@ -84,16 +84,18 @@ describe('DfsComparisonVisualizer', () => {
     render(<DfsComparisonVisualizer comparison={{ recursive, iterative }} />)
 
     expect(screen.getByText('Recursive DFS')).toBeInTheDocument()
-    expect(screen.getByText('Iterative DFS')).toBeInTheDocument()
+    expect(screen.getByText('Explicit-stack DFS')).toBeInTheDocument()
     expect(
       screen.getByRole('grid', { name: 'Recursive DFS visited grid' })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('grid', { name: 'Iterative DFS visited grid' })
+      screen.getByRole('grid', { name: 'Explicit-stack DFS visited grid' })
     ).toBeInTheDocument()
 
     const recursiveWork = screen.getByLabelText('Recursive DFS pending work')
-    const iterativeWork = screen.getByLabelText('Iterative DFS pending work')
+    const iterativeWork = screen.getByLabelText(
+      'Explicit-stack DFS pending work'
+    )
 
     expect(within(recursiveWork).getByText('visit(0, 0)')).toBeInTheDocument()
     expect(within(recursiveWork).getByText('1 pending')).toBeInTheDocument()

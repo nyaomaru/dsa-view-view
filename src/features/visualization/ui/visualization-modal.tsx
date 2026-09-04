@@ -76,7 +76,7 @@ function getVisualizationTitle({
 }): ReactNode {
   switch (type) {
     case 'dfs-comparison':
-      return 'Recursive DFS vs Explicit Stack'
+      return 'Recursive DFS vs Explicit-stack DFS'
     case 'expression':
       return 'Expression View'
     case 'stack':

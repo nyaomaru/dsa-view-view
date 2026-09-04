@@ -206,7 +206,7 @@ function IterativePendingWork({
   const pendingCells = isArray(stack) ? [...stack].reverse() : []
 
   return (
-    <section aria-label="Iterative DFS pending work" className="space-y-2">
+    <section aria-label="Explicit-stack DFS pending work" className="space-y-2">
       <div className="flex items-center justify-between gap-2">
         <h4 className="text-sm font-semibold">Explicit stack</h4>
         <Badge variant="secondary">{pendingCells.length} pending</Badge>
@@ -291,7 +291,7 @@ export function DfsComparisonVisualizer({
           <RecursivePendingWork executionState={comparison.recursive} />
         </ComparisonPanel>
         <ComparisonPanel
-          title="Iterative DFS"
+          title="Explicit-stack DFS"
           subtitle="Pending work lives in an array used as a stack."
           executionState={comparison.iterative}
         >
