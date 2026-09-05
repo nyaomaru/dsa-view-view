@@ -253,8 +253,7 @@ export function VisualizationModal({
         <div
           className={cn(
             'min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain px-4 py-3 sm:px-0 sm:py-4',
-            (showsCallFrameInspector || type === 'dfs-comparison') &&
-              'lg:overflow-hidden',
+            showsCallFrameInspector && 'lg:overflow-hidden',
             type === 'graph' &&
               'flex items-center justify-center overflow-hidden',
             (type === 'matrix' ||
