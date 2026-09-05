@@ -15,6 +15,7 @@ export function ControlPanel({
   functionSignature,
   defaultInputValues,
   executionState,
+  dfsComparison,
   isRunning,
   playbackInterval,
   algorithmExamples,
@@ -105,6 +106,7 @@ export function ControlPanel({
           <TabsContent value="runtime" className="mt-0 h-auto lg:h-full">
             <RuntimeTabContent
               executionState={executionState}
+              dfsComparison={dfsComparison}
               isRunning={isRunning}
               playbackInterval={playbackInterval}
               autoOpenPrimaryVisualization={autoOpenPrimaryVisualization}

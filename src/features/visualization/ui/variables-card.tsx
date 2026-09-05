@@ -3,6 +3,7 @@ import {
   BarChart2,
   Calculator,
   CheckSquare,
+  Columns2,
   GitGraph,
   Grid3X3,
   Search,
@@ -40,6 +41,8 @@ type VariablesCardProps = {
   expandedVariables: Record<string, boolean>
   /** Whether the execution trace includes recursive calls. */
   hasRecursion: boolean
+  /** Whether a paired recursive/iterative DFS trace is available. */
+  hasDfsComparison?: boolean
   /** Whether the call tree comes from class-design operations. */
   isClassDesignTrace?: boolean
   /** First step containing a prepared min/max heap pair. */
@@ -108,6 +111,7 @@ export function VariablesCard({
   variableEntries,
   expandedVariables,
   hasRecursion,
+  hasDfsComparison = false,
   isClassDesignTrace = false,
   primaryHeapStepIndex,
   primaryWordLadderStepIndex,
@@ -178,6 +182,17 @@ export function VariablesCard({
           <CardDescription>Current variable states</CardDescription>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
+          {hasDfsComparison && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => onOpenVisualization('dfs-comparison')}
+            >
+              <Columns2 className="w-4 h-4" />
+              DFS Comparison
+            </Button>
+          )}
           {!isUndefined(primaryWordLadderStepIndex) && (
             <Button
               variant="outline"

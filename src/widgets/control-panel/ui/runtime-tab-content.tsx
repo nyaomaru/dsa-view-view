@@ -14,6 +14,7 @@ const Visualizer = lazy(() =>
 
 export function RuntimeTabContent({
   executionState,
+  dfsComparison,
   isRunning,
   playbackInterval,
   onPlaybackIntervalChange,
@@ -49,6 +50,7 @@ export function RuntimeTabContent({
         <Suspense fallback={null}>
           <Visualizer
             executionState={executionState}
+            dfsComparison={dfsComparison}
             isRunning={isRunning}
             autoOpenPrimaryVisualization={autoOpenPrimaryVisualization}
             onPause={onPause}

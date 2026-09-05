@@ -476,7 +476,7 @@ export const ALGORITHM_EXAMPLE_SOURCES = {
   'number-of-islands': `function numIslands(grid: string[][]): number {
   let islands = 0
 
-  const visit = (row: number, col: number): void => {
+  function visit(row: number, col: number): void {
     if (row < 0 || col < 0) return
     if (row >= grid.length || col >= grid[row].length) return
     if (grid[row][col] !== '1') return
@@ -493,6 +493,49 @@ export const ALGORITHM_EXAMPLE_SOURCES = {
       if (grid[row][col] === '1') {
         islands++
         visit(row, col)
+      }
+    }
+  }
+
+  return islands
+}`,
+  'number-of-islands-stack': `function numIslandsStack(grid: string[][]): number {
+  let islands = 0
+  const directions = [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ]
+
+  for (let row = 0; row < grid.length; row++) {
+    for (let col = 0; col < grid[row].length; col++) {
+      if (grid[row][col] !== '1') continue
+
+      islands++
+      const stack: number[][] = [[row, col]]
+
+      while (stack.length > 0) {
+        const [currentRow, currentCol] = stack.pop()!
+
+        if (currentRow < 0 || currentCol < 0) continue
+        if (
+          currentRow >= grid.length ||
+          currentCol >= grid[currentRow].length
+        ) {
+          continue
+        }
+        if (grid[currentRow][currentCol] !== '1') continue
+
+        grid[currentRow][currentCol] = '0'
+
+        // Push in reverse so DFS visits down, up, right, then left.
+        for (let i = directions.length - 1; i >= 0; i--) {
+          stack.push([
+            currentRow + directions[i][0],
+            currentCol + directions[i][1],
+          ])
+        }
       }
     }
   }

@@ -92,4 +92,14 @@ describe('VisualizationModal', () => {
 
     expect(scrollContainer).toHaveClass('lg:overflow-hidden')
   })
+
+  it('keeps the DFS comparison body scrollable on large screens', () => {
+    const { container } = renderModal('dfs-comparison')
+    const scrollContainer = container.ownerDocument.querySelector(
+      '[data-tree-scroll-container]'
+    )
+
+    expect(scrollContainer).toHaveClass('overflow-auto')
+    expect(scrollContainer).not.toHaveClass('lg:overflow-hidden')
+  })
 })
