@@ -97,16 +97,23 @@ export function isVoidEntryFunction(
   entryFunctionName?: string
 ): boolean {
   const entryFunction = getEntryFunction(code, entryFunctionName)
+  const returnedFunction =
+    isObject(entryFunction) &&
+    hasKeys('body')(entryFunction) &&
+    isObject(entryFunction.body)
+      ? getReturnedFunction(entryFunction.body)
+      : null
+  const invokedFunction = returnedFunction ?? entryFunction
   if (
-    !isObject(entryFunction) ||
-    !hasKeys('returnType')(entryFunction) ||
-    !isObject(entryFunction.returnType) ||
-    !hasKeys('typeAnnotation')(entryFunction.returnType)
+    !isObject(invokedFunction) ||
+    !hasKeys('returnType')(invokedFunction) ||
+    !isObject(invokedFunction.returnType) ||
+    !hasKeys('typeAnnotation')(invokedFunction.returnType)
   ) {
     return false
   }
 
-  return isVoidTypeAnnotation(entryFunction.returnType.typeAnnotation)
+  return isVoidTypeAnnotation(invokedFunction.returnType.typeAnnotation)
 }
 
 function getParamNames(params: readonly unknown[]): string[] {

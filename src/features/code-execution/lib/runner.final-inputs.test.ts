@@ -65,4 +65,23 @@ describe('runner - final input values', () => {
     expect(state.completionValueKind).toBe('final-inputs')
     expect(state.returnValue).toEqual({ nums: [3, 2, 1] })
   })
+
+  it('uses mutated inputs when a factory entry returns a void function', () => {
+    const state = executeCode(
+      `function solution() {
+  return function rotate(nums: number[]): void {
+    nums.reverse()
+  }
+}`,
+      { nums: [1, 2, 3] },
+      'solution'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.completionValueKind).toBe('final-inputs')
+    expect(state.returnValue).toEqual({ nums: [3, 2, 1] })
+    expect(state.steps.at(-1)?.description).toBe(
+      'Final value: {"nums":[3,2,1]}'
+    )
+  })
 })
