@@ -8,7 +8,7 @@ import {
   compileTypeScriptCode,
   prepareTypeScriptCodeWithClasses,
 } from '@/entities/code/compiler'
-import { isError, isInstanceOf } from '@/shared/lib/guards'
+import { isError, isInstanceOf, isUndefined } from '@/shared/lib/guards'
 import { safeStringify } from '@/shared/lib/safe-stringify'
 
 import { instrumentCode } from './instrumenter'
@@ -35,11 +35,32 @@ type PreparedExecution = {
   shouldConsumeGenerator: boolean
 }
 
+type CompletionValue = {
+  value: unknown
+  kind: 'return' | 'final-inputs'
+}
+
 const isStepLimitError = isInstanceOf(
   StepLimitError as unknown as abstract new (
     ...args: unknown[]
   ) => StepLimitError
 )
+
+function getCompletionValue(
+  result: unknown,
+  inputs: InputValues,
+  entryFunctionName?: string
+): CompletionValue {
+  if (
+    entryFunctionName &&
+    isUndefined(result) &&
+    Object.keys(inputs).length > 0
+  ) {
+    return { value: inputs, kind: 'final-inputs' }
+  }
+
+  return { value: result, kind: 'return' }
+}
 
 function prepareExecution(
   code: string,
@@ -158,11 +179,18 @@ export function* createTypeScriptExecutionRunner(
       return undefined
     }
 
-    yield recordStep('return', 0, `Returned: ${safeStringify(result)}`, {
-      result,
-    })
+    const completionValue = getCompletionValue(result, inputs, entryFunctionName)
+    const completionLabel =
+      completionValue.kind === 'final-inputs' ? 'Final value' : 'Returned'
 
-    return result
+    yield recordStep(
+      'return',
+      0,
+      `${completionLabel}: ${safeStringify(completionValue.value)}`,
+      { result: completionValue.value }
+    )
+
+    return completionValue
   } catch (error) {
     const errorMessage = isError(error) ? error.message : 'Unknown error'
     for (let i = 1; i < context.steps.length; i++) {
@@ -241,11 +269,18 @@ export async function* createAsyncTypeScriptExecutionRunner(
       return undefined
     }
 
-    yield recordStep('return', 0, `Returned: ${safeStringify(result)}`, {
-      result,
-    })
+    const completionValue = getCompletionValue(result, inputs, entryFunctionName)
+    const completionLabel =
+      completionValue.kind === 'final-inputs' ? 'Final value' : 'Returned'
 
-    return result
+    yield recordStep(
+      'return',
+      0,
+      `${completionLabel}: ${safeStringify(completionValue.value)}`,
+      { result: completionValue.value }
+    )
+
+    return completionValue
   } catch (error) {
     const errorMessage = isError(error) ? error.message : 'Unknown error'
     for (let i = 1; i < context.steps.length; i++) {
@@ -266,6 +301,7 @@ export function executeTypeScriptCode(
 ): ExecutionState {
   const steps: ExecutionStep[] = []
   let returnValue: unknown
+  let completionValue: CompletionValue | undefined
   let error: string | undefined
 
   try {
@@ -281,7 +317,8 @@ export function executeTypeScriptCode(
       result = runner.next()
     }
 
-    returnValue = result.value
+    completionValue = result.value as CompletionValue | undefined
+    returnValue = completionValue?.value
     const lastStep = steps[steps.length - 1]
     if (
       lastStep?.description === `Warning: ${getStepLimitMessage(MAX_STEPS)}`
@@ -302,6 +339,7 @@ export function executeTypeScriptCode(
     steps,
     isComplete: false,
     returnValue,
+    completionValueKind: error ? undefined : completionValue?.kind,
     error,
   }
 }
@@ -316,6 +354,7 @@ export async function executeTypeScriptCodeAsync(
 ): Promise<ExecutionState> {
   const steps: ExecutionStep[] = []
   let returnValue: unknown
+  let completionValue: CompletionValue | undefined
   let error: string | undefined
 
   try {
@@ -331,7 +370,8 @@ export async function executeTypeScriptCodeAsync(
       result = await runner.next()
     }
 
-    returnValue = result.value
+    completionValue = result.value as CompletionValue | undefined
+    returnValue = completionValue?.value
     const lastStep = steps[steps.length - 1]
     if (
       lastStep?.description === `Warning: ${getStepLimitMessage(MAX_STEPS)}`
@@ -352,6 +392,7 @@ export async function executeTypeScriptCodeAsync(
     steps,
     isComplete: false,
     returnValue,
+    completionValueKind: error ? undefined : completionValue?.kind,
     error,
   }
 }

@@ -278,6 +278,11 @@ export function VisualizationModal({
             <div className="shrink-0 px-4 pb-3 sm:px-0 sm:pb-0">
               <ReturnValueCard
                 returnValue={executionState.returnValue}
+                title={
+                  executionState.completionValueKind === 'final-inputs'
+                    ? 'Final Value'
+                    : undefined
+                }
                 isExpanded={isReturnValueExpanded}
                 returnValueRef={returnValueRef}
                 onExpandedChange={setIsReturnValueExpanded}

@@ -10,6 +10,8 @@ import type { RefObject } from 'react'
 type ReturnValueCardProps = {
   /** Final return value from execution. */
   returnValue: unknown
+  /** Heading for a returned result or mutation-based final input value. */
+  title?: string
   /** Whether structured return details are expanded. */
   isExpanded: boolean
   /** Ref used to scroll the return value card into view. */
@@ -24,6 +26,7 @@ type ReturnValueCardProps = {
 
 export function ReturnValueCard({
   returnValue,
+  title = 'Return Value',
   isExpanded,
   returnValueRef,
   onExpandedChange,
@@ -40,7 +43,7 @@ export function ReturnValueCard({
           compactOnMobile && 'p-3 sm:p-6'
         )}
       >
-        <CardTitle className="text-primary">Return Value</CardTitle>
+        <CardTitle className="text-primary">{title}</CardTitle>
         {!shouldInlineReturnValue && (
           <Button
             variant="ghost"
