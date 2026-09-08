@@ -22,6 +22,7 @@ import { createExecutionContext, recordExecutionStep } from './step-recorder'
 import {
   buildExecutionWrapperCode,
   createExecutionFunction,
+  isVoidEntryFunction,
 } from './execution-wrapper'
 import {
   consumeGenerator,
@@ -33,6 +34,7 @@ type PreparedExecution = {
   wrapperCode: string
   inputNames: string[]
   shouldConsumeGenerator: boolean
+  isVoidEntryFunction: boolean
 }
 
 type CompletionValue = {
@@ -49,10 +51,10 @@ const isStepLimitError = isInstanceOf(
 function getCompletionValue(
   result: unknown,
   inputs: InputValues,
-  entryFunctionName?: string
+  isVoidEntryFunction: boolean
 ): CompletionValue {
   if (
-    entryFunctionName &&
+    isVoidEntryFunction &&
     isUndefined(result) &&
     Object.keys(inputs).length > 0
   ) {
@@ -91,6 +93,7 @@ function prepareExecution(
     shouldConsumeGenerator: entryFunctionName
       ? isSyncGeneratorEntry(code, entryFunctionName)
       : false,
+    isVoidEntryFunction: isVoidEntryFunction(code, entryFunctionName),
   }
 }
 
@@ -179,7 +182,11 @@ export function* createTypeScriptExecutionRunner(
       return undefined
     }
 
-    const completionValue = getCompletionValue(result, inputs, entryFunctionName)
+    const completionValue = getCompletionValue(
+      result,
+      inputs,
+      preparedExecution.isVoidEntryFunction
+    )
     const completionLabel =
       completionValue.kind === 'final-inputs' ? 'Final value' : 'Returned'
 
@@ -269,7 +276,11 @@ export async function* createAsyncTypeScriptExecutionRunner(
       return undefined
     }
 
-    const completionValue = getCompletionValue(result, inputs, entryFunctionName)
+    const completionValue = getCompletionValue(
+      result,
+      inputs,
+      preparedExecution.isVoidEntryFunction
+    )
     const completionLabel =
       completionValue.kind === 'final-inputs' ? 'Final value' : 'Returned'
 

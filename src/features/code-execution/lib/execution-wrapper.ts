@@ -27,7 +27,89 @@ const hasTypeKey = hasKeys('type')
 const hasArgumentKey = hasKeys('argument')
 const hasNameKey = hasKeys('name')
 
-function getParamNames(params: unknown[]): string[] {
+function getEntryFunction(code: string, entryFunctionName?: string): unknown {
+  if (!entryFunctionName) return null
+
+  try {
+    const ast = parse(code, {
+      sourceType: 'module',
+      plugins: ['typescript'],
+    })
+
+    for (const node of ast.program.body) {
+      if (
+        node.type === 'FunctionDeclaration' &&
+        node.id?.name === entryFunctionName
+      ) {
+        return node
+      }
+
+      if (node.type !== 'VariableDeclaration') continue
+
+      const declarator = node.declarations.find(
+        (item) =>
+          item.id.type === 'Identifier' &&
+          item.id.name === entryFunctionName &&
+          item.init &&
+          (item.init.type === 'ArrowFunctionExpression' ||
+            item.init.type === 'FunctionExpression')
+      )
+      if (declarator?.init) return declarator.init
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
+function isVoidTypeAnnotation(returnType: unknown): boolean {
+  if (!isObject(returnType) || !hasTypeKey(returnType)) return false
+  if (returnType.type === 'TSVoidKeyword') return true
+  if (
+    returnType.type !== 'TSTypeReference' ||
+    !hasKeys('typeName')(returnType) ||
+    !isObject(returnType.typeName) ||
+    !hasTypeKey(returnType.typeName) ||
+    returnType.typeName.type !== 'Identifier' ||
+    !hasNameKey(returnType.typeName) ||
+    returnType.typeName.name !== 'Promise'
+  ) {
+    return false
+  }
+
+  const typeArguments = hasKeys('typeArguments')(returnType)
+    ? returnType.typeArguments
+    : null
+  return (
+    isObject(typeArguments) &&
+    hasKeys('params')(typeArguments) &&
+    isArray(typeArguments.params) &&
+    isObject(typeArguments.params[0]) &&
+    hasTypeKey(typeArguments.params[0]) &&
+    typeArguments.params[0].type === 'TSVoidKeyword'
+  )
+}
+
+/** Returns whether the selected entry point is explicitly typed to return void. */
+export function isVoidEntryFunction(
+  code: string,
+  entryFunctionName?: string
+): boolean {
+  const entryFunction = getEntryFunction(code, entryFunctionName)
+  if (
+    !isObject(entryFunction) ||
+    !hasKeys('returnType')(entryFunction) ||
+    !isObject(entryFunction.returnType) ||
+    !hasKeys('typeAnnotation')(entryFunction.returnType)
+  ) {
+    return false
+  }
+
+  return isVoidTypeAnnotation(entryFunction.returnType.typeAnnotation)
+}
+
+function getParamNames(params: readonly unknown[]): string[] {
   return params.flatMap((param) =>
     isObject(param) &&
     hasTypeKey(param) &&
@@ -38,9 +120,9 @@ function getParamNames(params: unknown[]): string[] {
   )
 }
 
-function getReturnedFunction(
-  body: { type: string; body?: unknown[] } | { type: string }
-): unknown {
+function getReturnedFunction(body: unknown): unknown {
+  if (!isObject(body) || !hasTypeKey(body)) return null
+
   if (
     body.type === 'ArrowFunctionExpression' ||
     body.type === 'FunctionExpression'
@@ -50,7 +132,7 @@ function getReturnedFunction(
 
   if (
     body.type !== 'BlockStatement' ||
-    !('body' in body) ||
+    !hasKeys('body')(body) ||
     !isArray(body.body)
   ) {
     return null
@@ -78,48 +160,19 @@ function getHigherOrderEntryMetadata(
   code: string,
   entryFunctionName?: string
 ): HigherOrderEntryMetadata | null {
-  if (!entryFunctionName) return null
-
-  try {
-    const ast = parse(code, {
-      sourceType: 'module',
-      plugins: ['typescript'],
-    })
-
-    for (const node of ast.program.body) {
-      if (
-        node.type === 'FunctionDeclaration' &&
-        node.id?.name === entryFunctionName &&
-        getReturnedFunction(node.body)
-      ) {
-        return { outerParamNames: getParamNames(node.params) }
-      }
-
-      if (node.type !== 'VariableDeclaration') continue
-
-      const declarator = node.declarations.find(
-        (item) =>
-          item.id.type === 'Identifier' &&
-          item.id.name === entryFunctionName &&
-          item.init &&
-          (item.init.type === 'ArrowFunctionExpression' ||
-            item.init.type === 'FunctionExpression') &&
-          getReturnedFunction(item.init.body)
-      )
-
-      if (
-        declarator?.init &&
-        (declarator.init.type === 'ArrowFunctionExpression' ||
-          declarator.init.type === 'FunctionExpression')
-      ) {
-        return { outerParamNames: getParamNames(declarator.init.params) }
-      }
-    }
-  } catch {
+  const entryFunction = getEntryFunction(code, entryFunctionName)
+  if (
+    !isObject(entryFunction) ||
+    !hasKeys('params', 'body')(entryFunction) ||
+    !isArray(entryFunction.params) ||
+    !isObject(entryFunction.body) ||
+    !hasTypeKey(entryFunction.body) ||
+    !getReturnedFunction(entryFunction.body)
+  ) {
     return null
   }
 
-  return null
+  return { outerParamNames: getParamNames(entryFunction.params) }
 }
 
 function buildClassDesignWrapperCode(
