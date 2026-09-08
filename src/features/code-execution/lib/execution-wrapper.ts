@@ -1,6 +1,6 @@
 import { parse } from '@babel/parser'
 import type { InputValues } from '@/entities/execution'
-import { hasKeys, isArray, isObject } from '@/shared/lib/guards'
+import { hasKeys, isArray, isNil, isObject } from '@/shared/lib/guards'
 
 import {
   CLASS_DESIGN_INPUT_KEY,
@@ -91,7 +91,28 @@ function isVoidTypeAnnotation(returnType: unknown): boolean {
   )
 }
 
-/** Returns whether the selected entry point is explicitly typed to return void. */
+function hasValueBearingReturn(node: unknown): boolean {
+  if (isArray(node)) return node.some(hasValueBearingReturn)
+  if (!isObject(node)) return false
+
+  if (hasTypeKey(node)) {
+    if (node.type === 'ReturnStatement') {
+      return hasArgumentKey(node) && !isNil(node.argument)
+    }
+
+    if (
+      node.type === 'ArrowFunctionExpression' ||
+      node.type === 'FunctionDeclaration' ||
+      node.type === 'FunctionExpression'
+    ) {
+      return false
+    }
+  }
+
+  return Object.values(node).some(hasValueBearingReturn)
+}
+
+/** Returns whether the selected entry point is typed or inferred to return void. */
 export function isVoidEntryFunction(
   code: string,
   entryFunctionName?: string
@@ -104,16 +125,23 @@ export function isVoidEntryFunction(
       ? getReturnedFunction(entryFunction.body)
       : null
   const invokedFunction = returnedFunction ?? entryFunction
+  if (!isObject(invokedFunction)) return false
+
   if (
-    !isObject(invokedFunction) ||
-    !hasKeys('returnType')(invokedFunction) ||
-    !isObject(invokedFunction.returnType) ||
-    !hasKeys('typeAnnotation')(invokedFunction.returnType)
+    hasKeys('returnType')(invokedFunction) &&
+    !isNil(invokedFunction.returnType)
   ) {
-    return false
+    return (
+      isObject(invokedFunction.returnType) &&
+      hasKeys('typeAnnotation')(invokedFunction.returnType) &&
+      isVoidTypeAnnotation(invokedFunction.returnType.typeAnnotation)
+    )
   }
 
-  return isVoidTypeAnnotation(invokedFunction.returnType.typeAnnotation)
+  return (
+    hasKeys('body')(invokedFunction) &&
+    !hasValueBearingReturn(invokedFunction.body)
+  )
 }
 
 function getParamNames(params: readonly unknown[]): string[] {
