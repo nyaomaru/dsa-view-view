@@ -33,6 +33,26 @@ describe('runner - final input values', () => {
     expect(state.returnValue).toEqual({ nums: [3, 2, 1] })
   })
 
+  it('ignores value-bearing returns from nested object methods', () => {
+    const state = executeCode(
+      `function rotate(nums: number[]) {
+  const helper = {
+    size() {
+      return nums.length
+    },
+  }
+  helper.size()
+  nums.reverse()
+}`,
+      { nums: [1, 2, 3] },
+      'rotate'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.completionValueKind).toBe('final-inputs')
+    expect(state.returnValue).toEqual({ nums: [3, 2, 1] })
+  })
+
   it('uses mutated inputs when an expression-bodied arrow discards its result', () => {
     const state = executeCode(
       `const rotate = (nums: number[]) => void nums.reverse()`,

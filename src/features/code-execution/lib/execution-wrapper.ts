@@ -103,7 +103,10 @@ function hasValueBearingReturn(node: unknown): boolean {
     if (
       node.type === 'ArrowFunctionExpression' ||
       node.type === 'FunctionDeclaration' ||
-      node.type === 'FunctionExpression'
+      node.type === 'FunctionExpression' ||
+      node.type === 'ObjectMethod' ||
+      node.type === 'ClassMethod' ||
+      node.type === 'ClassPrivateMethod'
     ) {
       return false
     }
