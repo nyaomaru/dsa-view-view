@@ -1,6 +1,13 @@
 import { parse } from '@babel/parser'
 import type { InputValues } from '@/entities/execution'
-import { hasKeys, isArray, isNil, isObject } from '@/shared/lib/guards'
+import {
+  define,
+  equals,
+  hasKeys,
+  isArray,
+  isNil,
+  isObject,
+} from '@/shared/lib/guards'
 
 import {
   CLASS_DESIGN_INPUT_KEY,
@@ -26,6 +33,16 @@ type ExecutionFunction = (
 const hasTypeKey = hasKeys('type')
 const hasArgumentKey = hasKeys('argument')
 const hasNameKey = hasKeys('name')
+const hasVoidExpressionKeys = hasKeys('type', 'operator')
+const isUnaryExpressionType = equals('UnaryExpression')
+const isVoidOperator = equals('void')
+type VoidExpression = { type: 'UnaryExpression'; operator: 'void' }
+const isVoidExpression = define<VoidExpression>((value) =>
+  isObject(value) &&
+  hasVoidExpressionKeys(value) &&
+  isUnaryExpressionType(value.type) &&
+  isVoidOperator(value.operator)
+)
 
 function getEntryFunction(code: string, entryFunctionName?: string): unknown {
   if (!entryFunctionName) return null
@@ -96,16 +113,6 @@ function isVoidTypeAnnotation(returnType: unknown): boolean {
     isObject(typeArguments.params[completionTypeIndex]) &&
     hasTypeKey(typeArguments.params[completionTypeIndex]) &&
     typeArguments.params[completionTypeIndex].type === 'TSVoidKeyword'
-  )
-}
-
-function isVoidExpression(node: unknown): boolean {
-  return (
-    isObject(node) &&
-    hasTypeKey(node) &&
-    node.type === 'UnaryExpression' &&
-    hasKeys('operator')(node) &&
-    node.operator === 'void'
   )
 }
 
