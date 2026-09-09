@@ -33,6 +33,23 @@ describe('execution worker protocol', () => {
     ).toBe(false)
   })
 
+  it('rejects worker responses with an invalid completion value kind', () => {
+    const response = {
+      type: 'success' as const,
+      requestId: 'request-1',
+      state: {
+        currentStep: 0,
+        totalSteps: 0,
+        steps: [],
+        isComplete: false,
+        completionValueKind: 'stale-worker-value',
+      },
+    }
+
+    expect(isExecutionState(response.state)).toBe(false)
+    expect(isExecutionWorkerResponse(response)).toBe(false)
+  })
+
   it('accepts product-except-self execution states with sparse arrays', () => {
     const state = executeCode(
       `function productExceptSelf(nums: number[]): number[] {
