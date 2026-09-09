@@ -99,13 +99,27 @@ function isVoidTypeAnnotation(returnType: unknown): boolean {
   )
 }
 
+function isVoidExpression(node: unknown): boolean {
+  return (
+    isObject(node) &&
+    hasTypeKey(node) &&
+    node.type === 'UnaryExpression' &&
+    hasKeys('operator')(node) &&
+    node.operator === 'void'
+  )
+}
+
 function hasValueBearingReturn(node: unknown): boolean {
   if (isArray(node)) return node.some(hasValueBearingReturn)
   if (!isObject(node)) return false
 
   if (hasTypeKey(node)) {
     if (node.type === 'ReturnStatement') {
-      return hasArgumentKey(node) && !isNil(node.argument)
+      return (
+        hasArgumentKey(node) &&
+        !isNil(node.argument) &&
+        !isVoidExpression(node.argument)
+      )
     }
 
     if (
@@ -140,13 +154,7 @@ function hasValueBearingFunctionResult(functionNode: unknown): boolean {
       !hasTypeKey(functionBody) ||
       functionBody.type !== 'BlockStatement')
   ) {
-    return !(
-      isObject(functionBody) &&
-      hasTypeKey(functionBody) &&
-      functionBody.type === 'UnaryExpression' &&
-      hasKeys('operator')(functionBody) &&
-      functionBody.operator === 'void'
-    )
+    return !isVoidExpression(functionBody)
   }
 
   return hasValueBearingReturn(functionBody)

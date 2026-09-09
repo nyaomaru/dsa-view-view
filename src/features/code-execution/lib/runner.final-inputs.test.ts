@@ -68,6 +68,23 @@ describe('runner - final input values', () => {
     )
   })
 
+  it('uses mutated inputs when a block-bodied entry returns a void expression', () => {
+    const state = executeCode(
+      `function rotate(nums: number[]) {
+  return void nums.reverse()
+}`,
+      { nums: [1, 2, 3] },
+      'rotate'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.completionValueKind).toBe('final-inputs')
+    expect(state.returnValue).toEqual({ nums: [3, 2, 1] })
+    expect(state.steps.at(-1)?.description).toBe(
+      'Final value: {"nums":[3,2,1]}'
+    )
+  })
+
   it('uses mutated inputs when a generator has a void completion type', () => {
     const state = executeCode(
       `function* rotate(nums: number[]): Generator<number, void, void> {
