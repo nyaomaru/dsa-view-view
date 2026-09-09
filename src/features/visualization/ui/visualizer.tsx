@@ -298,6 +298,11 @@ export function Visualizer({
         !isUndefined(executionState.returnValue) && (
           <ReturnValueCard
             returnValue={executionState.returnValue}
+            title={
+              executionState.completionValueKind === 'final-inputs'
+                ? 'Final Value'
+                : undefined
+            }
             isExpanded={isReturnValueExpanded}
             returnValueRef={returnValueRef}
             onExpandedChange={setIsReturnValueExpanded}

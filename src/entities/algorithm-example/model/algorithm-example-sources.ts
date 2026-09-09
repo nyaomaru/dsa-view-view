@@ -473,6 +473,33 @@ export const ALGORITHM_EXAMPLE_SOURCES = {
   dfs(0)
   return result
 }`,
+  permute: `function permute(nums: number[]): number[][] {
+  const result: number[][] = []
+  const used = new Array(nums.length).fill(false)
+  const path: number[] = []
+
+  function dfs(): void {
+    if (path.length === nums.length) {
+      result.push([...path])
+      return
+    }
+
+    for (let i = 0; i < nums.length; i++) {
+      if (used[i]) continue
+
+      used[i] = true
+      path.push(nums[i])
+
+      dfs()
+
+      path.pop()
+      used[i] = false
+    }
+  }
+
+  dfs()
+  return result
+}`,
   'number-of-islands': `function numIslands(grid: string[][]): number {
   let islands = 0
 

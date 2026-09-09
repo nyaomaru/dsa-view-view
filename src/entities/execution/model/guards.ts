@@ -21,6 +21,7 @@ import { RUNTIME_COMPARISON_OPERATORS, STEP_TYPES } from './constants'
 import type { RuntimeComparison } from './types'
 
 const isExecutionStepType = oneOfValues(Object.values(STEP_TYPES))
+const isCompletionValueKind = oneOfValues('return', 'final-inputs')
 export const isRuntimeComparisonOperator = oneOfValues(
   ...RUNTIME_COMPARISON_OPERATORS
 )
@@ -83,6 +84,8 @@ export const isExecutionState: Guard<ExecutionState> = define<ExecutionState>(
       value.totalSteps === value.steps.length &&
       value.currentStep <= Math.max(value.totalSteps - 1, 0) &&
       isBoolean(value.isComplete) &&
+      (isUndefined(value.completionValueKind) ||
+        isCompletionValueKind(value.completionValueKind)) &&
       (isUndefined(value.error) || isString(value.error))
     )
   }

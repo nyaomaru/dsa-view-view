@@ -119,6 +119,8 @@ export type ExecutionState = {
   isComplete: boolean
   /** Optional function return value. */
   returnValue?: unknown
+  /** Whether the displayed completion value is a return value or final inputs. */
+  completionValueKind?: 'return' | 'final-inputs'
   /** Optional error message raised during execution. */
   error?: string
 }

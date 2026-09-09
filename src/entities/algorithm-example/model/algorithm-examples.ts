@@ -36,6 +36,7 @@ const EXAMPLE_CATEGORY_BY_ID = new Map<AlgorithmExampleSourceId, string>([
   ['longest-increasing-subsequence', 'Dynamic Programming'],
   ['house-robber', 'Dynamic Programming'],
   ['subsets', 'Backtracking'],
+  ['permute', 'Backtracking'],
   ['number-of-islands', 'Matrix'],
   ['number-of-islands-stack', 'Matrix'],
   ['flood-fill', 'Matrix'],
@@ -266,6 +267,14 @@ const ALGORITHM_EXAMPLE_DEFINITIONS: AlgorithmExampleDefinition[] = [
       nums: '[1, 2, 3]',
     },
     sourceCode: ALGORITHM_EXAMPLE_SOURCES['subsets'],
+  },
+  {
+    id: 'permute',
+    label: 'Permutations',
+    defaultInputValues: {
+      nums: '[1, 2, 3]',
+    },
+    sourceCode: ALGORITHM_EXAMPLE_SOURCES.permute,
   },
   {
     id: 'number-of-islands',
