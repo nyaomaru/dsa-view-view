@@ -64,6 +64,20 @@ describe('runner - final input values', () => {
     expect(state.steps.at(-1)?.description).toBe('Returned: undefined')
   })
 
+  it('preserves an undefined result from an expression-bodied arrow entry', () => {
+    const state = executeCode(
+      `const find = (nums: number[], target: number) =>
+  nums.find((n) => n === target)`,
+      { nums: [1, 2, 3], target: 4 },
+      'find'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.completionValueKind).toBe('return')
+    expect(state.returnValue).toBeUndefined()
+    expect(state.steps.at(-1)?.description).toBe('Returned: undefined')
+  })
+
   it('preserves an awaited undefined result from a non-void entry function', async () => {
     const state = await executeCodeAsync(
       `async function findIndex(

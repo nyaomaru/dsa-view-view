@@ -112,6 +112,27 @@ function hasValueBearingReturn(node: unknown): boolean {
   return Object.values(node).some(hasValueBearingReturn)
 }
 
+function hasValueBearingFunctionResult(functionNode: unknown): boolean {
+  if (
+    !isObject(functionNode) ||
+    !hasTypeKey(functionNode) ||
+    !hasKeys('body')(functionNode)
+  ) {
+    return false
+  }
+
+  if (
+    functionNode.type === 'ArrowFunctionExpression' &&
+    (!isObject(functionNode.body) ||
+      !hasTypeKey(functionNode.body) ||
+      functionNode.body.type !== 'BlockStatement')
+  ) {
+    return true
+  }
+
+  return hasValueBearingReturn(functionNode.body)
+}
+
 /** Returns whether the selected entry point is typed or inferred to return void. */
 export function isVoidEntryFunction(
   code: string,
@@ -140,7 +161,7 @@ export function isVoidEntryFunction(
 
   return (
     hasKeys('body')(invokedFunction) &&
-    !hasValueBearingReturn(invokedFunction.body)
+    !hasValueBearingFunctionResult(invokedFunction)
   )
 }
 
