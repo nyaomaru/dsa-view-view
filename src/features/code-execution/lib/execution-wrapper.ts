@@ -121,16 +121,24 @@ function hasValueBearingFunctionResult(functionNode: unknown): boolean {
     return false
   }
 
+  const functionBody = functionNode.body
+
   if (
     functionNode.type === 'ArrowFunctionExpression' &&
-    (!isObject(functionNode.body) ||
-      !hasTypeKey(functionNode.body) ||
-      functionNode.body.type !== 'BlockStatement')
+    (!isObject(functionBody) ||
+      !hasTypeKey(functionBody) ||
+      functionBody.type !== 'BlockStatement')
   ) {
-    return true
+    return !(
+      isObject(functionBody) &&
+      hasTypeKey(functionBody) &&
+      functionBody.type === 'UnaryExpression' &&
+      hasKeys('operator')(functionBody) &&
+      functionBody.operator === 'void'
+    )
   }
 
-  return hasValueBearingReturn(functionNode.body)
+  return hasValueBearingReturn(functionBody)
 }
 
 /** Returns whether the selected entry point is typed or inferred to return void. */

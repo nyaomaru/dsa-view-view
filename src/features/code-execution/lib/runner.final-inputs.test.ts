@@ -33,6 +33,21 @@ describe('runner - final input values', () => {
     expect(state.returnValue).toEqual({ nums: [3, 2, 1] })
   })
 
+  it('uses mutated inputs when an expression-bodied arrow discards its result', () => {
+    const state = executeCode(
+      `const rotate = (nums: number[]) => void nums.reverse()`,
+      { nums: [1, 2, 3] },
+      'rotate'
+    )
+
+    expect(state.error).toBeUndefined()
+    expect(state.completionValueKind).toBe('final-inputs')
+    expect(state.returnValue).toEqual({ nums: [3, 2, 1] })
+    expect(state.steps.at(-1)?.description).toBe(
+      'Final value: {"nums":[3,2,1]}'
+    )
+  })
+
   it('preserves an explicit undefined result from a non-void entry function', () => {
     const state = executeCode(
       `function findIndex(nums: number[], target: number): number | undefined {
