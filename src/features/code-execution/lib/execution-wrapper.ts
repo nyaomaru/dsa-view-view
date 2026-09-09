@@ -72,11 +72,19 @@ function isVoidTypeAnnotation(returnType: unknown): boolean {
     !isObject(returnType.typeName) ||
     !hasTypeKey(returnType.typeName) ||
     returnType.typeName.type !== 'Identifier' ||
-    !hasNameKey(returnType.typeName) ||
-    returnType.typeName.name !== 'Promise'
+    !hasNameKey(returnType.typeName)
   ) {
     return false
   }
+
+  const completionTypeIndex =
+    returnType.typeName.name === 'Promise'
+      ? 0
+      : returnType.typeName.name === 'Generator' ||
+          returnType.typeName.name === 'AsyncGenerator'
+        ? 1
+        : -1
+  if (completionTypeIndex === -1) return false
 
   const typeArguments = hasKeys('typeArguments')(returnType)
     ? returnType.typeArguments
@@ -85,9 +93,9 @@ function isVoidTypeAnnotation(returnType: unknown): boolean {
     isObject(typeArguments) &&
     hasKeys('params')(typeArguments) &&
     isArray(typeArguments.params) &&
-    isObject(typeArguments.params[0]) &&
-    hasTypeKey(typeArguments.params[0]) &&
-    typeArguments.params[0].type === 'TSVoidKeyword'
+    isObject(typeArguments.params[completionTypeIndex]) &&
+    hasTypeKey(typeArguments.params[completionTypeIndex]) &&
+    typeArguments.params[completionTypeIndex].type === 'TSVoidKeyword'
   )
 }
 
