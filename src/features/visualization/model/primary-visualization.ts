@@ -38,6 +38,10 @@ export function getPrimaryVisualization(
     }
   }
 
+  if (!isUndefined(detection.primaryZigzagStepIndex)) {
+    return { type: 'zigzag', targetStepIndex: detection.primaryZigzagStepIndex }
+  }
+
   if (detection.primaryAreaArrayName) {
     return {
       type: 'area',

@@ -20,6 +20,7 @@ const EXAMPLE_CATEGORY_BY_ID = new Map<AlgorithmExampleSourceId, string>([
   ['search-rotated-array', 'Binary Search'],
   ['product-except-self', 'Array'],
   ['longest-substring-without-repeating-characters', 'Sliding Window'],
+  ['zigzag-conversion', 'String'],
   ['bubble-sort', 'Sorting'],
   ['selection-sort', 'Sorting'],
   ['insertion-sort', 'Sorting'],
@@ -193,6 +194,15 @@ const ALGORITHM_EXAMPLE_DEFINITIONS: AlgorithmExampleDefinition[] = [
       ALGORITHM_EXAMPLE_SOURCES[
         'longest-substring-without-repeating-characters'
       ],
+  },
+  {
+    id: 'zigzag-conversion',
+    label: 'Zigzag Conversion',
+    defaultInputValues: {
+      s: 'PAYPALISHIRING',
+      numRows: 3,
+    },
+    sourceCode: ALGORITHM_EXAMPLE_SOURCES['zigzag-conversion'],
   },
   {
     id: 'trapping-rain-water',

@@ -20,8 +20,8 @@ describe('algorithm examples', () => {
     }
   })
 
-  it('ships 43 examples', () => {
-    expect(ALGORITHM_EXAMPLES).toHaveLength(43)
+  it('ships 44 examples', () => {
+    expect(ALGORITHM_EXAMPLES).toHaveLength(44)
   })
 
   it('pairs both Number of Islands DFS implementations', () => {

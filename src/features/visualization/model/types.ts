@@ -14,6 +14,7 @@ export type VisualizationType =
   | 'capacity-search'
   | 'binary-search'
   | 'sliding-window'
+  | 'zigzag'
   | 'bar-chart'
   | 'graph'
   | 'matrix'

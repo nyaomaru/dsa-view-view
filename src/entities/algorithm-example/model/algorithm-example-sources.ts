@@ -897,6 +897,24 @@ export const ALGORITHM_EXAMPLE_SOURCES = {
   current.next = list1 ?? list2
   return dummy.next
 }`,
+  'zigzag-conversion': `function convert(s: string, numRows: number): string {
+  if (numRows === 1 || s.length <= numRows) return s
+
+  const rows: string[] = Array.from({ length: numRows }, () => '')
+  let row = 0
+  let direction = 1
+
+  for (const char of s) {
+    rows[row] += char
+
+    if (row === 0) direction = 1
+    else if (row === numRows - 1) direction = -1
+
+    row += direction
+  }
+
+  return rows.join('')
+}`,
   'remove-nth-from-end': `function removeNthFromEnd(
   head: ListNode | null,
   n: number
