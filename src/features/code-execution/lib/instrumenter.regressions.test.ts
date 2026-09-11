@@ -3,6 +3,55 @@ import { describe, expect, it } from 'vite-plus/test'
 import { executeCode } from './runner'
 
 describe('instrumentation regressions', () => {
+  it('keeps the call-frame identifier available in function error handlers', () => {
+    const code = `
+      function findMedianSortedArrays(nums1: number[], nums2: number[]): number {
+        if (nums1.length > nums2.length) {
+          return findMedianSortedArrays(nums2, nums1)
+        }
+
+        const m = nums1.length
+        const n = nums2.length
+
+        let low = 0
+        let high = m
+
+        while (low <= high) {
+          const partitionA = Math.floor((low + high) / 2)
+          const partitionB = Math.floor((m + n + 1) / 2) - partitionA
+
+          const maxLeftA = partitionA === 0 ? -Infinity : nums1[partitionA - 1]
+          const minRightA = partitionA === m ? Infinity : nums1[partitionA]
+          const maxLeftB = partitionB === 0 ? -Infinity : nums2[partitionB - 1]
+          const minRightB = partitionB === n ? Infinity : nums2[partitionB]
+
+          if (maxLeftA <= minRightB && maxLeftB <= minRightA) {
+            if ((m + n) % 2 === 0) {
+              return (
+                (Math.max(maxLeftA, maxLeftB) + Math.min(minRightA, minRightB)) / 2
+              )
+            }
+          }
+
+          if (maxLeftA > minRightB) {
+            high = partitionA - 1
+          } else {
+            low = partitionA + 1
+          }
+        }
+
+        throw new Error('Invalid input')
+      }
+      `
+    const state = executeCode(
+      code,
+      { nums1: [1, 3], nums2: [2] },
+      'findMedianSortedArrays'
+    )
+
+    expect(state.error).toBe('Invalid input')
+  })
+
   it('does not instrument function-expression callbacks for skipped array methods', () => {
     const state = executeCode(
       `

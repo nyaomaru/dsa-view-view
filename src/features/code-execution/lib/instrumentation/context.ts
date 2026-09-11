@@ -156,7 +156,7 @@ export class InstrumentationContext {
     )
     const prelude = [
       this.markInstrumented(
-        t.variableDeclaration('const', [
+        t.variableDeclaration('var', [
           t.variableDeclarator(frameIdentifier, frameId),
         ])
       ),
