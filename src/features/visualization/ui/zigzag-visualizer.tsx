@@ -24,6 +24,7 @@ function getGrid({ source, numRows }: ZigzagVisualizationState): Cell[][] {
       column++
     } else if (row === 0 && direction === -1) {
       direction = 1
+    } else if (direction === -1) {
       column++
     }
     row += direction
@@ -46,7 +47,7 @@ export function ZigzagVisualizer({ state }: ZigzagVisualizerProps) {
             placed: {state.processedCharacterCount}/{Array.from(state.source).length}
           </span>
           <span className="border border-primary px-2 py-1">
-            next row: {state.row}
+            row pointer: {state.row}
           </span>
           <span className="border border-primary px-2 py-1">
             direction: {state.direction === 1 ? 'down' : 'up'}
