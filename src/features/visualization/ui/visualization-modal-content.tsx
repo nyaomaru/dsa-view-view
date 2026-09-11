@@ -32,6 +32,7 @@ import { getExecutionStepSearchOrder } from '../lib/execution-step-search'
 import { getHeapVisualizationState } from '../lib/heap-view'
 import { getWordLadderVisualizationState } from '../lib/word-ladder-view'
 import { getExpressionVisualizationState } from '../lib/expression-view'
+import { getZigzagVisualizationState } from '../lib/zigzag-view'
 import { getLatestRuntimeComparison } from '../lib/runtime-comparison'
 import { hasCallFrameMetadata } from '../lib/call-frame-inspector'
 import type { VisualizationType } from '../model/types'
@@ -54,6 +55,7 @@ import { ListGraphVisualizer } from './list-graph-visualizer'
 import { HeapVisualizer } from './heap-visualizer'
 import { WordLadderVisualizer } from './word-ladder-visualizer'
 import { ExpressionVisualizer } from './expression-visualizer'
+import { ZigzagVisualizer } from './zigzag-visualizer'
 import { CallFrameInspector } from './call-frame-inspector'
 import { DfsComparisonVisualizer } from './dfs-comparison-visualizer'
 
@@ -242,6 +244,18 @@ export function VisualizationModalContent({
       <ExpressionVisualizer state={expressionState} />
     ) : (
       <div>Expression state is not available at this step.</div>
+    )
+  }
+
+  if (type === 'zigzag') {
+    const zigzagState = getZigzagVisualizationState(
+      executionState,
+      targetStepIndex
+    )
+    return zigzagState ? (
+      <ZigzagVisualizer state={zigzagState} />
+    ) : (
+      <div>Zigzag row state is not available at this step.</div>
     )
   }
 

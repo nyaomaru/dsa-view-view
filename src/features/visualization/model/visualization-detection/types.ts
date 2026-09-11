@@ -43,6 +43,8 @@ export type VisualizationDetection = {
   primarySlidingWindowStringName: string | undefined
   /** Step index where sliding-window pointers are available. */
   primarySlidingWindowStepIndex: number | undefined
+  /** First step containing standard Zigzag Conversion row buffers. */
+  primaryZigzagStepIndex: number | undefined
   /** Primary boolean, numeric, or rolling state source for DP View. */
   primaryDpName: string | undefined
   /** Primary semantic Map variable to show in Map View. */

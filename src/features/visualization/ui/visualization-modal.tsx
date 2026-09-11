@@ -109,6 +109,8 @@ function getVisualizationTitle({
       return `Index View: ${targetVariable}`
     case 'sliding-window':
       return `Sliding Window View: ${targetVariable}`
+    case 'zigzag':
+      return 'Zigzag Conversion View'
     case 'graph':
       return `Graph: ${targetVariable}`
     case 'matrix':
@@ -167,6 +169,8 @@ function getVisualizationDescription(
       return 'Visualize the current binary-search range and mid index.'
     case 'sliding-window':
       return 'Visualize the current sliding window over the string.'
+    case 'zigzag':
+      return 'Follow characters as they move down and up through the row buffers.'
     case 'graph':
       return 'Visualize adjacency list as a directed graph.'
     case 'matrix':

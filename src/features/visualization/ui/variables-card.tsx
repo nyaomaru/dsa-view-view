@@ -51,6 +51,8 @@ type VariablesCardProps = {
   primaryWordLadderStepIndex?: number
   /** First step containing Basic Calculator-style expression state. */
   primaryExpressionStepIndex?: number
+  /** First step containing standard Zigzag Conversion row buffers. */
+  primaryZigzagStepIndex?: number
   /** Primary array variable detected for chart visualization. */
   primaryArrayName?: string
   /** Primary numeric array detected for an area visualization. */
@@ -116,6 +118,7 @@ export function VariablesCard({
   primaryHeapStepIndex,
   primaryWordLadderStepIndex,
   primaryExpressionStepIndex,
+  primaryZigzagStepIndex,
   primaryArrayName,
   primaryAreaArrayName,
   primaryAreaStepIndex,
@@ -238,6 +241,19 @@ export function VariablesCard({
             >
               <Calculator className="w-4 h-4" />
               Expression View
+            </Button>
+          )}
+          {!isUndefined(primaryZigzagStepIndex) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                onOpenVisualization('zigzag', undefined, primaryZigzagStepIndex)
+              }
+            >
+              <Grid3X3 className="w-4 h-4" />
+              Zigzag View
             </Button>
           )}
           {primaryArrayName && (

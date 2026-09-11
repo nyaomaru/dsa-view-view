@@ -11,6 +11,7 @@ const emptyDetection: VisualizationDetection = {
   primaryHeapStepIndex: undefined,
   primaryWordLadderStepIndex: undefined,
   primaryExpressionStepIndex: undefined,
+  primaryZigzagStepIndex: undefined,
   primaryStackName: undefined,
   primaryArrayName: undefined,
   primaryAreaArrayName: undefined,
@@ -67,6 +68,16 @@ describe('getPrimaryVisualization', () => {
         primaryStackName: 'stack',
       })
     ).toEqual({ type: 'expression', targetStepIndex: 4 })
+  })
+
+  it('selects Zigzag Conversion before generic array views', () => {
+    expect(
+      getPrimaryVisualization({
+        ...emptyDetection,
+        primaryZigzagStepIndex: 5,
+        primaryStackName: 'rows',
+      })
+    ).toEqual({ type: 'zigzag', targetStepIndex: 5 })
   })
 
   it('maps detected candidates to their modal configuration', () => {

@@ -77,6 +77,7 @@ export function Visualizer({
     primaryHeapStepIndex,
     primaryWordLadderStepIndex,
     primaryExpressionStepIndex,
+    primaryZigzagStepIndex,
     primaryArrayName,
     primaryAreaArrayName,
     primaryAreaStepIndex,
@@ -255,6 +256,7 @@ export function Visualizer({
         primaryHeapStepIndex={primaryHeapStepIndex}
         primaryWordLadderStepIndex={primaryWordLadderStepIndex}
         primaryExpressionStepIndex={primaryExpressionStepIndex}
+        primaryZigzagStepIndex={primaryZigzagStepIndex}
         primaryArrayName={primaryArrayName}
         primaryAreaArrayName={primaryAreaArrayName}
         primaryAreaStepIndex={primaryAreaStepIndex}
