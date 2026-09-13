@@ -1,5 +1,7 @@
 import { transform } from '@babel/standalone'
 
+import { isNull } from '@/shared/lib/guards'
+
 import type { CompilationError, CompilationResult } from '../model/types'
 import { prepareTypeScriptCodeWithClasses } from './prepared-typescript-classes'
 
@@ -30,7 +32,7 @@ export function compileTypeScriptCode(code: string): CompilationResult {
       filename: 'input.ts',
     })
 
-    if (!result.code) {
+    if (isNull(result) || !result.code) {
       return {
         success: false,
         errors: [

@@ -3,7 +3,7 @@ packages:
 
 overrides:
   dompurify: 3.4.11
-  vite: 'catalog:'
+  vite@*: 'catalog:'
 
 allowBuilds:
   lefthook: true
@@ -15,5 +15,5 @@ peerDependencyRules:
     tailwindcss: '4'
     vite: '*'
 catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@0.3.0
-  vite-plus: 0.3.0
+  vite: npm:@voidzero-dev/vite-plus-core@0.3.1
+  vite-plus: 0.3.1
