@@ -100,6 +100,12 @@ test('loads, compiles, runs a demo, and opens core dialogs', async ({
 
   if (isMobile) {
     const viewport = page.viewportSize()
+
+    expect(viewport).not.toBeNull()
+    await expect
+      .poll(async () => (await openDialog.boundingBox())?.x)
+      .toBeCloseTo(4, 0)
+
     const dialogBox = await openDialog.boundingBox()
     const playbackBox = await openDialog
       .getByRole('group', {
@@ -107,10 +113,8 @@ test('loads, compiles, runs a demo, and opens core dialogs', async ({
       })
       .boundingBox()
 
-    expect(viewport).not.toBeNull()
     expect(dialogBox).not.toBeNull()
     expect(playbackBox).not.toBeNull()
-    expect(dialogBox?.x).toBeCloseTo(4, 0)
     expect(dialogBox?.y).toBeCloseTo(8, 0)
     expect(dialogBox?.width).toBeCloseTo((viewport?.width ?? 0) - 8, 0)
     expect(dialogBox?.height).toBeCloseTo((viewport?.height ?? 0) - 16, 0)
