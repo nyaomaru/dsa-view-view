@@ -1,11 +1,11 @@
 :root {
-  --background: 22 24 22;
+  --background: 23 25 23;
   --foreground: 124 170 74;
   --muted: 30 41 59;
   --muted-foreground: 124 170 74;
-  --popover: 22 24 22;
+  --popover: 23 25 23;
   --popover-foreground: 124 170 74;
-  --card: 22 24 22;
+  --card: 23 25 23;
   --card-foreground: 124 170 74;
   /* Primary rgb(124, 170, 74). Stored as RGB channels for alpha syntax. */
   --primary: 124 170 74;
@@ -44,13 +44,13 @@
 }
 
 .dark {
-  --background: 22 24 22;
+  --background: 23 25 23;
   --foreground: 124 170 74;
   --muted: 30 41 59;
   --muted-foreground: 124 170 74;
-  --popover: 22 24 22;
+  --popover: 23 25 23;
   --popover-foreground: 124 170 74;
-  --card: 22 24 22;
+  --card: 23 25 23;
   --card-foreground: 124 170 74;
   --border: 124 170 74;
   --input: 124 170 74;
