@@ -29,7 +29,7 @@ export function RegexMatchVisualizer({ state }: RegexMatchVisualizerProps) {
         Current call: <code>dp({state.current.i}, {state.current.j})</code>. Each
         marked cell is a memoization state reached so far.
       </p>
-      <div className="overflow-auto">
+      <div className="overflow-auto pr-8">
         <div
           className="grid w-max min-w-full gap-1 text-center text-xs"
           style={{ gridTemplateColumns: `repeat(${pattern.length + 2}, minmax(2.25rem, 1fr))` }}
