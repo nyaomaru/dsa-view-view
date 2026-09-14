@@ -261,6 +261,19 @@ export function VisualizationModalContent({
     )
   }
 
+  if (type === 'regex-match') {
+    const state = getRegexMatchVisualizationState(
+      executionState,
+      targetStepIndex
+    )
+
+    return state ? (
+      <RegexMatchVisualizer state={state} />
+    ) : (
+      <div>Regular-expression matching state is not available.</div>
+    )
+  }
+
   if (!targetVariable) {
     return null
   }
@@ -467,16 +480,6 @@ export function VisualizationModalContent({
         <DpVisualizer data={dpData} name={targetVariable} />
       ) : (
         <div>Variable is not a boolean or numeric DP array</div>
-      )
-    }
-
-    case 'regex-match': {
-      const state = getRegexMatchVisualizationState(executionState)
-
-      return state ? (
-        <RegexMatchVisualizer state={state} />
-      ) : (
-        <div>Regular-expression matching state is not available.</div>
       )
     }
 

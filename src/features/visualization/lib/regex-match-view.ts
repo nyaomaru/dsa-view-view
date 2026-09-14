@@ -43,9 +43,20 @@ export function getRegexMatchStepIndex(
 /** Builds the explored memoization grid up to the selected execution step. */
 export function getRegexMatchVisualizationState(
   executionState: ExecutionState,
-  targetStepIndex = executionState.currentStep
+  fallbackStepIndex?: number
 ): RegexMatchState | null {
-  const limit = Math.min(targetStepIndex, executionState.steps.length - 1)
+  const currentLimit = Math.min(
+    executionState.currentStep,
+    executionState.steps.length - 1
+  )
+  const fallbackLimit = Math.min(
+    fallbackStepIndex ?? currentLimit,
+    executionState.steps.length - 1
+  )
+  const hasCurrentState = executionState.steps
+    .slice(0, currentLimit + 1)
+    .some((step) => Boolean(readRegexMatchState(step)))
+  const limit = hasCurrentState ? currentLimit : fallbackLimit
   let current: RegexMatchState['current'] | null = null
   let source: string | null = null
   let pattern: string | null = null

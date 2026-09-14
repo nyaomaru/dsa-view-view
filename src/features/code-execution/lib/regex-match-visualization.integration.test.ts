@@ -38,5 +38,11 @@ describe('Regular Expression Matching visualization integration', () => {
       pattern: 'c*a*b',
     })
     expect(view?.visited.has('0,0')).toBe(true)
+
+    const initialView = getRegexMatchVisualizationState(
+      { ...state, currentStep: 0 },
+      detection.primaryRegexMatchStepIndex
+    )
+    expect(initialView).not.toBeNull()
   })
 })

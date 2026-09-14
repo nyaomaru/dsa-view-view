@@ -10,6 +10,8 @@ type RegexMatchVisualizerProps = {
 export function RegexMatchVisualizer({ state }: RegexMatchVisualizerProps) {
   const source = Array.from(state.source)
   const pattern = Array.from(state.pattern)
+  const labelClass =
+    'flex aspect-square items-center justify-center p-2 text-muted-foreground'
 
   return (
     <div className="space-y-4" data-testid="regex-match-visualizer">
@@ -29,19 +31,19 @@ export function RegexMatchVisualizer({ state }: RegexMatchVisualizerProps) {
       </p>
       <div className="overflow-auto">
         <div
-          className="grid w-max gap-1 text-center text-xs"
+          className="grid w-max min-w-full gap-1 text-center text-xs"
           style={{ gridTemplateColumns: `repeat(${pattern.length + 2}, minmax(2.25rem, 1fr))` }}
         >
-          <span className="p-2 text-muted-foreground">s\\p</span>
+          <span className={labelClass}>s\\p</span>
           {pattern.map((character, index) => (
-            <span key={`${character}-${index}`} className="p-2 text-muted-foreground">
+            <span key={`${character}-${index}`} className={labelClass}>
               {index}:{character}
             </span>
           ))}
-          <span className="p-2 text-muted-foreground">{pattern.length}:∅</span>
+          <span className={labelClass}>{pattern.length}:∅</span>
           {Array.from({ length: source.length + 1 }, (_, i) => (
             <div className="contents" key={i}>
-              <span className="p-2 text-muted-foreground">
+              <span className={labelClass}>
                 {i}:{source[i] ?? '∅'}
               </span>
               {Array.from({ length: pattern.length + 1 }, (_, j) => {
@@ -51,7 +53,7 @@ export function RegexMatchVisualizer({ state }: RegexMatchVisualizerProps) {
                 return (
                   <span
                     className={cn(
-                      'border border-border p-2 font-mono',
+                      'flex aspect-square items-center justify-center border border-border p-2 font-mono',
                       isVisited && 'bg-secondary',
                       isCurrent && 'bg-primary text-primary-foreground'
                     )}
