@@ -20,6 +20,7 @@ export type VisualizationType =
   | 'matrix'
   | 'heap'
   | 'word-ladder'
+  | 'regex-match'
   | null
 
 /** Opens one visualization for an optional variable and fallback step. */

@@ -36,6 +36,7 @@ const EXAMPLE_CATEGORY_BY_ID = new Map<AlgorithmExampleSourceId, string>([
   ['coin-change', 'Dynamic Programming'],
   ['longest-increasing-subsequence', 'Dynamic Programming'],
   ['house-robber', 'Dynamic Programming'],
+  ['regular-expression-matching', 'Dynamic Programming'],
   ['subsets', 'Backtracking'],
   ['permute', 'Backtracking'],
   ['number-of-islands', 'Matrix'],
@@ -439,6 +440,15 @@ const ALGORITHM_EXAMPLE_DEFINITIONS: AlgorithmExampleDefinition[] = [
       n: 2,
     },
     sourceCode: ALGORITHM_EXAMPLE_SOURCES['remove-nth-from-end'],
+  },
+  {
+    id: 'regular-expression-matching',
+    label: 'Regular Expression Matching',
+    defaultInputValues: {
+      s: 'aab',
+      p: 'c*a*b',
+    },
+    sourceCode: ALGORITHM_EXAMPLE_SOURCES['regular-expression-matching'],
   },
 ]
 

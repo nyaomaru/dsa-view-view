@@ -42,6 +42,13 @@ export function getPrimaryVisualization(
     return { type: 'zigzag', targetStepIndex: detection.primaryZigzagStepIndex }
   }
 
+  if (!isUndefined(detection.primaryRegexMatchStepIndex)) {
+    return {
+      type: 'regex-match',
+      targetStepIndex: detection.primaryRegexMatchStepIndex,
+    }
+  }
+
   if (detection.primaryAreaArrayName) {
     return {
       type: 'area',

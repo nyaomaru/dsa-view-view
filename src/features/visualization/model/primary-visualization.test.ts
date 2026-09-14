@@ -12,6 +12,7 @@ const emptyDetection: VisualizationDetection = {
   primaryWordLadderStepIndex: undefined,
   primaryExpressionStepIndex: undefined,
   primaryZigzagStepIndex: undefined,
+  primaryRegexMatchStepIndex: undefined,
   primaryStackName: undefined,
   primaryArrayName: undefined,
   primaryAreaArrayName: undefined,

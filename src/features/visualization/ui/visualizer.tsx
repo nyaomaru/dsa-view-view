@@ -78,6 +78,7 @@ export function Visualizer({
     primaryWordLadderStepIndex,
     primaryExpressionStepIndex,
     primaryZigzagStepIndex,
+    primaryRegexMatchStepIndex,
     primaryArrayName,
     primaryAreaArrayName,
     primaryAreaStepIndex,
@@ -257,6 +258,7 @@ export function Visualizer({
         primaryWordLadderStepIndex={primaryWordLadderStepIndex}
         primaryExpressionStepIndex={primaryExpressionStepIndex}
         primaryZigzagStepIndex={primaryZigzagStepIndex}
+        primaryRegexMatchStepIndex={primaryRegexMatchStepIndex}
         primaryArrayName={primaryArrayName}
         primaryAreaArrayName={primaryAreaArrayName}
         primaryAreaStepIndex={primaryAreaStepIndex}
