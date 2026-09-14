@@ -124,6 +124,8 @@ function getVisualizationTitle({
       return 'Heap View'
     case 'word-ladder':
       return 'Word Ladder View'
+    case 'regex-match':
+      return 'Regular Expression Match View'
     case null:
       return ''
   }
@@ -179,6 +181,8 @@ function getVisualizationDescription(
       return 'Visualize values moving between the prepared max and min heaps.'
     case 'word-ladder':
       return 'Visualize the word-transformation graph and current BFS frontier.'
+    case 'regex-match':
+      return 'Follow recursive dp(i, j) calls through the memoization grid.'
     case null:
       return ''
   }

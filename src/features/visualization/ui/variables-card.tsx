@@ -53,6 +53,8 @@ type VariablesCardProps = {
   primaryExpressionStepIndex?: number
   /** First step containing standard Zigzag Conversion row buffers. */
   primaryZigzagStepIndex?: number
+  /** First step containing recursive regular-expression matching coordinates. */
+  primaryRegexMatchStepIndex?: number
   /** Primary array variable detected for chart visualization. */
   primaryArrayName?: string
   /** Primary numeric array detected for an area visualization. */
@@ -119,6 +121,7 @@ export function VariablesCard({
   primaryWordLadderStepIndex,
   primaryExpressionStepIndex,
   primaryZigzagStepIndex,
+  primaryRegexMatchStepIndex,
   primaryArrayName,
   primaryAreaArrayName,
   primaryAreaStepIndex,
@@ -254,6 +257,23 @@ export function VariablesCard({
             >
               <Grid3X3 className="w-4 h-4" />
               Zigzag View
+            </Button>
+          )}
+          {!isUndefined(primaryRegexMatchStepIndex) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                onOpenVisualization(
+                  'regex-match',
+                  undefined,
+                  primaryRegexMatchStepIndex
+                )
+              }
+            >
+              <CheckSquare className="w-4 h-4" />
+              Regex Match View
             </Button>
           )}
           {primaryArrayName && (

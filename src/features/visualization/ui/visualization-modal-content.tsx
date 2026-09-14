@@ -33,6 +33,7 @@ import { getHeapVisualizationState } from '../lib/heap-view'
 import { getWordLadderVisualizationState } from '../lib/word-ladder-view'
 import { getExpressionVisualizationState } from '../lib/expression-view'
 import { getZigzagVisualizationState } from '../lib/zigzag-view'
+import { getRegexMatchVisualizationState } from '../lib/regex-match-view'
 import { getLatestRuntimeComparison } from '../lib/runtime-comparison'
 import { hasCallFrameMetadata } from '../lib/call-frame-inspector'
 import type { VisualizationType } from '../model/types'
@@ -56,6 +57,7 @@ import { HeapVisualizer } from './heap-visualizer'
 import { WordLadderVisualizer } from './word-ladder-visualizer'
 import { ExpressionVisualizer } from './expression-visualizer'
 import { ZigzagVisualizer } from './zigzag-visualizer'
+import { RegexMatchVisualizer } from './regex-match-visualizer'
 import { CallFrameInspector } from './call-frame-inspector'
 import { DfsComparisonVisualizer } from './dfs-comparison-visualizer'
 
@@ -465,6 +467,16 @@ export function VisualizationModalContent({
         <DpVisualizer data={dpData} name={targetVariable} />
       ) : (
         <div>Variable is not a boolean or numeric DP array</div>
+      )
+    }
+
+    case 'regex-match': {
+      const state = getRegexMatchVisualizationState(executionState)
+
+      return state ? (
+        <RegexMatchVisualizer state={state} />
+      ) : (
+        <div>Regular-expression matching state is not available.</div>
       )
     }
 
