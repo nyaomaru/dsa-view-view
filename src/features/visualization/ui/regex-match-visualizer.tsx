@@ -6,10 +6,25 @@ type RegexMatchVisualizerProps = {
   state: RegexMatchState
 }
 
+const MAX_GRID_AXIS_CELLS = 20
+
+function getVisibleIndexes(length: number, currentIndex: number): number[] {
+  const cellCount = length + 1
+  const displayedCellCount = Math.min(cellCount, MAX_GRID_AXIS_CELLS)
+  const start = Math.min(
+    Math.max(0, currentIndex - Math.floor(displayedCellCount / 2)),
+    cellCount - displayedCellCount
+  )
+
+  return Array.from({ length: displayedCellCount }, (_, index) => start + index)
+}
+
 /** Displays recursive regex matching calls as coordinates in its memoization table. */
 export function RegexMatchVisualizer({ state }: RegexMatchVisualizerProps) {
   const source = Array.from(state.source)
   const pattern = Array.from(state.pattern)
+  const sourceIndexes = getVisibleIndexes(source.length, state.current.i)
+  const patternIndexes = getVisibleIndexes(pattern.length, state.current.j)
   const labelClass =
     'flex aspect-square items-center justify-center p-2 text-muted-foreground'
 
@@ -29,24 +44,31 @@ export function RegexMatchVisualizer({ state }: RegexMatchVisualizerProps) {
         Current call: <code>dp({state.current.i}, {state.current.j})</code>. Each
         marked cell is a memoization state reached so far.
       </p>
+      {(sourceIndexes.length !== source.length + 1 ||
+        patternIndexes.length !== pattern.length + 1) && (
+        <p className="text-sm text-muted-foreground">
+          Showing states near the current call to keep the grid responsive.
+        </p>
+      )}
       <div className="overflow-auto pr-8">
         <div
           className="grid w-max min-w-full gap-1 text-center text-xs"
-          style={{ gridTemplateColumns: `repeat(${pattern.length + 2}, minmax(2.25rem, 1fr))` }}
+          style={{
+            gridTemplateColumns: `repeat(${patternIndexes.length + 1}, minmax(2.25rem, 1fr))`,
+          }}
         >
           <span className={labelClass}>s\\p</span>
-          {pattern.map((character, index) => (
-            <span key={`${character}-${index}`} className={labelClass}>
-              {index}:{character}
+          {patternIndexes.map((index) => (
+            <span key={index} className={labelClass}>
+              {index}:{pattern[index] ?? '∅'}
             </span>
           ))}
-          <span className={labelClass}>{pattern.length}:∅</span>
-          {Array.from({ length: source.length + 1 }, (_, i) => (
+          {sourceIndexes.map((i) => (
             <div className="contents" key={i}>
               <span className={labelClass}>
                 {i}:{source[i] ?? '∅'}
               </span>
-              {Array.from({ length: pattern.length + 1 }, (_, j) => {
+              {patternIndexes.map((j) => {
                 const isCurrent = state.current.i === i && state.current.j === j
                 const isVisited = state.visited.has(`${i},${j}`)
 
@@ -57,6 +79,7 @@ export function RegexMatchVisualizer({ state }: RegexMatchVisualizerProps) {
                       isVisited && 'bg-secondary',
                       isCurrent && 'bg-primary text-primary-foreground'
                     )}
+                    data-regex-match-cell
                     key={`${i},${j}`}
                   >
                     {isCurrent ? 'dp' : isVisited ? '•' : ''}
