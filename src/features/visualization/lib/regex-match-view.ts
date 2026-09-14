@@ -1,5 +1,5 @@
 import type { ExecutionState, ExecutionStep } from '@/entities/execution'
-import { isInteger, isString } from '@/shared/lib/guards'
+import { isInteger, isMap, isString } from '@/shared/lib/guards'
 
 export type RegexMatchState = {
   source: string
@@ -12,8 +12,11 @@ function readRegexMatchState(
   step: ExecutionStep
 ): { source: string; pattern: string; i: number; j: number } | null {
   const { s, p, i, j } = step.variables
+  const isMemoizedDpCall =
+    step.metadata?.callFrame?.functionName === 'dp' && isMap(step.variables.memo)
 
   if (
+    !isMemoizedDpCall ||
     !isString(s) ||
     !isString(p) ||
     !isInteger(i) ||
