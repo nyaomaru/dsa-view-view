@@ -21,4 +21,21 @@ describe('RegexMatchVisualizer', () => {
       400
     )
   })
+
+  it('uses UTF-16 indexes like the executed matcher', () => {
+    render(
+      <RegexMatchVisualizer
+        state={{
+          source: '😀',
+          pattern: '..',
+          current: { i: 2, j: 2 },
+          visited: new Set(['0,0', '2,2']),
+        }}
+      />
+    )
+
+    expect(screen.getAllByText('2:∅')).toHaveLength(2)
+    expect(screen.getByText('0:\\ud83d')).toBeInTheDocument()
+    expect(document.querySelectorAll('[data-regex-match-cell]')).toHaveLength(9)
+  })
 })

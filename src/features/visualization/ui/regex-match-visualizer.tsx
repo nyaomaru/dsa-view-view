@@ -19,12 +19,20 @@ function getVisibleIndexes(length: number, currentIndex: number): number[] {
   return Array.from({ length: displayedCellCount }, (_, index) => start + index)
 }
 
+function getCodeUnitLabel(value: string, index: number): string {
+  const character = value[index]
+  if (character === undefined) return '∅'
+
+  const codeUnit = character.charCodeAt(0)
+  return codeUnit >= 0xd800 && codeUnit <= 0xdfff
+    ? `\\u${codeUnit.toString(16).padStart(4, '0')}`
+    : character
+}
+
 /** Displays recursive regex matching calls as coordinates in its memoization table. */
 export function RegexMatchVisualizer({ state }: RegexMatchVisualizerProps) {
-  const source = Array.from(state.source)
-  const pattern = Array.from(state.pattern)
-  const sourceIndexes = getVisibleIndexes(source.length, state.current.i)
-  const patternIndexes = getVisibleIndexes(pattern.length, state.current.j)
+  const sourceIndexes = getVisibleIndexes(state.source.length, state.current.i)
+  const patternIndexes = getVisibleIndexes(state.pattern.length, state.current.j)
   const labelClass =
     'flex aspect-square items-center justify-center p-2 text-muted-foreground'
 
@@ -44,8 +52,8 @@ export function RegexMatchVisualizer({ state }: RegexMatchVisualizerProps) {
         Current call: <code>dp({state.current.i}, {state.current.j})</code>. Each
         marked cell is a memoization state reached so far.
       </p>
-      {(sourceIndexes.length !== source.length + 1 ||
-        patternIndexes.length !== pattern.length + 1) && (
+      {(sourceIndexes.length !== state.source.length + 1 ||
+        patternIndexes.length !== state.pattern.length + 1) && (
         <p className="text-sm text-muted-foreground">
           Showing states near the current call to keep the grid responsive.
         </p>
@@ -60,13 +68,13 @@ export function RegexMatchVisualizer({ state }: RegexMatchVisualizerProps) {
           <span className={labelClass}>s\\p</span>
           {patternIndexes.map((index) => (
             <span key={index} className={labelClass}>
-              {index}:{pattern[index] ?? '∅'}
+              {index}:{getCodeUnitLabel(state.pattern, index)}
             </span>
           ))}
           {sourceIndexes.map((i) => (
             <div className="contents" key={i}>
               <span className={labelClass}>
-                {i}:{source[i] ?? '∅'}
+                {i}:{getCodeUnitLabel(state.source, i)}
               </span>
               {patternIndexes.map((j) => {
                 const isCurrent = state.current.i === i && state.current.j === j
