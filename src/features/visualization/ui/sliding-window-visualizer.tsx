@@ -1,5 +1,7 @@
 import { Card } from '@/shared/ui'
+import type { RuntimeComparison } from '@/entities/execution'
 import type { SlidingWindowState } from '../lib/sliding-window-view'
+import { RuntimeComparisonView } from './runtime-comparison-view'
 
 type SlidingWindowVisualizerProps = {
   /** String data being scanned by the sliding window. */
@@ -8,6 +10,8 @@ type SlidingWindowVisualizerProps = {
   name: string
   /** Current left/right window pointer state. */
   windowState: SlidingWindowState
+  /** Latest relevant comparison for the active sliding-window frame. */
+  comparison?: RuntimeComparison
 }
 
 function getMarkerLabel(
@@ -24,6 +28,7 @@ function getMarkerLabel(
 export function SlidingWindowVisualizer({
   data,
   windowState,
+  comparison,
 }: SlidingWindowVisualizerProps) {
   const chars = Array.from(data)
   const isHalfOpen = windowState.rangeMode === 'half-open'
@@ -132,6 +137,8 @@ export function SlidingWindowVisualizer({
             )}
           </div>
         </div>
+
+        <RuntimeComparisonView comparison={comparison} className="mx-auto" />
       </div>
     </Card>
   )

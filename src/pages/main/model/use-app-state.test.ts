@@ -39,8 +39,8 @@ describe('algorithm examples', () => {
     expect(ids).toContain('clone-graph')
   })
 
-  it('provides runnable default inputs for every bundled example', () => {
-    for (const example of ALGORITHM_EXAMPLES) {
+  for (const example of ALGORITHM_EXAMPLES) {
+    it(`provides runnable default inputs for ${example.label}`, () => {
       const signature = extractFunctionSignature(
         example.sourceCode,
         DEFAULT_LANGUAGE
@@ -62,8 +62,8 @@ describe('algorithm examples', () => {
 
       expect(state.error, example.label).toBeUndefined()
       expect(state.steps.length, example.label).toBeGreaterThan(0)
-    }
-  })
+    })
+  }
 
   it('selects an example from the full list using the provided random source', () => {
     expect(getRandomExample(() => 0)).toBe(ALGORITHM_EXAMPLES[0])

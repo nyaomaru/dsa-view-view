@@ -1,15 +1,19 @@
 import { Card } from '@/shared/ui'
+import type { RuntimeComparison } from '@/entities/execution'
 import { isUndefined } from '@/shared/lib/guards'
 import type {
   CapacityPackageState,
   CapacitySearchVisualizationState,
 } from '../lib/capacity-search-view'
+import { RuntimeComparisonView } from './runtime-comparison-view'
 
 type CapacitySearchVisualizerProps = {
   /** Package-array variable name. */
   name: string
   /** Current capacity-search state. */
   state: CapacitySearchVisualizationState
+  /** Latest relevant comparison for the active capacity-search frame. */
+  comparison?: RuntimeComparison
 }
 
 function Metric({
@@ -128,6 +132,7 @@ function PackageProgressItem({
 export function CapacitySearchVisualizer({
   name,
   state,
+  comparison,
 }: CapacitySearchVisualizerProps) {
   const status =
     state.phase === 'pending'
@@ -197,6 +202,8 @@ export function CapacitySearchVisualizer({
             ? 'Waiting for the first package iteration'
             : `${name}[${state.currentIndex}] = ${state.currentWeight} · day ${state.requiredDays} load = ${state.currentLoad}`}
         </div>
+
+        <RuntimeComparisonView comparison={comparison} />
       </div>
     </Card>
   )

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test'
+import type { ExecutionState } from '@/entities/execution'
 
-import { getSlidingWindowState } from './sliding-window-view'
+import {
+  getSlidingWindowState,
+  getSlidingWindowVisualizationState,
+} from './sliding-window-view'
 
 describe('getSlidingWindowState', () => {
   it('recognizes abbreviated boundaries and a t pattern', () => {
@@ -104,5 +108,27 @@ describe('getSlidingWindowState', () => {
         best: 1,
       })
     ).toBeNull()
+  })
+
+  it('retains the pointer aliases from the displayed window step', () => {
+    const executionState: ExecutionState = {
+      currentStep: 0,
+      totalSteps: 1,
+      isComplete: false,
+      steps: [
+        {
+          stepNumber: 0,
+          type: 'assignment',
+          line: 1,
+          description: 'window state',
+          timestamp: 0,
+          variables: { s: 'abc', left: 0, right: 1, l: 99, r: 99 },
+        },
+      ],
+    }
+
+    expect(
+      getSlidingWindowVisualizationState({ executionState, variableName: 's' })
+    ).toMatchObject({ pointerNames: ['left', 'right'] })
   })
 })

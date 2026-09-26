@@ -27,4 +27,24 @@ describe('SlidingWindowVisualizer', () => {
     expect(screen.getByLabelText('End boundary')).toHaveTextContent('∅')
     expect(screen.getByText('R')).toBeInTheDocument()
   })
+
+  it('renders the shared runtime comparison', () => {
+    render(
+      <SlidingWindowVisualizer
+        data="abc"
+        name="s"
+        comparison={{
+          left: { expression: 'right', value: 2 },
+          operator: '<',
+          right: { expression: 'chars.length', value: 3 },
+          result: true,
+        }}
+        windowState={{ left: 0, right: 2, rangeMode: 'inclusive' }}
+      />
+    )
+
+    expect(screen.getByLabelText('Runtime comparison')).toHaveTextContent(
+      'chars.length'
+    )
+  })
 })

@@ -1,8 +1,10 @@
 import { Card } from '@/shared/ui'
+import type { RuntimeComparison } from '@/entities/execution'
 import type {
   BinarySearchIndexState,
   BinarySearchRangeMode,
 } from '../lib/binary-search-view'
+import { RuntimeComparisonView } from './runtime-comparison-view'
 
 type BinarySearchVisualizerProps = {
   /** Numeric array being searched. */
@@ -13,6 +15,8 @@ type BinarySearchVisualizerProps = {
   indexState: BinarySearchIndexState
   /** Whether the right boundary is included in the active range. */
   rangeMode: BinarySearchRangeMode
+  /** Latest relevant comparison for the active binary-search frame. */
+  comparison?: RuntimeComparison
 }
 
 function getClampedRange(
@@ -35,6 +39,7 @@ export function BinarySearchVisualizer({
   name,
   indexState,
   rangeMode,
+  comparison,
 }: BinarySearchVisualizerProps) {
   const activeRange = getClampedRange(indexState, data.length, rangeMode)
 
@@ -103,6 +108,8 @@ export function BinarySearchVisualizer({
             })}
           </div>
         </div>
+
+        <RuntimeComparisonView comparison={comparison} className="mx-auto" />
       </div>
     </Card>
   )
