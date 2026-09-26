@@ -316,4 +316,26 @@ describe('getContextualRuntimeComparison', () => {
       })
     ).toBe(comparison)
   })
+
+  it('matches a variable used as a ternary consequent', () => {
+    const comparison: RuntimeComparison = {
+      left: { expression: 'flag ? left : high', value: 2 },
+      operator: '===',
+      right: { expression: 'expected', value: 2 },
+      result: true,
+    }
+    const state = createState([
+      createStep({
+        stepNumber: 0,
+        comparison,
+        frameId: 1,
+        functionName: 'binarySearch',
+      }),
+      createStep({ stepNumber: 1, frameId: 1, functionName: 'binarySearch' }),
+    ])
+
+    expect(
+      getContextualRuntimeComparison(state, { variableNames: ['left'] })
+    ).toBe(comparison)
+  })
 })

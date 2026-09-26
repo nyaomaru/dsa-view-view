@@ -225,11 +225,19 @@ function referencesVariable(expression: string, variableName: string): boolean {
 
     const identifier = expression.slice(startIndex, index)
     const previousCharacter = expression[startIndex - 1]
+    const previousNonWhitespaceCharacter = getPreviousNonWhitespaceCharacter(
+      expression,
+      startIndex
+    )
     const nextCharacter = getNextNonWhitespaceCharacter(expression, index)
     if (
       identifier === variableName &&
       previousCharacter !== '.' &&
-      nextCharacter !== ':'
+      !(
+        nextCharacter === ':' &&
+        (previousNonWhitespaceCharacter === '{' ||
+          previousNonWhitespaceCharacter === ',')
+      )
     ) {
       return true
     }
