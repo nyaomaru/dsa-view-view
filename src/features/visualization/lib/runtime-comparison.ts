@@ -84,10 +84,12 @@ export function getContextualRuntimeComparison(
   executionState: ExecutionState,
   { variableNames, stepIndex = executionState.currentStep }: RuntimeComparisonContext
 ): RuntimeComparison | undefined {
-  const activeStep = executionState.steps[stepIndex]
+  const contextStep = executionState.steps[stepIndex]
+  const searchStepIndex = Math.min(stepIndex, executionState.currentStep)
+  const activeStep = contextStep
   if (!activeStep) return undefined
 
-  for (let index = stepIndex; index >= 0; index -= 1) {
+  for (let index = searchStepIndex; index >= 0; index -= 1) {
     const candidate = executionState.steps[index]
     const comparison = candidate?.metadata?.comparison
 

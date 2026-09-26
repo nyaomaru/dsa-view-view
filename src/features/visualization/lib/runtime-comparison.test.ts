@@ -140,6 +140,28 @@ describe('getContextualRuntimeComparison', () => {
     ).toBeUndefined()
   })
 
+  it('uses a future target step only for context, not as a search endpoint', () => {
+    const state = createState(
+      [
+        createStep({ stepNumber: 0, frameId: 1, functionName: 'binarySearch' }),
+        createStep({
+          stepNumber: 1,
+          comparison: binaryComparison,
+          frameId: 1,
+          functionName: 'binarySearch',
+        }),
+      ],
+      0
+    )
+
+    expect(
+      getContextualRuntimeComparison(state, {
+        stepIndex: 1,
+        variableNames: ['nums', 'mid', 'target'],
+      })
+    ).toBeUndefined()
+  })
+
   it('rejects comparisons from another call frame and preserves undefined values', () => {
     const ownComparison: RuntimeComparison = {
       left: { expression: 'nums[mid]', value: undefined },
