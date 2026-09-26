@@ -7,6 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [vv1.3.0] - 2026-09-26
+
+### Added
+
+- capacity search view by @nyaomaru in [#69](https://github.com/nyaomaru/dsa-view-view/pull/69)
+  - Why: Add a dedicated Capacity View for shipping-capacity binary searches.
+- add runtime comparison view by @nyaomaru in [#70](https://github.com/nyaomaru/dsa-view-view/pull/70)
+- add longest substring sliding window view by @nyaomaru in [#76](https://github.com/nyaomaru/dsa-view-view/pull/76)
+- add side-by-side DFS comparison by @nyaomaru in [#78](https://github.com/nyaomaru/dsa-view-view/pull/78)
+- add permutations and show void final inputs by @nyaomaru in [#81](https://github.com/nyaomaru/dsa-view-view/pull/81)
+- add zigzag conversion visualization by @nyaomaru in [#82](https://github.com/nyaomaru/dsa-view-view/pull/82)
+- add regex matching visualization by @nyaomaru in [#87](https://github.com/nyaomaru/dsa-view-view/pull/87)
+- show contextual comparisons in index visualizers by @nyaomaru in [#90](https://github.com/nyaomaru/dsa-view-view/pull/90)
+
+### Fixed
+
+- icon & buttons image by @nyaomaru in [#65](https://github.com/nyaomaru/dsa-view-view/pull/65)
+- clarify empty stack handling in parentheses sample by @nyaomaru in [#74](https://github.com/nyaomaru/dsa-view-view/pull/74)
+- execution frame id in error handlers by @nyaomaru in [#83](https://github.com/nyaomaru/dsa-view-view/pull/83)
+
+### Changed
+
+- stock profit types and UI by @nyaomaru in [#66](https://github.com/nyaomaru/dsa-view-view/pull/66)
+
+### Docs
+
+- v1.2.0 by [bot] by @github-actions in [#62](https://github.com/nyaomaru/dsa-view-view/pull/62)
+
+### Chore
+
+- add calm and beam animations by @nyaomaru in [#75](https://github.com/nyaomaru/dsa-view-view/pull/75)
+- style align dark background tokens by @nyaomaru in [#86](https://github.com/nyaomaru/dsa-view-view/pull/86)
+- bump nyaomaru/changelog-bot from 0.6.9 to 0.6.10 in the actions group by [bot] by @dependabot in [#63](https://github.com/nyaomaru/dsa-view-view/pull/63)
+- bump the minor-and-patch group with 6 updates by [bot] by @dependabot in [#64](https://github.com/nyaomaru/dsa-view-view/pull/64)
+- bump nyaomaru/changelog-bot from 0.6.10 to 0.6.11 in the actions group by [bot] by @dependabot in [#72](https://github.com/nyaomaru/dsa-view-view/pull/72)
+- bump the minor-and-patch group with 7 updates by [bot] by @dependabot in [#73](https://github.com/nyaomaru/dsa-view-view/pull/73)
+- bump nyaomaru/changelog-bot from 0.6.11 to 0.6.12 in the actions group by [bot] by @dependabot in [#79](https://github.com/nyaomaru/dsa-view-view/pull/79)
+- bump the minor-and-patch group with 11 updates by [bot] by @dependabot in [#80](https://github.com/nyaomaru/dsa-view-view/pull/80)
+- bump nyaomaru/changelog-bot from 0.6.12 to 0.6.13 in the actions group by [bot] by @dependabot in [#84](https://github.com/nyaomaru/dsa-view-view/pull/84)
+- bump the minor-and-patch group with 18 updates by [bot] by @dependabot in [#85](https://github.com/nyaomaru/dsa-view-view/pull/85)
+- bump nyaomaru/changelog-bot from 0.6.13 to 0.6.14 in the actions group by [bot] by @dependabot in [#88](https://github.com/nyaomaru/dsa-view-view/pull/88)
+- bump the minor-and-patch group with 12 updates by [bot] by @dependabot in [#89](https://github.com/nyaomaru/dsa-view-view/pull/89)
+
+**Full Changelog**: https://github.com/nyaomaru/dsa-view-view/compare/v1.2.0...v1.3.0
+
+[vv1.3.0]: https://github.com/nyaomaru/dsa-view-view/compare/v1.2.0...v1.3.0
+
 ## [vv1.2.0] - 2026-08-22
 
 ### Added
