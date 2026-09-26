@@ -263,4 +263,33 @@ describe('getContextualRuntimeComparison', () => {
       })
     ).toBe(binaryComparison)
   })
+
+  it('ignores variable-like text in regular expressions and comments', () => {
+    const state = createState([
+      createStep({
+        stepNumber: 0,
+        comparison: binaryComparison,
+        frameId: 1,
+        functionName: 'binarySearch',
+      }),
+      createStep({
+        stepNumber: 1,
+        comparison: {
+          left: { expression: '/left/.test(status)', value: false },
+          operator: '===',
+          right: { expression: 'status /* right */', value: false },
+          result: true,
+        },
+        frameId: 1,
+        functionName: 'binarySearch',
+      }),
+      createStep({ stepNumber: 2, frameId: 1, functionName: 'binarySearch' }),
+    ])
+
+    expect(
+      getContextualRuntimeComparison(state, {
+        variableNames: ['left', 'right', 'mid', 'target'],
+      })
+    ).toBe(binaryComparison)
+  })
 })

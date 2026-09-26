@@ -36,6 +36,67 @@ function skipQuotedText(expression: string, startIndex: number): number {
   return index
 }
 
+function getPreviousNonWhitespaceCharacter(
+  expression: string,
+  startIndex: number
+): string | undefined {
+  for (let index = startIndex - 1; index >= 0; index -= 1) {
+    if (!/\s/.test(expression[index])) return expression[index]
+  }
+
+  return undefined
+}
+
+function canStartRegularExpression(
+  expression: string,
+  startIndex: number
+): boolean {
+  const previousCharacter = getPreviousNonWhitespaceCharacter(
+    expression,
+    startIndex
+  )
+
+  return (
+    previousCharacter === undefined ||
+    '([{:;,=!?&|+-*%^~<>'.includes(previousCharacter)
+  )
+}
+
+function skipRegularExpression(expression: string, startIndex: number): number {
+  let index = startIndex + 1
+  let isInCharacterClass = false
+
+  while (index < expression.length) {
+    const character = expression[index]
+    if (character === '\\') {
+      index += 2
+      continue
+    }
+    if (character === '[') isInCharacterClass = true
+    if (character === ']') isInCharacterClass = false
+    if (character === '/' && !isInCharacterClass) {
+      index += 1
+      while (index < expression.length && /[A-Za-z]/.test(expression[index])) {
+        index += 1
+      }
+      return index
+    }
+    index += 1
+  }
+
+  return index
+}
+
+function skipComment(expression: string, startIndex: number): number {
+  if (expression[startIndex + 1] === '/') {
+    const newlineIndex = expression.indexOf('\n', startIndex + 2)
+    return newlineIndex === -1 ? expression.length : newlineIndex + 1
+  }
+
+  const endIndex = expression.indexOf('*/', startIndex + 2)
+  return endIndex === -1 ? expression.length : endIndex + 2
+}
+
 function getNextNonWhitespaceCharacter(
   expression: string,
   startIndex: number
@@ -55,6 +116,18 @@ function referencesVariable(expression: string, variableName: string): boolean {
 
     if (character === "'" || character === '"' || character === '`') {
       index = skipQuotedText(expression, index)
+      continue
+    }
+    if (character === '/' && expression[index + 1] === '/') {
+      index = skipComment(expression, index)
+      continue
+    }
+    if (character === '/' && expression[index + 1] === '*') {
+      index = skipComment(expression, index)
+      continue
+    }
+    if (character === '/' && canStartRegularExpression(expression, index)) {
+      index = skipRegularExpression(expression, index)
       continue
     }
     if (!isIdentifierStart(character)) {
