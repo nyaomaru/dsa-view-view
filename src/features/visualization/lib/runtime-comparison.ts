@@ -97,6 +97,82 @@ function skipComment(expression: string, startIndex: number): number {
   return endIndex === -1 ? expression.length : endIndex + 2
 }
 
+function findTemplateInterpolationEnd(
+  expression: string,
+  startIndex: number
+): number {
+  let depth = 1
+  let index = startIndex
+
+  while (index < expression.length) {
+    const character = expression[index]
+
+    if (character === "'" || character === '"' || character === '`') {
+      index = skipQuotedText(expression, index)
+      continue
+    }
+    if (character === '/' && expression[index + 1] === '/') {
+      index = skipComment(expression, index)
+      continue
+    }
+    if (character === '/' && expression[index + 1] === '*') {
+      index = skipComment(expression, index)
+      continue
+    }
+    if (character === '/' && canStartRegularExpression(expression, index)) {
+      index = skipRegularExpression(expression, index)
+      continue
+    }
+    if (character === '{') depth += 1
+    if (character === '}') {
+      depth -= 1
+      if (depth === 0) return index
+    }
+    index += 1
+  }
+
+  return expression.length
+}
+
+function scanTemplateLiteral(
+  expression: string,
+  variableName: string,
+  startIndex: number
+): { endIndex: number; referencesVariable: boolean } {
+  let index = startIndex + 1
+
+  while (index < expression.length) {
+    const character = expression[index]
+    if (character === '\\') {
+      index += 2
+      continue
+    }
+    if (character === '`') {
+      return { endIndex: index + 1, referencesVariable: false }
+    }
+    if (character === '$' && expression[index + 1] === '{') {
+      const interpolationStart = index + 2
+      const interpolationEnd = findTemplateInterpolationEnd(
+        expression,
+        interpolationStart
+      )
+      if (
+        referencesVariable(
+          expression.slice(interpolationStart, interpolationEnd),
+          variableName
+        )
+      ) {
+        return { endIndex: interpolationEnd + 1, referencesVariable: true }
+      }
+      index = interpolationEnd + 1
+      continue
+    }
+    index += 1
+  }
+
+  return { endIndex: index, referencesVariable: false }
+}
+
 function getNextNonWhitespaceCharacter(
   expression: string,
   startIndex: number
@@ -114,8 +190,14 @@ function referencesVariable(expression: string, variableName: string): boolean {
   while (index < expression.length) {
     const character = expression[index]
 
-    if (character === "'" || character === '"' || character === '`') {
+    if (character === "'" || character === '"') {
       index = skipQuotedText(expression, index)
+      continue
+    }
+    if (character === '`') {
+      const template = scanTemplateLiteral(expression, variableName, index)
+      if (template.referencesVariable) return true
+      index = template.endIndex
       continue
     }
     if (character === '/' && expression[index + 1] === '/') {

@@ -292,4 +292,28 @@ describe('getContextualRuntimeComparison', () => {
       })
     ).toBe(binaryComparison)
   })
+
+  it('matches variables evaluated inside template interpolations', () => {
+    const comparison: RuntimeComparison = {
+      left: { expression: '`${char}`', value: 'a' },
+      operator: '===',
+      right: { expression: "'a'", value: 'a' },
+      result: true,
+    }
+    const state = createState([
+      createStep({
+        stepNumber: 0,
+        comparison,
+        frameId: 1,
+        functionName: 'slidingWindow',
+      }),
+      createStep({ stepNumber: 1, frameId: 1, functionName: 'slidingWindow' }),
+    ])
+
+    expect(
+      getContextualRuntimeComparison(state, {
+        variableNames: ['s', 'left', 'right', 'char'],
+      })
+    ).toBe(comparison)
+  })
 })
