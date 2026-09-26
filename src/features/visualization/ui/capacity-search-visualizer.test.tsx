@@ -78,4 +78,36 @@ describe('CapacitySearchVisualizer', () => {
       screen.getByText('Waiting for the first package iteration')
     ).toBeVisible()
   })
+
+  it('renders the shared runtime comparison', () => {
+    render(
+      <CapacitySearchVisualizer
+        name="weights"
+        comparison={{
+          left: { expression: 'current + weight', value: 12 },
+          operator: '>',
+          right: { expression: 'capacity', value: 10 },
+          result: true,
+        }}
+        state={{
+          left: 10,
+          right: 20,
+          mid: 15,
+          capacity: 15,
+          isConverged: false,
+          phase: 'pending',
+          totalWeight: 20,
+          targetDays: 2,
+          packages: [{ index: 0, weight: 10, day: 1, load: 10 }],
+          requiredDays: 0,
+          currentLoad: 0,
+          canShip: true,
+        }}
+      />
+    )
+
+    expect(screen.getByLabelText('Runtime comparison')).toHaveTextContent(
+      'current + weight'
+    )
+  })
 })

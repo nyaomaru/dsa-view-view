@@ -34,7 +34,10 @@ import { getWordLadderVisualizationState } from '../lib/word-ladder-view'
 import { getExpressionVisualizationState } from '../lib/expression-view'
 import { getZigzagVisualizationState } from '../lib/zigzag-view'
 import { getRegexMatchVisualizationState } from '../lib/regex-match-view'
-import { getLatestRuntimeComparison } from '../lib/runtime-comparison'
+import {
+  getContextualRuntimeComparison,
+  getLatestRuntimeComparison,
+} from '../lib/runtime-comparison'
 import { hasCallFrameMetadata } from '../lib/call-frame-inspector'
 import type { VisualizationType } from '../model/types'
 import type { DfsComparisonExecution } from '../lib/dfs-comparison'
@@ -378,6 +381,19 @@ export function VisualizationModalContent({
         <CapacitySearchVisualizer
           name={targetVariable}
           state={visualizationState}
+          comparison={getContextualRuntimeComparison(executionState, {
+            variableNames: [
+              targetVariable,
+              'left',
+              'right',
+              'mid',
+              'capacity',
+              'current',
+              'weight',
+              'requiredDays',
+              'days',
+            ],
+          })}
         />
       ) : (
         <div>Capacity-search state is not available.</div>
@@ -413,6 +429,10 @@ export function VisualizationModalContent({
           name={targetVariable}
           indexState={indexState}
           rangeMode={rangeMode}
+          comparison={getContextualRuntimeComparison(executionState, {
+            variableNames: [targetVariable, 'left', 'right', 'mid', 'target'],
+            stepIndex: binarySearchStepIndex,
+          })}
         />
       ) : (
         <div>Binary search indexes are not available.</div>
@@ -431,6 +451,23 @@ export function VisualizationModalContent({
           data={visualizationState.data}
           name={targetVariable}
           windowState={visualizationState.windowState}
+          comparison={getContextualRuntimeComparison(executionState, {
+            variableNames: [
+              targetVariable,
+              'left',
+              'right',
+              'l',
+              'r',
+              'set',
+              'best',
+              'chars',
+              'char',
+              'pattern',
+              'p',
+              't',
+              'word',
+            ],
+          })}
         />
       ) : (
         <div>Sliding window indexes are not available.</div>

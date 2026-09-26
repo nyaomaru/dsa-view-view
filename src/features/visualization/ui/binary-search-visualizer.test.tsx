@@ -34,4 +34,25 @@ describe('BinarySearchVisualizer', () => {
       screen.getByLabelText('Index 4: value 9, out of range')
     ).toBeVisible()
   })
+
+  it('renders the shared runtime comparison', () => {
+    render(
+      <BinarySearchVisualizer
+        data={[1, 3, 5]}
+        name="nums"
+        indexState={{ left: 0, right: 2, mid: 1 }}
+        rangeMode="inclusive"
+        comparison={{
+          left: { expression: 'nums[mid]', value: 3 },
+          operator: '<',
+          right: { expression: 'target', value: 5 },
+          result: true,
+        }}
+      />
+    )
+
+    expect(screen.getByLabelText('Runtime comparison')).toHaveTextContent(
+      'nums[mid]'
+    )
+  })
 })
