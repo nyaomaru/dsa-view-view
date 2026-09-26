@@ -12,17 +12,75 @@ type RuntimeComparisonContext = {
   stepIndex?: number
 }
 
-function escapeForRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+function isIdentifierStart(character: string): boolean {
+  return /[A-Za-z_$]/.test(character)
+}
+
+function isIdentifierCharacter(character: string): boolean {
+  return /[A-Za-z0-9_$]/.test(character)
+}
+
+function skipQuotedText(expression: string, startIndex: number): number {
+  const quote = expression[startIndex]
+  let index = startIndex + 1
+
+  while (index < expression.length) {
+    if (expression[index] === '\\') {
+      index += 2
+      continue
+    }
+    if (expression[index] === quote) return index + 1
+    index += 1
+  }
+
+  return index
+}
+
+function getNextNonWhitespaceCharacter(
+  expression: string,
+  startIndex: number
+): string | undefined {
+  for (let index = startIndex; index < expression.length; index += 1) {
+    if (!/\s/.test(expression[index])) return expression[index]
+  }
+
+  return undefined
 }
 
 function referencesVariable(expression: string, variableName: string): boolean {
-  const escapedName = escapeForRegExp(variableName)
-  const identifierPattern = new RegExp(
-    `(^|[^A-Za-z0-9_$])${escapedName}(?=$|[^A-Za-z0-9_$])`
-  )
+  let index = 0
 
-  return identifierPattern.test(expression)
+  while (index < expression.length) {
+    const character = expression[index]
+
+    if (character === "'" || character === '"' || character === '`') {
+      index = skipQuotedText(expression, index)
+      continue
+    }
+    if (!isIdentifierStart(character)) {
+      index += 1
+      continue
+    }
+
+    const startIndex = index
+    index += 1
+    while (index < expression.length && isIdentifierCharacter(expression[index])) {
+      index += 1
+    }
+
+    const identifier = expression.slice(startIndex, index)
+    const previousCharacter = expression[startIndex - 1]
+    const nextCharacter = getNextNonWhitespaceCharacter(expression, index)
+    if (
+      identifier === variableName &&
+      previousCharacter !== '.' &&
+      nextCharacter !== ':'
+    ) {
+      return true
+    }
+  }
+
+  return false
 }
 
 function isComparisonRelevant(

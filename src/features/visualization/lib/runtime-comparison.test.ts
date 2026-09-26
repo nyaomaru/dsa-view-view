@@ -234,4 +234,33 @@ describe('getContextualRuntimeComparison', () => {
       getContextualRuntimeComparison(state, { variableNames: ['s'] })
     ).toBeUndefined()
   })
+
+  it('ignores member keys and string literals that resemble visualizer variables', () => {
+    const state = createState([
+      createStep({
+        stepNumber: 0,
+        comparison: binaryComparison,
+        frameId: 1,
+        functionName: 'binarySearch',
+      }),
+      createStep({
+        stepNumber: 1,
+        comparison: {
+          left: { expression: 'node.left', value: null },
+          operator: '!==',
+          right: { expression: "{ right: 'left' }", value: null },
+          result: false,
+        },
+        frameId: 1,
+        functionName: 'binarySearch',
+      }),
+      createStep({ stepNumber: 2, frameId: 1, functionName: 'binarySearch' }),
+    ])
+
+    expect(
+      getContextualRuntimeComparison(state, {
+        variableNames: ['left', 'right', 'mid', 'target'],
+      })
+    ).toBe(binaryComparison)
+  })
 })
