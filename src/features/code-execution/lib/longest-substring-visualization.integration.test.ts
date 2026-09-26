@@ -54,6 +54,7 @@ describe('Longest Substring visualization integration', () => {
     })
     expect(view).toEqual({
       data: 'abcabcbb',
+      pointerNames: ['left', 'right'],
       windowState: {
         left: 7,
         right: 8,

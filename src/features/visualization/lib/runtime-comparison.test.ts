@@ -338,4 +338,38 @@ describe('getContextualRuntimeComparison', () => {
       getContextualRuntimeComparison(state, { variableNames: ['left'] })
     ).toBe(comparison)
   })
+
+  it('does not match an inactive sliding-window pointer alias', () => {
+    const state = createState([
+      createStep({
+        stepNumber: 0,
+        comparison: {
+          left: { expression: 'left', value: 0 },
+          operator: '<=',
+          right: { expression: 'right', value: 2 },
+          result: true,
+        },
+        frameId: 1,
+        functionName: 'slidingWindow',
+      }),
+      createStep({
+        stepNumber: 1,
+        comparison: {
+          left: { expression: 'l', value: 99 },
+          operator: '===',
+          right: { expression: '0', value: 0 },
+          result: false,
+        },
+        frameId: 1,
+        functionName: 'slidingWindow',
+      }),
+      createStep({ stepNumber: 2, frameId: 1, functionName: 'slidingWindow' }),
+    ])
+
+    expect(
+      getContextualRuntimeComparison(state, {
+        variableNames: ['s', 'left', 'right'],
+      })
+    ).toMatchObject({ left: { expression: 'left' } })
+  })
 })

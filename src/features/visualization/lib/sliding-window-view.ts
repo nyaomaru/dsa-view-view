@@ -1,6 +1,7 @@
 import type { ExecutionState, ExecutionStep } from '@/entities/execution'
 import {
   isInteger,
+  isNil,
   isNull,
   isSet,
   isString,
@@ -10,6 +11,7 @@ import {
 const STRING_SOURCE_NAMES = new Set(['s', 'str', 'text'])
 const PATTERN_SOURCE_NAMES = ['p', 'pattern', 't', 'word'] as const
 type SlidingWindowRangeMode = 'inclusive' | 'half-open'
+type SlidingWindowPointerNames = readonly ['left' | 'l', 'right' | 'r']
 
 /** Window boundaries and optional pattern metadata for one execution step. */
 export type SlidingWindowState = {
@@ -35,6 +37,17 @@ export type SlidingWindowVisualizationState = {
   data: string
   /** Valid window boundaries and metadata. */
   windowState: SlidingWindowState
+  /** Variable names used for the displayed left and right boundaries. */
+  pointerNames: SlidingWindowPointerNames
+}
+
+function getPointerNames(
+  variables: ExecutionStep['variables']
+): SlidingWindowPointerNames {
+  return [
+    isNil(variables.left) ? 'l' : 'left',
+    isNil(variables.right) ? 'r' : 'right',
+  ]
 }
 
 function readWindowSize(
@@ -230,5 +243,7 @@ export function getSlidingWindowVisualizationState({
     currentWindowState ??
     getSlidingWindowState(data, windowStep.variables, rangeMode)
 
-  return isNull(windowState) ? null : { data, windowState }
+  return isNull(windowState)
+    ? null
+    : { data, windowState, pointerNames: getPointerNames(windowStep.variables) }
 }

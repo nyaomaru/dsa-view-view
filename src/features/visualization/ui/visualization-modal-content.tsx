@@ -454,10 +454,7 @@ export function VisualizationModalContent({
           comparison={getContextualRuntimeComparison(executionState, {
             variableNames: [
               targetVariable,
-              'left',
-              'right',
-              'l',
-              'r',
+              ...visualizationState.pointerNames,
               'set',
               'best',
               'chars',
