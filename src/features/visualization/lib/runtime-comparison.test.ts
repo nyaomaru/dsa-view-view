@@ -372,4 +372,36 @@ describe('getContextualRuntimeComparison', () => {
       })
     ).toMatchObject({ left: { expression: 'left' } })
   })
+
+  it('ignores visualizer identifiers shadowed by arrow-function parameters', () => {
+    const state = createState([
+      createStep({
+        stepNumber: 0,
+        comparison: binaryComparison,
+        frameId: 1,
+        functionName: 'binarySearch',
+      }),
+      createStep({
+        stepNumber: 1,
+        comparison: {
+          left: {
+            expression: 'items.some(left => left.flag)',
+            value: false,
+          },
+          operator: '===',
+          right: { expression: 'true', value: true },
+          result: false,
+        },
+        frameId: 1,
+        functionName: 'binarySearch',
+      }),
+      createStep({ stepNumber: 2, frameId: 1, functionName: 'binarySearch' }),
+    ])
+
+    expect(
+      getContextualRuntimeComparison(state, {
+        variableNames: ['left', 'right', 'mid', 'target'],
+      })
+    ).toBe(binaryComparison)
+  })
 })

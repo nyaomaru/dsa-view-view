@@ -173,6 +173,84 @@ function scanTemplateLiteral(
   return { endIndex: index, referencesVariable: false }
 }
 
+function getNextNonWhitespaceIndex(
+  expression: string,
+  startIndex: number
+): number | undefined {
+  for (let index = startIndex; index < expression.length; index += 1) {
+    if (!/\s/.test(expression[index])) return index
+  }
+
+  return undefined
+}
+
+function getArrowBodyStart(
+  expression: string,
+  parameterEndIndex: number
+): number | undefined {
+  let arrowStartIndex = getNextNonWhitespaceIndex(
+    expression,
+    parameterEndIndex
+  )
+  if (expression[arrowStartIndex ?? -1] === ')') {
+    arrowStartIndex = getNextNonWhitespaceIndex(
+      expression,
+      (arrowStartIndex ?? 0) + 1
+    )
+  }
+  if (
+    arrowStartIndex === undefined ||
+    expression[arrowStartIndex] !== '=' ||
+    expression[arrowStartIndex + 1] !== '>'
+  ) {
+    return undefined
+  }
+
+  return getNextNonWhitespaceIndex(expression, arrowStartIndex + 2)
+}
+
+function getArrowExpressionEnd(
+  expression: string,
+  bodyStartIndex: number
+): number {
+  if (expression[bodyStartIndex] === '{') {
+    return findTemplateInterpolationEnd(expression, bodyStartIndex + 1)
+  }
+
+  let nestingDepth = 0
+  let index = bodyStartIndex
+  while (index < expression.length) {
+    const character = expression[index]
+    if (character === "'" || character === '"' || character === '`') {
+      index = skipQuotedText(expression, index)
+      continue
+    }
+    if (character === '/' && expression[index + 1] === '/') {
+      index = skipComment(expression, index)
+      continue
+    }
+    if (character === '/' && expression[index + 1] === '*') {
+      index = skipComment(expression, index)
+      continue
+    }
+    if (character === '/' && canStartRegularExpression(expression, index)) {
+      index = skipRegularExpression(expression, index)
+      continue
+    }
+    if (character === '(' || character === '[' || character === '{') {
+      nestingDepth += 1
+    } else if (character === ')' || character === ']' || character === '}') {
+      if (nestingDepth === 0) return index
+      nestingDepth -= 1
+    } else if (character === ',' && nestingDepth === 0) {
+      return index
+    }
+    index += 1
+  }
+
+  return index
+}
+
 function getNextNonWhitespaceCharacter(
   expression: string,
   startIndex: number
@@ -186,6 +264,7 @@ function getNextNonWhitespaceCharacter(
 
 function referencesVariable(expression: string, variableName: string): boolean {
   let index = 0
+  const shadowedRanges: Array<{ start: number; end: number }> = []
 
   while (index < expression.length) {
     const character = expression[index]
@@ -224,6 +303,14 @@ function referencesVariable(expression: string, variableName: string): boolean {
     }
 
     const identifier = expression.slice(startIndex, index)
+    const arrowBodyStart = getArrowBodyStart(expression, index)
+    if (identifier === variableName && arrowBodyStart !== undefined) {
+      shadowedRanges.push({
+        start: arrowBodyStart,
+        end: getArrowExpressionEnd(expression, arrowBodyStart),
+      })
+      continue
+    }
     const previousCharacter = expression[startIndex - 1]
     const previousNonWhitespaceCharacter = getPreviousNonWhitespaceCharacter(
       expression,
@@ -233,6 +320,9 @@ function referencesVariable(expression: string, variableName: string): boolean {
     if (
       identifier === variableName &&
       previousCharacter !== '.' &&
+      !shadowedRanges.some(
+        (range) => startIndex >= range.start && startIndex < range.end
+      ) &&
       !(
         nextCharacter === ':' &&
         (previousNonWhitespaceCharacter === '{' ||
