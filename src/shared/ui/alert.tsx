@@ -54,7 +54,7 @@ const AlertDescription = ({
 }: React.ComponentProps<'div'>) => (
   <div
     ref={ref}
-    className={cn('text-sm [&_p]:leading-relaxed', className)}
+    className={cn('text-sm [&_p]:leading-relaxed ml-2', className)}
     {...props}
   />
 )
