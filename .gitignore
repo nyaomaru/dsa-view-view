@@ -27,3 +27,4 @@ test-results
 *.njsproj
 *.sln
 *.sw?
+.vitest/
