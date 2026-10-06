@@ -61,6 +61,26 @@ describe('MatrixVisualizer', () => {
     expect(screen.getByText('A').parentElement).toHaveClass('border-border')
   })
 
+  it('fits dense 9x9 matrices within the modal width without horizontal scroll', () => {
+    const board = Array.from({ length: 9 }, () =>
+      Array.from({ length: 9 }, () => '.')
+    )
+
+    render(<MatrixVisualizer data={board} name="board" />)
+
+    const scrollContainer =
+      screen.getByText('9 × 9 Matrix').parentElement?.nextElementSibling
+    const grid = scrollContainer?.firstElementChild
+
+    expect(scrollContainer).toHaveClass('max-w-full')
+    expect(scrollContainer).not.toHaveClass('overflow-x-auto')
+    expect(grid).toHaveClass('w-full', 'max-w-full')
+    expect(grid).toHaveStyle({
+      gridTemplateColumns: 'repeat(9, minmax(0, 1fr))',
+    })
+    expect(grid?.firstElementChild).toHaveClass('aspect-square')
+  })
+
   it('keeps wide matrices scrollable from the left edge', () => {
     render(
       <MatrixVisualizer
