@@ -34,6 +34,7 @@ import { getWordLadderVisualizationState } from '../lib/word-ladder-view'
 import { getExpressionVisualizationState } from '../lib/expression-view'
 import { getZigzagVisualizationState } from '../lib/zigzag-view'
 import { getRegexMatchVisualizationState } from '../lib/regex-match-view'
+import { getFirstMissingPositiveVisualizationState } from '../lib/first-missing-positive-view'
 import {
   getContextualRuntimeComparison,
   getLatestRuntimeComparison,
@@ -61,6 +62,7 @@ import { WordLadderVisualizer } from './word-ladder-visualizer'
 import { ExpressionVisualizer } from './expression-visualizer'
 import { ZigzagVisualizer } from './zigzag-visualizer'
 import { RegexMatchVisualizer } from './regex-match-visualizer'
+import { FirstMissingPositiveVisualizer } from './first-missing-positive-visualizer'
 import { CallFrameInspector } from './call-frame-inspector'
 import { DfsComparisonVisualizer } from './dfs-comparison-visualizer'
 
@@ -317,6 +319,20 @@ export function VisualizationModalContent({
           data={data.map((value) => Number(value))}
           name={targetVariable}
         />
+      )
+    }
+
+    case 'first-missing-positive': {
+      const state = getFirstMissingPositiveVisualizationState({
+        executionState,
+        variableName: targetVariable,
+        targetStepIndex,
+      })
+
+      return state ? (
+        <FirstMissingPositiveVisualizer name={targetVariable} state={state} />
+      ) : (
+        <div>First Missing Positive state is not available.</div>
       )
     }
 
