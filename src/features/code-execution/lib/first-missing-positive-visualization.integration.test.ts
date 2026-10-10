@@ -52,20 +52,6 @@ describe('First Missing Positive visualization integration', () => {
     })
   })
 
-  it('opens the view when no value is in the placement range', () => {
-    const state = executeCode(
-      firstMissingPositiveExample.sourceCode,
-      { nums: [0] },
-      'firstMissingPositive'
-    )
-    const completedState = { ...state, currentStep: state.steps.length - 1 }
-    const detection = detectVisualizationState(completedState)
-
-    expect(state.error).toBeUndefined()
-    expect(state.returnValue).toBe(1)
-    expect(detection.primaryFirstMissingPositiveArrayName).toBe('nums')
-  })
-
   it('does not classify an unrelated target-index swap as cyclic placement', () => {
     const state = executeCode(
       `function reverse(nums: number[]): number[] {
@@ -86,6 +72,32 @@ describe('First Missing Positive visualization integration', () => {
 
     expect(state.error).toBeUndefined()
     expect(state.returnValue).toEqual([4, 3, 2, 1])
+    expect(detection.primaryFirstMissingPositiveArrayName).toBeUndefined()
+  })
+
+  it('does not classify a positive-array validator without a placement lookup', () => {
+    const state = executeCode(
+      `function isIdentityPositive(nums: number[]): boolean {
+  const n = nums.length
+
+  for (let i = 0; i < n; i++) {
+    if (nums[i] >= 1 && nums[i] <= n) continue
+  }
+
+  for (let i = 0; i < n; i++) {
+    if (nums[i] !== i + 1) return false
+  }
+
+  return true
+}`,
+      { nums: [1, 2, 0] },
+      'isIdentityPositive'
+    )
+    const completedState = { ...state, currentStep: state.steps.length - 1 }
+    const detection = detectVisualizationState(completedState)
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(false)
     expect(detection.primaryFirstMissingPositiveArrayName).toBeUndefined()
   })
 })

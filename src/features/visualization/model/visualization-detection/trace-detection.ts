@@ -53,11 +53,6 @@ export function getCyclicPlacementArrayName(
         step.description ===
           `Compare ${arrayName}[${arrayName}[i] - 1] !== ${arrayName}[i] -> false`
     )
-    const hasMissingValueCheck = executionState.steps.some(
-      (step) =>
-        step.description === `Compare ${arrayName}[i] !== i + 1 -> true` ||
-        step.description === `Compare ${arrayName}[i] !== i + 1 -> false`
-    )
     const hasLengthBoundArray = executionState.steps.some((step) => {
       const data = step.variables[arrayName]
       const n = step.variables.n
@@ -71,12 +66,8 @@ export function getCyclicPlacementArrayName(
     })
 
     const hasPlacementProof = hasUpperBound && hasValuePlacementCheck
-    const hasFirstMissingPositiveResultCheck = hasMissingValueCheck
 
-    if (
-      hasLengthBoundArray &&
-      (hasPlacementProof || hasFirstMissingPositiveResultCheck)
-    ) {
+    if (hasLengthBoundArray && hasPlacementProof) {
       return arrayName
     }
   }
