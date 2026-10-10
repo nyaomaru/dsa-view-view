@@ -19,6 +19,8 @@ export type VisualizationDetection = {
   primaryStackName: string | undefined
   /** Primary numeric array to show as a bar chart. */
   primaryArrayName: string | undefined
+  /** Primary array used by the First Missing Positive cyclic-placement view. */
+  primaryFirstMissingPositiveArrayName: string | undefined
   /** Primary height source to show in container, histogram, or rain-water view. */
   primaryAreaArrayName: string | undefined
   /** Step index where area pointers are available. */

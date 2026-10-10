@@ -15,7 +15,7 @@ if (!firstMissingPositiveExample) {
 }
 
 describe('First Missing Positive visualization integration', () => {
-  it('opens the array view for cyclic placements', () => {
+  it('opens the dedicated cyclic-placement view', () => {
     const state = executeCode(
       firstMissingPositiveExample.sourceCode,
       { nums: [3, 4, -1, 1] },
@@ -26,10 +26,11 @@ describe('First Missing Positive visualization integration', () => {
 
     expect(state.error).toBeUndefined()
     expect(state.returnValue).toBe(2)
-    expect(detection.primaryArrayName).toBe('nums')
+    expect(detection.primaryFirstMissingPositiveArrayName).toBe('nums')
     expect(getPrimaryVisualization(detection)).toEqual({
-      type: 'bar-chart',
+      type: 'first-missing-positive',
       targetVariable: 'nums',
     })
+
   })
 })

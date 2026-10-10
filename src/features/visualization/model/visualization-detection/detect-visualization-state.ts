@@ -174,8 +174,10 @@ export function detectVisualizationState(
     primaryHeapStepIndex:
       primaryHeapStepIndex >= 0 ? primaryHeapStepIndex : undefined,
     primaryStackName,
-    primaryArrayName:
-      hasSort || hasCyclicPlacement ? primaryArrayName : undefined,
+    primaryArrayName: hasSort ? primaryArrayName : undefined,
+    primaryFirstMissingPositiveArrayName: hasCyclicPlacement
+      ? primaryArrayName
+      : undefined,
     primaryAreaArrayName: primaryAreaCandidate?.name,
     primaryAreaStepIndex: primaryAreaCandidate?.stepIndex,
     primaryMaxSubarrayArrayName: primaryMaxSubarrayCandidate?.name,

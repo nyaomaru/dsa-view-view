@@ -101,6 +101,13 @@ export function getPrimaryVisualization(
     return { type: 'stack', targetVariable: detection.primaryStackName }
   }
 
+  if (detection.primaryFirstMissingPositiveArrayName) {
+    return {
+      type: 'first-missing-positive',
+      targetVariable: detection.primaryFirstMissingPositiveArrayName,
+    }
+  }
+
   if (detection.primaryArrayName) {
     return { type: 'bar-chart', targetVariable: detection.primaryArrayName }
   }
