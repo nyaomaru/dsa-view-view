@@ -52,6 +52,20 @@ describe('First Missing Positive visualization integration', () => {
     })
   })
 
+  it('opens the view when every placement check is short-circuited', () => {
+    const state = executeCode(
+      firstMissingPositiveExample.sourceCode,
+      { nums: [-1, -2] },
+      'firstMissingPositive'
+    )
+    const completedState = { ...state, currentStep: state.steps.length - 1 }
+    const detection = detectVisualizationState(completedState)
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(1)
+    expect(detection.primaryFirstMissingPositiveArrayName).toBe('nums')
+  })
+
   it('does not classify an unrelated target-index swap as cyclic placement', () => {
     const state = executeCode(
       `function reverse(nums: number[]): number[] {
