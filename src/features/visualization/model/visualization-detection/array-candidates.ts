@@ -21,8 +21,13 @@ const isStackLikeName = oneOfValues('stack', 'signstack', 'signs')
 export function getPrimaryArrayName(
   variableEntries: VariableEntries,
   mutatedNumericArrayNames: Set<string>,
-  options: { excludeResultLikeArrays?: boolean } = {}
+  options: {
+    excludeResultLikeArrays?: boolean
+    requireMutation?: boolean
+  } = {}
 ): string | undefined {
+  const requireMutation = options.requireMutation ?? true
+
   return variableEntries
     .filter(
       ([name, value]) =>
@@ -30,7 +35,7 @@ export function getPrimaryArrayName(
         !isWorkingPathName(name) &&
         isNumericArray(value) &&
         value.length > 0 &&
-        mutatedNumericArrayNames.has(name)
+        (!requireMutation || mutatedNumericArrayNames.has(name))
     )
     .sort(([leftName], [rightName]) => {
       const leftIsResultLike = isResultLikeName(leftName)

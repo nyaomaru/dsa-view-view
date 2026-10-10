@@ -92,6 +92,11 @@ export function detectVisualizationState(
     metadata.mutatedNumericArrayNames,
     { excludeResultLikeArrays: prefersResultStack }
   )
+  const primaryFirstMissingPositiveArrayName = hasCyclicPlacement
+    ? getPrimaryArrayName(variableEntries, metadata.mutatedNumericArrayNames, {
+        requireMutation: false,
+      })
+    : undefined
   const primaryStackName =
     getPrimaryStackName(variableEntries, {
       includeNumericResultArrays: prefersResultStack || !hasSort,
@@ -175,9 +180,7 @@ export function detectVisualizationState(
       primaryHeapStepIndex >= 0 ? primaryHeapStepIndex : undefined,
     primaryStackName,
     primaryArrayName: hasSort ? primaryArrayName : undefined,
-    primaryFirstMissingPositiveArrayName: hasCyclicPlacement
-      ? primaryArrayName
-      : undefined,
+    primaryFirstMissingPositiveArrayName,
     primaryAreaArrayName: primaryAreaCandidate?.name,
     primaryAreaStepIndex: primaryAreaCandidate?.stepIndex,
     primaryMaxSubarrayArrayName: primaryMaxSubarrayCandidate?.name,

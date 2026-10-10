@@ -33,4 +33,22 @@ describe('First Missing Positive visualization integration', () => {
     })
 
   })
+
+  it('opens the view when every value is already placed', () => {
+    const state = executeCode(
+      firstMissingPositiveExample.sourceCode,
+      { nums: [1, 2, 0] },
+      'firstMissingPositive'
+    )
+    const completedState = { ...state, currentStep: state.steps.length - 1 }
+    const detection = detectVisualizationState(completedState)
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(3)
+    expect(detection.primaryFirstMissingPositiveArrayName).toBe('nums')
+    expect(getPrimaryVisualization(detection)).toEqual({
+      type: 'first-missing-positive',
+      targetVariable: 'nums',
+    })
+  })
 })
