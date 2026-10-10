@@ -2,7 +2,8 @@ packages:
   - .
 
 overrides:
-  dompurify: 3.4.11
+  dompurify: 3.4.16
+  source-map-js: 1.2.2
   vite@*: 'catalog:'
 
 allowBuilds:
