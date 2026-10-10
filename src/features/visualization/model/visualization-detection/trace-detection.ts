@@ -1,5 +1,5 @@
 import type { ExecutionState } from '@/entities/execution'
-import { isInteger, isNumericArray } from '@/shared/lib/guards'
+import { isInteger, isNumericArray, isString } from '@/shared/lib/guards'
 import { VISUALIZATION_CONSTANTS } from '../../constants/constants'
 
 const { RECURSION_DEPTH_THRESHOLD } = VISUALIZATION_CONSTANTS
@@ -37,7 +37,7 @@ export function getCyclicPlacementArrayName(
   const arrayNames = new Set(
     executionState.steps
       .map((step) => POSITIVE_BOUND_COMPARISON.exec(step.description)?.[1])
-      .filter((name): name is string => name !== undefined)
+      .filter(isString)
   )
 
   for (const arrayName of arrayNames) {
