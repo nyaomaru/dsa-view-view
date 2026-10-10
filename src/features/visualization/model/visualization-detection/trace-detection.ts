@@ -4,6 +4,7 @@ import {
   isInteger,
   isNumericArray,
   isString,
+  isUndefined,
 } from '@/shared/lib/guards'
 import { VISUALIZATION_CONSTANTS } from '../../constants/constants'
 
@@ -94,5 +95,5 @@ export function getCyclicPlacementArrayName(
 
 /** Identifies the value-to-index placement invariant used by First Missing Positive. */
 export function hasCyclicPlacementTrace(executionState: ExecutionState): boolean {
-  return getCyclicPlacementArrayName(executionState) !== undefined
+  return !isUndefined(getCyclicPlacementArrayName(executionState))
 }
