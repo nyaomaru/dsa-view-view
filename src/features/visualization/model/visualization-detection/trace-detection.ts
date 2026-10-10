@@ -5,7 +5,8 @@ import { VISUALIZATION_CONSTANTS } from '../../constants/constants'
 const { RECURSION_DEPTH_THRESHOLD } = VISUALIZATION_CONSTANTS
 const CLASS_DESIGN_INPUT_VARIABLE = '__algorithmVisualizerClassDesignInput'
 const SORT_TRACE_KEYWORDS = ['sort', 'sorted', 'swap', 'partition', 'pivot']
-const CYCLIC_PLACEMENT_VARIABLES = ['i', 'n']
+const POSITIVE_BOUND_COMPARISON =
+  /^Compare ([$A-Z_a-z][\w$]*)\[i\] >= 1 -> (?:true|false)$/
 
 export function hasClassDesignTrace(executionState: ExecutionState): boolean {
   return executionState.steps.some((step) =>
@@ -29,22 +30,59 @@ export function hasSortTrace(executionState: ExecutionState): boolean {
   })
 }
 
-/**
- * Identifies cyclic placement from its loop index and the length-bound used to
- * position values. `targetIndex` is intentionally optional: no-swap runs never
- * enter the loop body that declares it.
- */
-export function hasCyclicPlacementTrace(executionState: ExecutionState): boolean {
-  return executionState.steps.some((step) => {
-    const { variables } = step
-    const n = variables.n
+/** Returns the array placed by the First Missing Positive loop, if present. */
+export function getCyclicPlacementArrayName(
+  executionState: ExecutionState
+): string | undefined {
+  const arrayNames = new Set(
+    executionState.steps
+      .map((step) => POSITIVE_BOUND_COMPARISON.exec(step.description)?.[1])
+      .filter((name): name is string => name !== undefined)
+  )
 
-    return (
-      CYCLIC_PLACEMENT_VARIABLES.every((name) => name in variables) &&
-      isInteger(n) &&
-      Object.values(variables).some(
-        (value) => isNumericArray(value) && value.length === n
-      )
+  for (const arrayName of arrayNames) {
+    const hasUpperBound = executionState.steps.some(
+      (step) =>
+        step.description === `Compare ${arrayName}[i] <= n -> true` ||
+        step.description === `Compare ${arrayName}[i] <= n -> false`
     )
-  })
+    const hasValuePlacementCheck = executionState.steps.some(
+      (step) =>
+        step.description ===
+          `Compare ${arrayName}[${arrayName}[i] - 1] !== ${arrayName}[i] -> true` ||
+        step.description ===
+          `Compare ${arrayName}[${arrayName}[i] - 1] !== ${arrayName}[i] -> false`
+    )
+    const hasMissingValueCheck = executionState.steps.some(
+      (step) =>
+        step.description === `Compare ${arrayName}[i] !== i + 1 -> true` ||
+        step.description === `Compare ${arrayName}[i] !== i + 1 -> false`
+    )
+    const hasLengthBoundArray = executionState.steps.some((step) => {
+      const data = step.variables[arrayName]
+      const n = step.variables.n
+
+      return (
+        isNumericArray(data) &&
+        isInteger(n) &&
+        n === data.length &&
+        isInteger(step.variables.i)
+      )
+    })
+
+    const hasPlacementProof = hasUpperBound && hasValuePlacementCheck
+    const hasFirstMissingPositiveResultCheck = hasMissingValueCheck
+
+    if (
+      hasLengthBoundArray &&
+      (hasPlacementProof || hasFirstMissingPositiveResultCheck)
+    ) {
+      return arrayName
+    }
+  }
+}
+
+/** Identifies the value-to-index placement invariant used by First Missing Positive. */
+export function hasCyclicPlacementTrace(executionState: ExecutionState): boolean {
+  return getCyclicPlacementArrayName(executionState) !== undefined
 }

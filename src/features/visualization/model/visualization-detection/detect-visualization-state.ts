@@ -33,7 +33,7 @@ import {
 import {
   hasRecursiveCallStack,
   hasSortTrace,
-  hasCyclicPlacementTrace,
+  getCyclicPlacementArrayName,
   hasClassDesignTrace,
 } from './trace-detection'
 import {
@@ -76,7 +76,7 @@ export function detectVisualizationState(
     getInitialVariableContext(executionState)
   const metadata = collectVisualizationMutationMetadata(executionState)
   const hasSort = hasSortTrace(executionState)
-  const hasCyclicPlacement = hasCyclicPlacementTrace(executionState)
+  const cyclicPlacementArrayName = getCyclicPlacementArrayName(executionState)
   const hasInitialTreeNode = hasInitialTreeNodeVariable(
     variableEntries,
     initialVariableNames
@@ -92,11 +92,16 @@ export function detectVisualizationState(
     metadata.mutatedNumericArrayNames,
     { excludeResultLikeArrays: prefersResultStack }
   )
-  const primaryFirstMissingPositiveArrayName = hasCyclicPlacement
-    ? getPrimaryArrayName(variableEntries, metadata.mutatedNumericArrayNames, {
-        requireMutation: false,
-      })
-    : undefined
+  const primaryFirstMissingPositiveArrayName =
+    !isUndefined(cyclicPlacementArrayName) &&
+    variableEntries.some(
+      ([name, value]) =>
+        name === cyclicPlacementArrayName &&
+        isNumericArray(value) &&
+        value.length > 0
+    )
+      ? cyclicPlacementArrayName
+      : undefined
   const primaryStackName =
     getPrimaryStackName(variableEntries, {
       includeNumericResultArrays: prefersResultStack || !hasSort,
