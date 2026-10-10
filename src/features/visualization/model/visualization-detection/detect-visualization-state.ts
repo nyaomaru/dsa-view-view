@@ -33,6 +33,7 @@ import {
 import {
   hasRecursiveCallStack,
   hasSortTrace,
+  hasCyclicPlacementTrace,
   hasClassDesignTrace,
 } from './trace-detection'
 import {
@@ -75,6 +76,7 @@ export function detectVisualizationState(
     getInitialVariableContext(executionState)
   const metadata = collectVisualizationMutationMetadata(executionState)
   const hasSort = hasSortTrace(executionState)
+  const hasCyclicPlacement = hasCyclicPlacementTrace(executionState)
   const hasInitialTreeNode = hasInitialTreeNodeVariable(
     variableEntries,
     initialVariableNames
@@ -172,7 +174,8 @@ export function detectVisualizationState(
     primaryHeapStepIndex:
       primaryHeapStepIndex >= 0 ? primaryHeapStepIndex : undefined,
     primaryStackName,
-    primaryArrayName: hasSort ? primaryArrayName : undefined,
+    primaryArrayName:
+      hasSort || hasCyclicPlacement ? primaryArrayName : undefined,
     primaryAreaArrayName: primaryAreaCandidate?.name,
     primaryAreaStepIndex: primaryAreaCandidate?.stepIndex,
     primaryMaxSubarrayArrayName: primaryMaxSubarrayCandidate?.name,

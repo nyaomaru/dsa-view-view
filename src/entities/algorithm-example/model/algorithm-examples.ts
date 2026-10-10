@@ -19,6 +19,7 @@ const EXAMPLE_CATEGORY_BY_ID = new Map<AlgorithmExampleSourceId, string>([
   ['binary-search', 'Binary Search'],
   ['search-rotated-array', 'Binary Search'],
   ['product-except-self', 'Array'],
+  ['first-missing-positive', 'Array'],
   ['longest-substring-without-repeating-characters', 'Sliding Window'],
   ['zigzag-conversion', 'String'],
   ['bubble-sort', 'Sorting'],
@@ -184,6 +185,14 @@ const ALGORITHM_EXAMPLE_DEFINITIONS: AlgorithmExampleDefinition[] = [
       nums: '[1, 2, 3, 4]',
     },
     sourceCode: ALGORITHM_EXAMPLE_SOURCES['product-except-self'],
+  },
+  {
+    id: 'first-missing-positive',
+    label: 'First Missing Positive',
+    defaultInputValues: {
+      nums: '[3, 4, -1, 1]',
+    },
+    sourceCode: ALGORITHM_EXAMPLE_SOURCES['first-missing-positive'],
   },
   {
     id: 'longest-substring-without-repeating-characters',
