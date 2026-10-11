@@ -58,11 +58,6 @@ export function getCyclicPlacementArrayName(
         step.description ===
           `Compare ${arrayName}[${arrayName}[i] - 1] !== ${arrayName}[i] -> false`
     )
-    const hasMissingValueCheck = executionState.steps.some(
-      (step) =>
-        step.description === `Compare ${arrayName}[i] !== i + 1 -> true` ||
-        step.description === `Compare ${arrayName}[i] !== i + 1 -> false`
-    )
     const hasLengthBoundArray = executionState.steps.some((step) => {
       const data = step.variables[arrayName]
       const n = step.variables.n
@@ -76,28 +71,8 @@ export function getCyclicPlacementArrayName(
     })
 
     const hasPlacementProof = hasUpperBound && hasValuePlacementCheck
-    const hasFailedPositiveBound = executionState.steps.some(
-      (step) =>
-        step.description === `Compare ${arrayName}[i] >= 1 -> false` ||
-        step.description === `Compare ${arrayName}[i] > 0 -> false`
-    )
-    const hasSuccessfulPositiveBound = executionState.steps.some(
-      (step) =>
-        step.description === `Compare ${arrayName}[i] >= 1 -> true` ||
-        step.description === `Compare ${arrayName}[i] > 0 -> true`
-    )
-    const hasOnlyShortCircuitedPositiveBounds =
-      hasFailedPositiveBound && !hasSuccessfulPositiveBound
-    const hasShortCircuitedPlacement =
-      hasOnlyShortCircuitedPositiveBounds &&
-      !hasUpperBound &&
-      !hasValuePlacementCheck &&
-      hasMissingValueCheck
 
-    if (
-      hasLengthBoundArray &&
-      (hasPlacementProof || hasShortCircuitedPlacement)
-    ) {
+    if (hasLengthBoundArray && hasPlacementProof) {
       return arrayName
     }
   }
