@@ -97,15 +97,15 @@ export function getPrimaryVisualization(
     }
   }
 
-  if (detection.primaryStackName) {
-    return { type: 'stack', targetVariable: detection.primaryStackName }
-  }
-
   if (detection.primaryFirstMissingPositiveArrayName) {
     return {
       type: 'first-missing-positive',
       targetVariable: detection.primaryFirstMissingPositiveArrayName,
     }
+  }
+
+  if (detection.primaryStackName) {
+    return { type: 'stack', targetVariable: detection.primaryStackName }
   }
 
   if (detection.primaryArrayName) {
