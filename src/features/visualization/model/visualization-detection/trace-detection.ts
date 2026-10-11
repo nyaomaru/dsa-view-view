@@ -1,6 +1,5 @@
 import type { ExecutionState } from '@/entities/execution'
 import {
-  equals,
   isInteger,
   isNumericArray,
   isString,
@@ -13,7 +12,6 @@ const CLASS_DESIGN_INPUT_VARIABLE = '__algorithmVisualizerClassDesignInput'
 const SORT_TRACE_KEYWORDS = ['sort', 'sorted', 'swap', 'partition', 'pivot']
 const POSITIVE_BOUND_COMPARISON =
   /^Compare ([$A-Z_a-z][\w$]*)\[i\] (?:>= 1|> 0) -> (?:true|false)$/
-const isFirstMissingPositiveFunction = equals('firstMissingPositive')
 
 export function hasClassDesignTrace(executionState: ExecutionState): boolean {
   return executionState.steps.some((step) =>
@@ -78,11 +76,23 @@ export function getCyclicPlacementArrayName(
     })
 
     const hasPlacementProof = hasUpperBound && hasValuePlacementCheck
-    const hasFirstMissingPositiveCall = executionState.steps.some((step) =>
-      step.callStack?.some(isFirstMissingPositiveFunction)
+    const hasFailedPositiveBound = executionState.steps.some(
+      (step) =>
+        step.description === `Compare ${arrayName}[i] >= 1 -> false` ||
+        step.description === `Compare ${arrayName}[i] > 0 -> false`
     )
+    const hasSuccessfulPositiveBound = executionState.steps.some(
+      (step) =>
+        step.description === `Compare ${arrayName}[i] >= 1 -> true` ||
+        step.description === `Compare ${arrayName}[i] > 0 -> true`
+    )
+    const hasOnlyShortCircuitedPositiveBounds =
+      hasFailedPositiveBound && !hasSuccessfulPositiveBound
     const hasShortCircuitedPlacement =
-      hasFirstMissingPositiveCall && hasMissingValueCheck
+      hasOnlyShortCircuitedPositiveBounds &&
+      !hasUpperBound &&
+      !hasValuePlacementCheck &&
+      hasMissingValueCheck
 
     if (
       hasLengthBoundArray &&

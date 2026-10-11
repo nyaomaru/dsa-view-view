@@ -80,11 +80,15 @@ describe('First Missing Positive visualization integration', () => {
     })
   })
 
-  it('opens the view when every placement check is short-circuited', () => {
+  it('opens the view for a renamed function when every placement check is short-circuited', () => {
+    const sourceCode = firstMissingPositiveExample.sourceCode.replace(
+      'firstMissingPositive',
+      'locateSmallestMissingPositive'
+    )
     const state = executeCode(
-      firstMissingPositiveExample.sourceCode,
+      sourceCode,
       { nums: [-1, -2] },
-      'firstMissingPositive'
+      'locateSmallestMissingPositive'
     )
     const completedState = { ...state, currentStep: state.steps.length - 1 }
     const detection = detectVisualizationState(completedState)
