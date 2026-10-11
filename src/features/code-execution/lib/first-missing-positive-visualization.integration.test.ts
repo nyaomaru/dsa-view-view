@@ -31,7 +31,35 @@ describe('First Missing Positive visualization integration', () => {
       type: 'first-missing-positive',
       targetVariable: 'nums',
     })
+  })
 
+  it('recognizes the equivalent greater-than-zero lower bound', () => {
+    const state = executeCode(
+      `function findFirstMissingPositive(nums: number[]): number {
+  const n = nums.length
+
+  for (let i = 0; i < n; i++) {
+    while (nums[i] > 0 && nums[i] <= n && nums[nums[i] - 1] !== nums[i]) {
+      const targetIndex = nums[i] - 1
+      ;[nums[i], nums[targetIndex]] = [nums[targetIndex], nums[i]]
+    }
+  }
+
+  for (let i = 0; i < n; i++) {
+    if (nums[i] !== i + 1) return i + 1
+  }
+
+  return n + 1
+}`,
+      { nums: [3, 4, -1, 1] },
+      'findFirstMissingPositive'
+    )
+    const completedState = { ...state, currentStep: state.steps.length - 1 }
+    const detection = detectVisualizationState(completedState)
+
+    expect(state.error).toBeUndefined()
+    expect(state.returnValue).toBe(2)
+    expect(detection.primaryFirstMissingPositiveArrayName).toBe('nums')
   })
 
   it('opens the view when every value is already placed', () => {

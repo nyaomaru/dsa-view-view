@@ -12,7 +12,7 @@ const { RECURSION_DEPTH_THRESHOLD } = VISUALIZATION_CONSTANTS
 const CLASS_DESIGN_INPUT_VARIABLE = '__algorithmVisualizerClassDesignInput'
 const SORT_TRACE_KEYWORDS = ['sort', 'sorted', 'swap', 'partition', 'pivot']
 const POSITIVE_BOUND_COMPARISON =
-  /^Compare ([$A-Z_a-z][\w$]*)\[i\] >= 1 -> (?:true|false)$/
+  /^Compare ([$A-Z_a-z][\w$]*)\[i\] (?:>= 1|> 0) -> (?:true|false)$/
 const isFirstMissingPositiveFunction = equals('firstMissingPositive')
 
 export function hasClassDesignTrace(executionState: ExecutionState): boolean {
