@@ -69,7 +69,7 @@
     "vite-plus": "catalog:"
   },
   "engines": {
-    "node": ">=24.15.0"
+    "node": "24.x"
   },
   "packageManager": "pnpm@11.2.2"
 }
