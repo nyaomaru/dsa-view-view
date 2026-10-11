@@ -97,6 +97,8 @@ function getVisualizationTitle({
       return `Map View: ${targetVariable}`
     case 'bar-chart':
       return `Bar Chart: ${targetVariable}`
+    case 'first-missing-positive':
+      return `First Missing Positive View: ${targetVariable}`
     case 'area':
       return `Area View: ${targetVariable}`
     case 'max-subarray':
@@ -159,6 +161,8 @@ function getVisualizationDescription(
       return 'Visualize Map entries and the current algorithm context.'
     case 'bar-chart':
       return 'Visualize numeric array as a bar chart.'
+    case 'first-missing-positive':
+      return 'Follow cyclic placements from each value to its target index.'
     case 'area':
       return 'Visualize the current container, histogram rectangle, or trapped water.'
     case 'max-subarray':

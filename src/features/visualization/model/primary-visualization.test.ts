@@ -15,6 +15,7 @@ const emptyDetection: VisualizationDetection = {
   primaryRegexMatchStepIndex: undefined,
   primaryStackName: undefined,
   primaryArrayName: undefined,
+  primaryFirstMissingPositiveArrayName: undefined,
   primaryAreaArrayName: undefined,
   primaryAreaStepIndex: undefined,
   primaryMaxSubarrayArrayName: undefined,
@@ -79,6 +80,17 @@ describe('getPrimaryVisualization', () => {
         primaryStackName: 'rows',
       })
     ).toEqual({ type: 'zigzag', targetStepIndex: 5 })
+  })
+
+  it('selects the First Missing Positive view before generic array and stack views', () => {
+    expect(
+      getPrimaryVisualization({
+        ...emptyDetection,
+        primaryArrayName: 'nums',
+        primaryStackName: 'result',
+        primaryFirstMissingPositiveArrayName: 'nums',
+      })
+    ).toEqual({ type: 'first-missing-positive', targetVariable: 'nums' })
   })
 
   it('maps detected candidates to their modal configuration', () => {

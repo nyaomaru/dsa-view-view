@@ -80,6 +80,7 @@ export function Visualizer({
     primaryZigzagStepIndex,
     primaryRegexMatchStepIndex,
     primaryArrayName,
+    primaryFirstMissingPositiveArrayName,
     primaryAreaArrayName,
     primaryAreaStepIndex,
     primaryMaxSubarrayArrayName,
@@ -260,6 +261,9 @@ export function Visualizer({
         primaryZigzagStepIndex={primaryZigzagStepIndex}
         primaryRegexMatchStepIndex={primaryRegexMatchStepIndex}
         primaryArrayName={primaryArrayName}
+        primaryFirstMissingPositiveArrayName={
+          primaryFirstMissingPositiveArrayName
+        }
         primaryAreaArrayName={primaryAreaArrayName}
         primaryAreaStepIndex={primaryAreaStepIndex}
         primaryMaxSubarrayArrayName={primaryMaxSubarrayArrayName}

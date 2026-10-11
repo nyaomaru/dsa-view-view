@@ -12,6 +12,7 @@ export type VisualizationType =
   | 'max-subarray'
   | 'stock-profit'
   | 'capacity-search'
+  | 'first-missing-positive'
   | 'binary-search'
   | 'sliding-window'
   | 'zigzag'

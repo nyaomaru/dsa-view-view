@@ -97,6 +97,13 @@ export function getPrimaryVisualization(
     }
   }
 
+  if (detection.primaryFirstMissingPositiveArrayName) {
+    return {
+      type: 'first-missing-positive',
+      targetVariable: detection.primaryFirstMissingPositiveArrayName,
+    }
+  }
+
   if (detection.primaryStackName) {
     return { type: 'stack', targetVariable: detection.primaryStackName }
   }

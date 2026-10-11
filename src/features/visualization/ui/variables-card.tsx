@@ -57,6 +57,8 @@ type VariablesCardProps = {
   primaryRegexMatchStepIndex?: number
   /** Primary array variable detected for chart visualization. */
   primaryArrayName?: string
+  /** Primary array detected for First Missing Positive cyclic placement. */
+  primaryFirstMissingPositiveArrayName?: string
   /** Primary numeric array detected for an area visualization. */
   primaryAreaArrayName?: string
   /** Step index where area pointers are available. */
@@ -123,6 +125,7 @@ export function VariablesCard({
   primaryZigzagStepIndex,
   primaryRegexMatchStepIndex,
   primaryArrayName,
+  primaryFirstMissingPositiveArrayName,
   primaryAreaArrayName,
   primaryAreaStepIndex,
   primaryMaxSubarrayArrayName,
@@ -285,6 +288,22 @@ export function VariablesCard({
             >
               <BarChart2 className="w-4 h-4" />
               Sort Graph
+            </Button>
+          )}
+          {primaryFirstMissingPositiveArrayName && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                onOpenVisualization(
+                  'first-missing-positive',
+                  primaryFirstMissingPositiveArrayName
+                )
+              }
+            >
+              <BarChart2 className="w-4 h-4" />
+              First Missing Positive View
             </Button>
           )}
           {primaryAreaArrayName && (
