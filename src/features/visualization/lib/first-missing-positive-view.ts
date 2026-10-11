@@ -1,5 +1,5 @@
 import type { ExecutionState } from '@/entities/execution'
-import { isInteger, isNumericArray } from '@/shared/lib/guards'
+import { isInteger, isNumericArray, isUndefined } from '@/shared/lib/guards'
 import { getExecutionStepSearchOrder } from './execution-step-search'
 
 /** State required to explain a cyclic placement in First Missing Positive. */
@@ -27,11 +27,16 @@ export function getFirstMissingPositiveVisualizationState({
   })
 
   for (const stepIndex of orderedIndexes) {
-    const variables = executionState.steps[stepIndex]?.variables
+    const step = executionState.steps[stepIndex]
+    const variables = step?.variables
     const data = variables?.[variableName]
     const n = variables?.n
     const index = variables?.i
     const targetIndex = variables?.targetIndex
+    const visibleVariableNames = step?.metadata?.callFrame?.visibleVariableNames
+    const isTargetIndexVisible =
+      isUndefined(visibleVariableNames) ||
+      visibleVariableNames.includes('targetIndex')
 
     if (!isNumericArray(data) || !isInteger(n) || !isInteger(index)) continue
 
@@ -39,7 +44,10 @@ export function getFirstMissingPositiveVisualizationState({
       data: data.map(Number),
       n,
       index,
-      targetIndex: isInteger(targetIndex) ? targetIndex : undefined,
+      targetIndex:
+        isTargetIndexVisible && isInteger(targetIndex)
+          ? targetIndex
+          : undefined,
     }
   }
 
