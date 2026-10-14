@@ -29,6 +29,10 @@ export type VisualizationDetection = {
   primaryMaxSubarrayArrayName: string | undefined
   /** Step index where initialized maximum-subarray state is available. */
   primaryMaxSubarrayStepIndex: number | undefined
+  /** Primary numeric source detected for Jump Game II's greedy range expansion. */
+  primaryJumpGameArrayName: string | undefined
+  /** Step index where initialized Jump Game II state is available. */
+  primaryJumpGameStepIndex: number | undefined
   /** Primary numeric source detected for stock-profit visualization. */
   primaryStockProfitArrayName: string | undefined
   /** Step index where initialized stock-profit state is available. */

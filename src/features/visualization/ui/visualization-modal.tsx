@@ -103,6 +103,8 @@ function getVisualizationTitle({
       return `Area View: ${targetVariable}`
     case 'max-subarray':
       return `Maximum Subarray View: ${targetVariable}`
+    case 'jump-game':
+      return `Jump Game View: ${targetVariable}`
     case 'stock-profit':
       return `Stock Profit View: ${targetVariable}`
     case 'capacity-search':
@@ -167,6 +169,8 @@ function getVisualizationDescription(
       return 'Visualize the current container, histogram rectangle, or trapped water.'
     case 'max-subarray':
       return 'Follow the current position, best sum ending here, and best sum seen so far.'
+    case 'jump-game':
+      return 'Follow the current jump range, its boundary, and the farthest reachable position.'
     case 'stock-profit':
       return 'Follow prices, the current day, and the profit accumulated by the strategy.'
     case 'capacity-search':

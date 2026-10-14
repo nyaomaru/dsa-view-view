@@ -8,6 +8,7 @@ import {
 import { describe, expect, it, vi } from 'vite-plus/test'
 
 import type { ExecutionState } from '@/entities/execution'
+import { executeCode } from '@/features/code-execution/lib/runner'
 
 import { Visualizer } from './visualizer'
 
@@ -52,6 +53,49 @@ Object.defineProperty(HTMLElement.prototype, 'scrollTo', {
 })
 
 describe('Visualizer return value display', () => {
+  it('opens Jump Game View from the Variables panel', () => {
+    const executionState = executeCode(
+      `function jump(nums: number[]): number {
+  let jumps = 0
+  let currentEnd = 0
+  let farthest = 0
+
+  for (let i = 0; i < nums.length - 1; i++) {
+    farthest = Math.max(farthest, i + nums[i])
+
+    if (i === currentEnd) {
+      jumps++
+      currentEnd = farthest
+    }
+  }
+
+  return jumps
+}`,
+      { nums: [2, 3, 1, 1, 4] },
+      'jump'
+    )
+
+    render(
+      <Visualizer
+        executionState={executionState}
+        isRunning={false}
+        onPause={noop}
+        onRunAll={noop}
+        onReset={noop}
+        onStepForward={noop}
+        onStepBackward={noop}
+        onSkipToEnd={noop}
+        onJumpToStep={noop}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Jump Game View' }))
+
+    expect(
+      screen.getByRole('heading', { name: 'Jump Game View: nums' })
+    ).toBeInTheDocument()
+  })
+
   it('keeps the viewport and focus in place when jumping to a previous variable change', () => {
     const steps: ExecutionState['steps'] = [0, 0, 1, 1, 2, 2].map(
       (left, stepNumber) => ({

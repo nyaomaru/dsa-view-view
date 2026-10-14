@@ -67,6 +67,10 @@ type VariablesCardProps = {
   primaryMaxSubarrayArrayName?: string
   /** Step index where maximum-subarray state is available. */
   primaryMaxSubarrayStepIndex?: number
+  /** Primary numeric array detected for Jump Game II visualization. */
+  primaryJumpGameArrayName?: string
+  /** Step index where Jump Game II state is available. */
+  primaryJumpGameStepIndex?: number
   /** Primary numeric array detected for stock-profit visualization. */
   primaryStockProfitArrayName?: string
   /** Step index where stock-profit state is available. */
@@ -130,6 +134,8 @@ export function VariablesCard({
   primaryAreaStepIndex,
   primaryMaxSubarrayArrayName,
   primaryMaxSubarrayStepIndex,
+  primaryJumpGameArrayName,
+  primaryJumpGameStepIndex,
   primaryStockProfitArrayName,
   primaryStockProfitStepIndex,
   primaryCapacitySearchArrayName,
@@ -338,6 +344,23 @@ export function VariablesCard({
             >
               <BarChart2 className="w-4 h-4" />
               Max Subarray View
+            </Button>
+          )}
+          {primaryJumpGameArrayName && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                onOpenVisualization(
+                  'jump-game',
+                  primaryJumpGameArrayName,
+                  primaryJumpGameStepIndex
+                )
+              }
+            >
+              <BarChart2 className="w-4 h-4" />
+              Jump Game View
             </Button>
           )}
           {primaryStockProfitArrayName && (

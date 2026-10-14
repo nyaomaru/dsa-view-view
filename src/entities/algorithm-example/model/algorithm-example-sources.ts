@@ -28,6 +28,22 @@ export const ALGORITHM_EXAMPLE_SOURCES = {
 
   return -1
 }`,
+  'jump-game-ii': `function jump(nums: number[]): number {
+  let jumps = 0
+  let currentEnd = 0
+  let farthest = 0
+
+  for (let i = 0; i < nums.length - 1; i++) {
+    farthest = Math.max(farthest, i + nums[i])
+
+    if (i === currentEnd) {
+      jumps++
+      currentEnd = farthest
+    }
+  }
+
+  return jumps
+}`,
   'bubble-sort': `function bubbleSort(nums: number[]): number[] {
   for (let i = 0; i < nums.length; i++) {
     for (let j = 0; j < nums.length - i - 1; j++) {

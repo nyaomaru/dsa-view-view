@@ -8,6 +8,7 @@ import {
 import { isSlidingWindowCandidate } from '../../lib/sliding-window-view'
 import { isRollingDpCandidate } from '../../lib/rolling-dp-view'
 import { getMaxSubarrayTraceCandidate } from '../../lib/max-subarray-view'
+import { getJumpGameTraceCandidate } from '../../lib/jump-game-view'
 import { getStockProfitTraceCandidate } from '../../lib/stock-profit-view'
 import { getExecutionStepSearchOrder } from '../../lib/execution-step-search'
 import {
@@ -38,6 +39,16 @@ export function getPrimaryMaxSubarrayCandidate(
   executionState: ExecutionState
 ): IndexedVariableCandidate | undefined {
   const candidate = getMaxSubarrayTraceCandidate(executionState)
+
+  return candidate
+    ? { name: candidate.name, stepIndex: candidate.stepIndex }
+    : undefined
+}
+
+export function getPrimaryJumpGameCandidate(
+  executionState: ExecutionState
+): IndexedVariableCandidate | undefined {
+  const candidate = getJumpGameTraceCandidate(executionState)
 
   return candidate
     ? { name: candidate.name, stepIndex: candidate.stepIndex }
