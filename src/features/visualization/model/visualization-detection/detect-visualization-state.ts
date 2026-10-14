@@ -14,6 +14,7 @@ import {
   getPrimaryAreaCandidate,
   getPrimaryBinarySearchCandidate,
   getPrimaryCapacitySearchCandidate,
+  getPrimaryJumpGameCandidate,
   getPrimaryMaxSubarrayCandidate,
   getPrimaryRollingDpName,
   getPrimarySlidingWindowCandidate,
@@ -127,6 +128,7 @@ export function detectVisualizationState(
   )
   const primaryMaxSubarrayCandidate =
     getPrimaryMaxSubarrayCandidate(executionState)
+  const primaryJumpGameCandidate = getPrimaryJumpGameCandidate(executionState)
   const primaryStockProfitCandidate =
     getPrimaryStockProfitCandidate(executionState)
   const primarySlidingWindowCandidate =
@@ -190,6 +192,8 @@ export function detectVisualizationState(
     primaryAreaStepIndex: primaryAreaCandidate?.stepIndex,
     primaryMaxSubarrayArrayName: primaryMaxSubarrayCandidate?.name,
     primaryMaxSubarrayStepIndex: primaryMaxSubarrayCandidate?.stepIndex,
+    primaryJumpGameArrayName: primaryJumpGameCandidate?.name,
+    primaryJumpGameStepIndex: primaryJumpGameCandidate?.stepIndex,
     primaryStockProfitArrayName: primaryStockProfitCandidate?.name,
     primaryStockProfitStepIndex: primaryStockProfitCandidate?.stepIndex,
     primaryCapacitySearchArrayName: primaryCapacitySearchCandidate?.name,

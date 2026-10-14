@@ -85,6 +85,8 @@ export function Visualizer({
     primaryAreaStepIndex,
     primaryMaxSubarrayArrayName,
     primaryMaxSubarrayStepIndex,
+    primaryJumpGameArrayName,
+    primaryJumpGameStepIndex,
     primaryStockProfitArrayName,
     primaryStockProfitStepIndex,
     primaryCapacitySearchArrayName,
@@ -268,6 +270,8 @@ export function Visualizer({
         primaryAreaStepIndex={primaryAreaStepIndex}
         primaryMaxSubarrayArrayName={primaryMaxSubarrayArrayName}
         primaryMaxSubarrayStepIndex={primaryMaxSubarrayStepIndex}
+        primaryJumpGameArrayName={primaryJumpGameArrayName}
+        primaryJumpGameStepIndex={primaryJumpGameStepIndex}
         primaryStockProfitArrayName={primaryStockProfitArrayName}
         primaryStockProfitStepIndex={primaryStockProfitStepIndex}
         primaryCapacitySearchArrayName={primaryCapacitySearchArrayName}

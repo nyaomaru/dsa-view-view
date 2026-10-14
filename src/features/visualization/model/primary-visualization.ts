@@ -65,6 +65,14 @@ export function getPrimaryVisualization(
     }
   }
 
+  if (detection.primaryJumpGameArrayName) {
+    return {
+      type: 'jump-game',
+      targetVariable: detection.primaryJumpGameArrayName,
+      targetStepIndex: detection.primaryJumpGameStepIndex,
+    }
+  }
+
   if (detection.primaryStockProfitArrayName) {
     return {
       type: 'stock-profit',

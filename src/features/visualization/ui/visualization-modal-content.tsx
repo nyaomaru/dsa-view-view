@@ -22,6 +22,7 @@ import {
 } from '../lib/binary-search-view'
 import { getAreaVisualizationState } from '../lib/area-view'
 import { getMaxSubarrayVisualizationState } from '../lib/max-subarray-view'
+import { getJumpGameVisualizationState } from '../lib/jump-game-view'
 import { getStockProfitVisualizationState } from '../lib/stock-profit-view'
 import { getCapacitySearchVisualizationState } from '../lib/capacity-search-view'
 import { getSlidingWindowVisualizationState } from '../lib/sliding-window-view'
@@ -47,6 +48,7 @@ import { RecursionTreeVisualizer } from './recursion-tree-visualizer'
 import { BarChartVisualizer } from './bar-chart-visualizer'
 import { AreaVisualizer } from './area-visualizer'
 import { MaxSubarrayVisualizer } from './max-subarray-visualizer'
+import { JumpGameVisualizer } from './jump-game-visualizer'
 import { StockProfitVisualizer } from './stock-profit-visualizer'
 import { CapacitySearchVisualizer } from './capacity-search-visualizer'
 import { BinarySearchVisualizer } from './binary-search-visualizer'
@@ -368,6 +370,19 @@ export function VisualizationModalContent({
         />
       ) : (
         <div>Maximum-subarray state is not available.</div>
+      )
+    }
+
+    case 'jump-game': {
+      const visualizationState = getJumpGameVisualizationState({
+        executionState,
+        variableName: targetVariable,
+      })
+
+      return visualizationState ? (
+        <JumpGameVisualizer name={targetVariable} state={visualizationState} />
+      ) : (
+        <div>Jump Game state is not available.</div>
       )
     }
 

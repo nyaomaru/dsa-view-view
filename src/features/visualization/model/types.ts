@@ -10,6 +10,7 @@ export type VisualizationType =
   | 'map'
   | 'area'
   | 'max-subarray'
+  | 'jump-game'
   | 'stock-profit'
   | 'capacity-search'
   | 'first-missing-positive'

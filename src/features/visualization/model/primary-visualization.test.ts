@@ -20,6 +20,8 @@ const emptyDetection: VisualizationDetection = {
   primaryAreaStepIndex: undefined,
   primaryMaxSubarrayArrayName: undefined,
   primaryMaxSubarrayStepIndex: undefined,
+  primaryJumpGameArrayName: undefined,
+  primaryJumpGameStepIndex: undefined,
   primaryStockProfitArrayName: undefined,
   primaryStockProfitStepIndex: undefined,
   primaryCapacitySearchArrayName: undefined,

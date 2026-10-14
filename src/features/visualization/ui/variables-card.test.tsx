@@ -30,6 +30,29 @@ const executionState = {
 }
 
 describe('VariablesCard', () => {
+  it('opens Jump Game View from the detected source array', () => {
+    const openVisualization = vi.fn()
+
+    render(
+      <VariablesCard
+        executionState={executionState}
+        currentStep={step}
+        variableEntries={Object.entries(step.variables)}
+        expandedVariables={{}}
+        hasRecursion={false}
+        primaryJumpGameArrayName="nums"
+        primaryJumpGameStepIndex={4}
+        onToggleVariable={vi.fn()}
+        onOpenVisualization={openVisualization}
+        onJumpToStep={vi.fn()}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Jump Game View' }))
+
+    expect(openVisualization).toHaveBeenCalledWith('jump-game', 'nums', 4)
+  })
+
   it('keeps call frames available when recursive DFS also has a tree graph', () => {
     const openVisualization = vi.fn()
 
