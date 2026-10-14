@@ -17,6 +17,7 @@ const EXAMPLE_CATEGORY_BY_ID = new Map<AlgorithmExampleSourceId, string>([
   ['group-anagrams', 'Hash Map'],
   ['top-k-frequent', 'Hash Map'],
   ['binary-search', 'Binary Search'],
+  ['jump-game-ii', 'Greedy'],
   ['search-rotated-array', 'Binary Search'],
   ['product-except-self', 'Array'],
   ['first-missing-positive', 'Array'],
@@ -86,6 +87,14 @@ const ALGORITHM_EXAMPLE_DEFINITIONS: AlgorithmExampleDefinition[] = [
       target: 7,
     },
     sourceCode: ALGORITHM_EXAMPLE_SOURCES['binary-search'],
+  },
+  {
+    id: 'jump-game-ii',
+    label: 'Jump Game II',
+    defaultInputValues: {
+      nums: '[2, 3, 1, 1, 4]',
+    },
+    sourceCode: ALGORITHM_EXAMPLE_SOURCES['jump-game-ii'],
   },
   {
     id: 'bubble-sort',
