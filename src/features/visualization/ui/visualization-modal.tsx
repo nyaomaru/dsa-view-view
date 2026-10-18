@@ -130,6 +130,8 @@ function getVisualizationTitle({
       return 'Word Ladder View'
     case 'regex-match':
       return 'Regular Expression Match View'
+    case 'n-queens':
+      return 'N-Queens Chess Board'
     case null:
       return ''
   }
@@ -191,6 +193,8 @@ function getVisualizationDescription(
       return 'Visualize the word-transformation graph and current BFS frontier.'
     case 'regex-match':
       return 'Follow recursive dp(i, j) calls through the memoization grid.'
+    case 'n-queens':
+      return 'Follow queen placements as backtracking explores each row.'
     case null:
       return ''
   }
