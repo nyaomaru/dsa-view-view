@@ -535,6 +535,84 @@ export const ALGORITHM_EXAMPLE_SOURCES = {
   dfs()
   return result
 }`,
+  'n-queens': `function solveNQueens(n: number): string[][] {
+  const result: string[][] = []
+
+  const board = Array.from({ length: n }, () => Array(n).fill('.'))
+
+  const cols = new Set<number>()
+  const diag1 = new Set<number>()
+  const diag2 = new Set<number>()
+
+  const backtrack = (row: number) => {
+    if (row === n) {
+      result.push(board.map((row) => row.join('')))
+      return
+    }
+
+    for (let col = 0; col < n; col++) {
+      const d1 = row - col
+      const d2 = row + col
+
+      if (cols.has(col) || diag1.has(d1) || diag2.has(d2)) {
+        continue
+      }
+
+      board[row][col] = 'Q'
+      cols.add(col)
+      diag1.add(d1)
+      diag2.add(d2)
+
+      backtrack(row + 1)
+
+      board[row][col] = '.'
+      cols.delete(col)
+      diag1.delete(d1)
+      diag2.delete(d2)
+    }
+  }
+
+  backtrack(0)
+
+  return result
+}`,
+  'n-queens-ii': `function totalNQueens(n: number): number {
+  let count = 0
+
+  const cols = new Set<number>()
+  const diag1 = new Set<number>()
+  const diag2 = new Set<number>()
+
+  const backtrack = (row: number) => {
+    if (row === n) {
+      count++
+      return
+    }
+
+    for (let col = 0; col < n; col++) {
+      const d1 = row + col
+      const d2 = row - col
+
+      if (cols.has(col) || diag1.has(d1) || diag2.has(d2)) {
+        continue
+      }
+
+      cols.add(col)
+      diag1.add(d1)
+      diag2.add(d2)
+
+      backtrack(row + 1)
+
+      cols.delete(col)
+      diag1.delete(d1)
+      diag2.delete(d2)
+    }
+  }
+
+  backtrack(0)
+
+  return count
+}`,
   'number-of-islands': `function numIslands(grid: string[][]): number {
   let islands = 0
 

@@ -17,6 +17,13 @@ export type PrimaryVisualization = {
 export function getPrimaryVisualization(
   detection: VisualizationDetection
 ): PrimaryVisualization | null {
+  if (!isUndefined(detection.primaryNQueensStepIndex)) {
+    return {
+      type: 'n-queens',
+      targetStepIndex: detection.primaryNQueensStepIndex,
+    }
+  }
+
   if (!isUndefined(detection.primaryWordLadderStepIndex)) {
     return {
       type: 'word-ladder',

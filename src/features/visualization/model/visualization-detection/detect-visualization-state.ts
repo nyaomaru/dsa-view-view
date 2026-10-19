@@ -47,6 +47,7 @@ import { getWordLadderStepIndex } from '../../lib/word-ladder-view'
 import { getExpressionStepIndex } from '../../lib/expression-view'
 import { getZigzagStepIndex } from '../../lib/zigzag-view'
 import { getRegexMatchStepIndex } from '../../lib/regex-match-view'
+import { getNQueensStepIndex } from '../../lib/n-queens-view'
 
 export function detectVisualizationState(
   executionState: ExecutionState
@@ -61,6 +62,7 @@ export function detectVisualizationState(
   const primaryExpressionStepIndex = getExpressionStepIndex(executionState)
   const primaryZigzagStepIndex = getZigzagStepIndex(executionState)
   const primaryRegexMatchStepIndex = getRegexMatchStepIndex(executionState)
+  const primaryNQueensStepIndex = getNQueensStepIndex(executionState)
   const dualHeapStepIndex = executionState.steps.findIndex((step) => {
     const heaps = step.metadata?.heapTrace?.heaps ?? []
     return (
@@ -183,6 +185,7 @@ export function detectVisualizationState(
     primaryExpressionStepIndex,
     primaryZigzagStepIndex,
     primaryRegexMatchStepIndex,
+    primaryNQueensStepIndex,
     primaryHeapStepIndex:
       primaryHeapStepIndex >= 0 ? primaryHeapStepIndex : undefined,
     primaryStackName,

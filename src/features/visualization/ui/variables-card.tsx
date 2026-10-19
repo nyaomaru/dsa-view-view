@@ -55,6 +55,8 @@ type VariablesCardProps = {
   primaryZigzagStepIndex?: number
   /** First step containing recursive regular-expression matching coordinates. */
   primaryRegexMatchStepIndex?: number
+  /** First step containing standard N-Queens backtracking state. */
+  primaryNQueensStepIndex?: number
   /** Primary array variable detected for chart visualization. */
   primaryArrayName?: string
   /** Primary array detected for First Missing Positive cyclic placement. */
@@ -128,6 +130,7 @@ export function VariablesCard({
   primaryExpressionStepIndex,
   primaryZigzagStepIndex,
   primaryRegexMatchStepIndex,
+  primaryNQueensStepIndex,
   primaryArrayName,
   primaryFirstMissingPositiveArrayName,
   primaryAreaArrayName,
@@ -283,6 +286,23 @@ export function VariablesCard({
             >
               <CheckSquare className="w-4 h-4" />
               Regex Match View
+            </Button>
+          )}
+          {!isUndefined(primaryNQueensStepIndex) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                onOpenVisualization(
+                  'n-queens',
+                  undefined,
+                  primaryNQueensStepIndex
+                )
+              }
+            >
+              <Grid3X3 className="w-4 h-4" />
+              Chess Board
             </Button>
           )}
           {primaryArrayName && (

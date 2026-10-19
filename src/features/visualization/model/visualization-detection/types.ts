@@ -53,6 +53,8 @@ export type VisualizationDetection = {
   primaryZigzagStepIndex: number | undefined
   /** First step containing recursive regular-expression matching coordinates. */
   primaryRegexMatchStepIndex: number | undefined
+  /** First step containing standard N-Queens backtracking state. */
+  primaryNQueensStepIndex: number | undefined
   /** Primary boolean, numeric, or rolling state source for DP View. */
   primaryDpName: string | undefined
   /** Primary semantic Map variable to show in Map View. */

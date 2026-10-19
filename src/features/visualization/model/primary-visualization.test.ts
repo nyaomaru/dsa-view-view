@@ -13,6 +13,7 @@ const emptyDetection: VisualizationDetection = {
   primaryExpressionStepIndex: undefined,
   primaryZigzagStepIndex: undefined,
   primaryRegexMatchStepIndex: undefined,
+  primaryNQueensStepIndex: undefined,
   primaryStackName: undefined,
   primaryArrayName: undefined,
   primaryFirstMissingPositiveArrayName: undefined,
@@ -43,6 +44,16 @@ const emptyDetection: VisualizationDetection = {
 }
 
 describe('getPrimaryVisualization', () => {
+  it('prioritizes N-Queens board state over generic recursive views', () => {
+    expect(
+      getPrimaryVisualization({
+        ...emptyDetection,
+        primaryNQueensStepIndex: 3,
+        primaryStackName: 'result',
+      })
+    ).toEqual({ type: 'n-queens', targetStepIndex: 3 })
+  })
+
   it('prioritizes Word Ladder traces over generic queues and maps', () => {
     expect(
       getPrimaryVisualization({

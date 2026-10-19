@@ -23,6 +23,7 @@ export type VisualizationType =
   | 'heap'
   | 'word-ladder'
   | 'regex-match'
+  | 'n-queens'
   | null
 
 /** Opens one visualization for an optional variable and fallback step. */

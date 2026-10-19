@@ -35,6 +35,7 @@ import { getWordLadderVisualizationState } from '../lib/word-ladder-view'
 import { getExpressionVisualizationState } from '../lib/expression-view'
 import { getZigzagVisualizationState } from '../lib/zigzag-view'
 import { getRegexMatchVisualizationState } from '../lib/regex-match-view'
+import { getNQueensVisualizationState } from '../lib/n-queens-view'
 import { getFirstMissingPositiveVisualizationState } from '../lib/first-missing-positive-view'
 import {
   getContextualRuntimeComparison,
@@ -64,6 +65,7 @@ import { WordLadderVisualizer } from './word-ladder-visualizer'
 import { ExpressionVisualizer } from './expression-visualizer'
 import { ZigzagVisualizer } from './zigzag-visualizer'
 import { RegexMatchVisualizer } from './regex-match-visualizer'
+import { NQueensVisualizer } from './n-queens-visualizer'
 import { FirstMissingPositiveVisualizer } from './first-missing-positive-visualizer'
 import { CallFrameInspector } from './call-frame-inspector'
 import { DfsComparisonVisualizer } from './dfs-comparison-visualizer'
@@ -278,6 +280,16 @@ export function VisualizationModalContent({
       <RegexMatchVisualizer state={state} />
     ) : (
       <div>Regular-expression matching state is not available.</div>
+    )
+  }
+
+  if (type === 'n-queens') {
+    const state = getNQueensVisualizationState(executionState, targetStepIndex)
+
+    return state ? (
+      <NQueensVisualizer state={state} />
+    ) : (
+      <div>N-Queens board state is not available.</div>
     )
   }
 
