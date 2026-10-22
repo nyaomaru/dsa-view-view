@@ -9,7 +9,7 @@ By participating, you agree to follow our
 
 ## Setup
 
-The project requires Node.js 24.15 or later and pnpm 11.2.2.
+The project requires Node.js 24.22.1 or later and pnpm 11.2.2.
 
 ```sh
 pnpm install
