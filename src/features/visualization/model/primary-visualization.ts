@@ -24,6 +24,13 @@ export function getPrimaryVisualization(
     }
   }
 
+  if (!isUndefined(detection.primaryPermutationStepIndex)) {
+    return {
+      type: 'permutation',
+      targetStepIndex: detection.primaryPermutationStepIndex,
+    }
+  }
+
   if (!isUndefined(detection.primaryWordLadderStepIndex)) {
     return {
       type: 'word-ladder',

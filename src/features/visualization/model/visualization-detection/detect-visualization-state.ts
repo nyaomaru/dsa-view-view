@@ -48,6 +48,7 @@ import { getExpressionStepIndex } from '../../lib/expression-view'
 import { getZigzagStepIndex } from '../../lib/zigzag-view'
 import { getRegexMatchStepIndex } from '../../lib/regex-match-view'
 import { getNQueensStepIndex } from '../../lib/n-queens-view'
+import { getPermutationStepIndex } from '../../lib/permutation-view'
 
 export function detectVisualizationState(
   executionState: ExecutionState
@@ -63,6 +64,7 @@ export function detectVisualizationState(
   const primaryZigzagStepIndex = getZigzagStepIndex(executionState)
   const primaryRegexMatchStepIndex = getRegexMatchStepIndex(executionState)
   const primaryNQueensStepIndex = getNQueensStepIndex(executionState)
+  const primaryPermutationStepIndex = getPermutationStepIndex(executionState)
   const dualHeapStepIndex = executionState.steps.findIndex((step) => {
     const heaps = step.metadata?.heapTrace?.heaps ?? []
     return (
@@ -186,6 +188,7 @@ export function detectVisualizationState(
     primaryZigzagStepIndex,
     primaryRegexMatchStepIndex,
     primaryNQueensStepIndex,
+    primaryPermutationStepIndex,
     primaryHeapStepIndex:
       primaryHeapStepIndex >= 0 ? primaryHeapStepIndex : undefined,
     primaryStackName,

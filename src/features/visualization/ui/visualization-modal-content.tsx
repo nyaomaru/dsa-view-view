@@ -37,6 +37,7 @@ import { getZigzagVisualizationState } from '../lib/zigzag-view'
 import { getRegexMatchVisualizationState } from '../lib/regex-match-view'
 import { getNQueensVisualizationState } from '../lib/n-queens-view'
 import { getFirstMissingPositiveVisualizationState } from '../lib/first-missing-positive-view'
+import { getPermutationVisualizationState } from '../lib/permutation-view'
 import {
   getContextualRuntimeComparison,
   getLatestRuntimeComparison,
@@ -67,6 +68,7 @@ import { ZigzagVisualizer } from './zigzag-visualizer'
 import { RegexMatchVisualizer } from './regex-match-visualizer'
 import { NQueensVisualizer } from './n-queens-visualizer'
 import { FirstMissingPositiveVisualizer } from './first-missing-positive-visualizer'
+import { PermutationVisualizer } from './permutation-visualizer'
 import { CallFrameInspector } from './call-frame-inspector'
 import { DfsComparisonVisualizer } from './dfs-comparison-visualizer'
 
@@ -290,6 +292,16 @@ export function VisualizationModalContent({
       <NQueensVisualizer state={state} />
     ) : (
       <div>N-Queens board state is not available.</div>
+    )
+  }
+
+  if (type === 'permutation') {
+    const state = getPermutationVisualizationState(executionState, targetStepIndex)
+
+    return state ? (
+      <PermutationVisualizer state={state} />
+    ) : (
+      <div>Permutation selection state is not available.</div>
     )
   }
 

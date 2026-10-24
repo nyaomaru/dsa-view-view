@@ -99,6 +99,8 @@ function getVisualizationTitle({
       return `Bar Chart: ${targetVariable}`
     case 'first-missing-positive':
       return `First Missing Positive View: ${targetVariable}`
+    case 'permutation':
+      return 'K-th Permutation View'
     case 'area':
       return `Area View: ${targetVariable}`
     case 'max-subarray':
@@ -167,6 +169,8 @@ function getVisualizationDescription(
       return 'Visualize numeric array as a bar chart.'
     case 'first-missing-positive':
       return 'Follow cyclic placements from each value to its target index.'
+    case 'permutation':
+      return 'Follow each factoradic block selection while constructing the k-th permutation.'
     case 'area':
       return 'Visualize the current container, histogram rectangle, or trapped water.'
     case 'max-subarray':

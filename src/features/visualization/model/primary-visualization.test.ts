@@ -14,6 +14,7 @@ const emptyDetection: VisualizationDetection = {
   primaryZigzagStepIndex: undefined,
   primaryRegexMatchStepIndex: undefined,
   primaryNQueensStepIndex: undefined,
+  primaryPermutationStepIndex: undefined,
   primaryStackName: undefined,
   primaryArrayName: undefined,
   primaryFirstMissingPositiveArrayName: undefined,
@@ -52,6 +53,16 @@ describe('getPrimaryVisualization', () => {
         primaryStackName: 'result',
       })
     ).toEqual({ type: 'n-queens', targetStepIndex: 3 })
+  })
+
+  it('selects factoradic permutation state before generic array views', () => {
+    expect(
+      getPrimaryVisualization({
+        ...emptyDetection,
+        primaryPermutationStepIndex: 4,
+        primaryStackName: 'numbers',
+      })
+    ).toEqual({ type: 'permutation', targetStepIndex: 4 })
   })
 
   it('prioritizes Word Ladder traces over generic queues and maps', () => {

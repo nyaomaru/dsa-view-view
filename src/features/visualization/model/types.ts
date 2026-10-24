@@ -14,6 +14,7 @@ export type VisualizationType =
   | 'stock-profit'
   | 'capacity-search'
   | 'first-missing-positive'
+  | 'permutation'
   | 'binary-search'
   | 'sliding-window'
   | 'zigzag'
