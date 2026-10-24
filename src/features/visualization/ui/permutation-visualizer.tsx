@@ -1,4 +1,5 @@
 import { Card } from '@/shared/ui'
+import { isUndefined } from '@/shared/lib/guards'
 import type { PermutationVisualizationState } from '../lib/permutation-view'
 
 type PermutationVisualizerProps = {
@@ -18,7 +19,7 @@ function Metric({ label, value }: { label: string; value: string | number }) {
 
 export function PermutationVisualizer({ state }: PermutationVisualizerProps) {
   const selectedValue = state.numbers[state.index]
-  const isAwaitingRemoval = selectedValue !== undefined
+  const isAwaitingRemoval = !isUndefined(selectedValue)
   const blockStart = state.index * state.blockSize
   const blockEnd = blockStart + state.blockSize - 1
 
