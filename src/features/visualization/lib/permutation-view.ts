@@ -51,6 +51,7 @@ function getPermutationSnapshot(
     index < 0 ||
     index >= numbers.length ||
     k < 0 ||
+    index !== Math.floor(k / blockSize) ||
     numbers.length !== remain
   ) {
     return undefined

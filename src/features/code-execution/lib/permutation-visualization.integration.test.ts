@@ -84,6 +84,52 @@ describe('k-th permutation visualization integration', () => {
       result: '2',
       selectionIsCommitted: true,
     })
+
+    const staleIndexStep = state.steps.findIndex(
+      (step) =>
+        step.variables.remain === 2 &&
+        step.variables.blockSize === 1 &&
+        step.variables.index === 1 &&
+        step.variables.k === 0 &&
+        isNumericArray(step.variables.numbers) &&
+        step.variables.numbers.length === 2
+    )
+    const staleIndexVisualization = getPermutationVisualizationState({
+      ...state,
+      currentStep: staleIndexStep,
+    })
+
+    expect(staleIndexStep).toBeGreaterThanOrEqual(0)
+    expect(staleIndexVisualization).toMatchObject({
+      numbers: [1, 3, 4],
+      remain: 3,
+      blockSize: 2,
+      index: 1,
+      rank: 2,
+    })
+
+    const currentSelectionStep = state.steps.findIndex(
+      (step) =>
+        step.variables.remain === 2 &&
+        step.variables.blockSize === 1 &&
+        step.variables.index === 0 &&
+        step.variables.k === 0 &&
+        isNumericArray(step.variables.numbers) &&
+        step.variables.numbers.length === 2
+    )
+    const currentSelectionVisualization = getPermutationVisualizationState({
+      ...state,
+      currentStep: currentSelectionStep,
+    })
+
+    expect(currentSelectionStep).toBeGreaterThanOrEqual(0)
+    expect(currentSelectionVisualization).toMatchObject({
+      numbers: [1, 4],
+      remain: 2,
+      blockSize: 1,
+      index: 0,
+      rank: 0,
+    })
   })
 
   it('does not classify unrelated factorial calculations as a permutation trace', () => {
