@@ -57,6 +57,8 @@ type VariablesCardProps = {
   primaryRegexMatchStepIndex?: number
   /** First step containing standard N-Queens backtracking state. */
   primaryNQueensStepIndex?: number
+  /** First step containing a factoradic k-th permutation selection. */
+  primaryPermutationStepIndex?: number
   /** Primary array variable detected for chart visualization. */
   primaryArrayName?: string
   /** Primary array detected for First Missing Positive cyclic placement. */
@@ -131,6 +133,7 @@ export function VariablesCard({
   primaryZigzagStepIndex,
   primaryRegexMatchStepIndex,
   primaryNQueensStepIndex,
+  primaryPermutationStepIndex,
   primaryArrayName,
   primaryFirstMissingPositiveArrayName,
   primaryAreaArrayName,
@@ -303,6 +306,23 @@ export function VariablesCard({
             >
               <Grid3X3 className="w-4 h-4" />
               Chess Board
+            </Button>
+          )}
+          {!isUndefined(primaryPermutationStepIndex) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() =>
+                onOpenVisualization(
+                  'permutation',
+                  undefined,
+                  primaryPermutationStepIndex
+                )
+              }
+            >
+              <Grid3X3 className="w-4 h-4" />
+              K-th Permutation View
             </Button>
           )}
           {primaryArrayName && (

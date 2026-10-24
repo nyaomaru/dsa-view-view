@@ -53,6 +53,30 @@ describe('VariablesCard', () => {
     expect(openVisualization).toHaveBeenCalledWith('jump-game', 'nums', 4)
   })
 
+  it('reopens the K-th Permutation View from its detected step', () => {
+    const openVisualization = vi.fn()
+
+    render(
+      <VariablesCard
+        executionState={executionState}
+        currentStep={step}
+        variableEntries={Object.entries(step.variables)}
+        expandedVariables={{}}
+        hasRecursion={false}
+        primaryPermutationStepIndex={7}
+        onToggleVariable={vi.fn()}
+        onOpenVisualization={openVisualization}
+        onJumpToStep={vi.fn()}
+      />
+    )
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'K-th Permutation View' })
+    )
+
+    expect(openVisualization).toHaveBeenCalledWith('permutation', undefined, 7)
+  })
+
   it('keeps call frames available when recursive DFS also has a tree graph', () => {
     const openVisualization = vi.fn()
 
