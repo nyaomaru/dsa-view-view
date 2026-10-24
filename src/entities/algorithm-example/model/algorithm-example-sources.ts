@@ -535,6 +535,30 @@ export const ALGORITHM_EXAMPLE_SOURCES = {
   dfs()
   return result
 }`,
+  'k-th-permutation': `function getPermutation(n: number, k: number): string {
+  const numbers: number[] = []
+  const factorial: number[] = [1]
+
+  for (let i = 1; i <= n; i++) {
+    numbers.push(i)
+    factorial[i] = factorial[i - 1] * i
+  }
+
+  k--
+
+  let result = ''
+
+  for (let remain = n; remain >= 1; remain--) {
+    const blockSize = factorial[remain - 1]
+    const index = Math.floor(k / blockSize)
+
+    result += numbers[index]
+    numbers.splice(index, 1)
+    k %= blockSize
+  }
+
+  return result
+}`,
   'n-queens': `function solveNQueens(n: number): string[][] {
   const result: string[][] = []
 
