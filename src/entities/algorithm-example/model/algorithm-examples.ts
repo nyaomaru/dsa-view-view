@@ -41,6 +41,7 @@ const EXAMPLE_CATEGORY_BY_ID = new Map<AlgorithmExampleSourceId, string>([
   ['regular-expression-matching', 'Dynamic Programming'],
   ['subsets', 'Backtracking'],
   ['permute', 'Backtracking'],
+  ['k-th-permutation', 'Combinatorics'],
   ['n-queens', 'Backtracking'],
   ['n-queens-ii', 'Backtracking'],
   ['number-of-islands', 'Matrix'],
@@ -306,6 +307,15 @@ const ALGORITHM_EXAMPLE_DEFINITIONS: AlgorithmExampleDefinition[] = [
       nums: '[1, 2, 3]',
     },
     sourceCode: ALGORITHM_EXAMPLE_SOURCES.permute,
+  },
+  {
+    id: 'k-th-permutation',
+    label: 'K-th Permutation',
+    defaultInputValues: {
+      n: 4,
+      k: 9,
+    },
+    sourceCode: ALGORITHM_EXAMPLE_SOURCES['k-th-permutation'],
   },
   {
     id: 'n-queens',
