@@ -41,7 +41,7 @@
     "react-dom": "19.3.0",
     "react-hook-form": "7.89.0",
     "tailwind-merge": "^3.7.0",
-    "zod": "4.6.5"
+    "zod": "4.6.6"
   },
   "devDependencies": {
     "@babel/core": "8.0.7",
