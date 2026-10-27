@@ -12,6 +12,7 @@ export type AlgorithmExample = {
 }
 
 const EXAMPLE_CATEGORY_BY_ID = new Map<AlgorithmExampleSourceId, string>([
+  ['unique-paths', 'Dynamic Programming'],
   ['two-sum', 'Hash Map'],
   ['valid-anagram', 'Hash Map'],
   ['group-anagrams', 'Hash Map'],
@@ -486,6 +487,12 @@ const ALGORITHM_EXAMPLE_DEFINITIONS: AlgorithmExampleDefinition[] = [
       n: 2,
     },
     sourceCode: ALGORITHM_EXAMPLE_SOURCES['remove-nth-from-end'],
+  },
+  {
+    id: 'unique-paths',
+    label: 'Unique Paths',
+    defaultInputValues: { m: 3, n: 7 },
+    sourceCode: ALGORITHM_EXAMPLE_SOURCES['unique-paths'],
   },
   {
     id: 'regular-expression-matching',

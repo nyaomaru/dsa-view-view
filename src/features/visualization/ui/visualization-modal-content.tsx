@@ -58,6 +58,8 @@ import { SlidingWindowVisualizer } from './sliding-window-visualizer'
 import { DpVisualizer } from './dp-visualizer'
 import { GraphVisualizer } from './graph-visualizer'
 import { MatrixVisualizer } from './matrix-visualizer'
+import { UniquePathsVisualizer } from './unique-paths-visualizer'
+import { getUniquePathsVisualizationState } from '../lib/unique-paths-view'
 import { MapVisualizer } from './map-visualizer'
 import { TreeGraphVisualizer } from './tree-graph-visualizer'
 import { ListGraphVisualizer } from './list-graph-visualizer'
@@ -296,7 +298,10 @@ export function VisualizationModalContent({
   }
 
   if (type === 'permutation') {
-    const state = getPermutationVisualizationState(executionState, targetStepIndex)
+    const state = getPermutationVisualizationState(
+      executionState,
+      targetStepIndex
+    )
 
     return state ? (
       <PermutationVisualizer state={state} />
@@ -669,6 +674,14 @@ export function VisualizationModalContent({
       const previousStep =
         matrixStepIndex > 0 ? executionState.steps[matrixStepIndex - 1] : null
       const previousData = previousStep?.variables[targetVariable]
+
+      const uniquePathsState = getUniquePathsVisualizationState(
+        executionState,
+        matrixStepIndex,
+        targetVariable
+      )
+      if (uniquePathsState)
+        return <UniquePathsVisualizer state={uniquePathsState} />
 
       return isMatrix(data) ? (
         <MatrixVisualizer
