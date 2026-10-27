@@ -1,5 +1,11 @@
 import type { ExecutionState } from '@/entities/execution'
-import { arrayOf, isInteger, isMatrix, isNumber } from '@/shared/lib/guards'
+import {
+  arrayOf,
+  isInteger,
+  isMatrix,
+  isNumber,
+  isUndefined,
+} from '@/shared/lib/guards'
 
 export type UniquePathsState = {
   data: readonly (readonly number[])[]
@@ -92,7 +98,11 @@ function hasCanonicalUniquePathsWrites(
     previous = data
   }
 
-  return previous !== undefined && !!finalTable && isCanonicalUniquePathsTable(finalTable)
+  return (
+    !isUndefined(previous) &&
+    !isUndefined(finalTable) &&
+    isCanonicalUniquePathsTable(finalTable)
+  )
 }
 
 /** Reads actual DP snapshots, keeping the latest written cell selected between writes. */
@@ -116,7 +126,7 @@ export function getUniquePathsVisualizationState(
     !isNumberGrid(data) ||
     data.length !== m ||
     data[0].length !== n ||
-    frameId === undefined ||
+    isUndefined(frameId) ||
     !hasCanonicalUniquePathsWrites(executionState, stepIndex, frameId)
   )
     return null
