@@ -67,4 +67,23 @@ describe('Unique Paths visualization integration', () => {
       getUniquePathsVisualizationState(state, state.steps.length - 1, 'dp')
     ).toBeNull()
   })
+
+  it('keeps edited Unique Paths implementations in the generic matrix view', () => {
+    const state = executeCode(
+      `function uniquePaths(m: number, n: number): number {
+        const dp = Array.from({ length: m }, () => Array(n).fill(0))
+        dp[0][0] = 1
+        for (let i = 1; i < m; i++) dp[i][0] = 1
+        for (let j = 1; j < n; j++) dp[0][j] = 1
+        dp[1][1] = 0
+        return dp[m - 1][n - 1]
+      }`,
+      { m: 2, n: 2 },
+      'uniquePaths'
+    )
+
+    expect(
+      getUniquePathsVisualizationState(state, state.steps.length - 1, 'dp')
+    ).toBeNull()
+  })
 })
