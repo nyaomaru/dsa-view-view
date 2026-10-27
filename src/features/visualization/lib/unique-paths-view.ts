@@ -3,6 +3,7 @@ import {
   arrayOf,
   isInteger,
   isMatrix,
+  isNull,
   isNumber,
   isUndefined,
 } from '@/shared/lib/guards'
@@ -33,7 +34,7 @@ function getUniquePathsFrameId(
 function getChangedCell(
   previous: readonly (readonly number[])[],
   current: readonly (readonly number[])[]
-): { row: number; col: number } | null {
+): { row: number; col: number } | null | undefined {
   let changed: { row: number; col: number } | undefined
 
   for (let row = 0; row < current.length; row++) {
@@ -44,7 +45,7 @@ function getChangedCell(
     }
   }
 
-  return changed ?? null
+  return changed
 }
 
 function isCanonicalUniquePathsTable(
@@ -82,10 +83,11 @@ function hasCanonicalUniquePathsWrites(
     }
 
     const changed = getChangedCell(previous, data)
-    if (!changed) {
+    if (isUndefined(changed)) {
       previous = data
       continue
     }
+    if (isNull(changed)) return false
 
     const { row, col } = changed
     const nextValue = data[row][col]

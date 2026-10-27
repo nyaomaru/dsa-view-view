@@ -86,4 +86,23 @@ describe('Unique Paths visualization integration', () => {
       getUniquePathsVisualizationState(state, state.steps.length - 1, 'dp')
     ).toBeNull()
   })
+
+  it('rejects multi-cell writes even when the final table is canonical', () => {
+    const state = executeCode(
+      `function uniquePaths(m: number, n: number): number {
+        const dp = Array.from({ length: m }, () => Array(n).fill(0))
+        dp[0] = [2, 2]
+        dp[0] = [1, 1]
+        dp[1][0] = 1
+        dp[1][1] = 2
+        return dp[m - 1][n - 1]
+      }`,
+      { m: 2, n: 2 },
+      'uniquePaths'
+    )
+
+    expect(
+      getUniquePathsVisualizationState(state, state.steps.length - 1, 'dp')
+    ).toBeNull()
+  })
 })
