@@ -22,7 +22,7 @@ describe('AppHeader', () => {
 })
 
 describe('MobileHeader', () => {
-  it('shows the title, View View monitor, and tabs in order', () => {
+  it('shows the View View monitor above the tabs without the logo', () => {
     render(
       <MobileHeader
         mode="editor"
@@ -33,14 +33,12 @@ describe('MobileHeader', () => {
       />
     )
 
-    const title = screen.getByRole('img', { name: 'DSA ViewView' })
     const animation = screen.getByRole('img', { name: 'View View animation' })
     const firstTab = screen.getByRole('button', { name: 'Editor' })
 
     expect(
-      title.compareDocumentPosition(animation) &
-        Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBeTruthy()
+      screen.queryByRole('img', { name: 'DSA ViewView' })
+    ).not.toBeInTheDocument()
     expect(
       animation.compareDocumentPosition(firstTab) &
         Node.DOCUMENT_POSITION_FOLLOWING

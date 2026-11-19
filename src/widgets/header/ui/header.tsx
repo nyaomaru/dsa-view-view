@@ -17,7 +17,7 @@ type MobileHeaderProps = {
   viewViewAnimationSrc: string | null
   /** Callback when the current View View animation image loads. */
   onViewViewAnimationLoad?: () => void
-  /** Whether to render the View View monitor between title and tabs. */
+  /** Whether to render the View View monitor above the tabs. */
   showViewViewMonitor?: boolean
 }
 
@@ -89,11 +89,6 @@ export function MobileHeader({
   return (
     <div className="lg:hidden sticky top-0 z-50 bg-background border-b flex-none">
       <div className="container mx-auto px-4 py-2">
-        <div className="flex items-center justify-between">
-          <Heading level={2} className="text-lg">
-            <LogoImage className="max-w-[11.25rem]" />
-          </Heading>
-        </div>
         {showViewViewMonitor && (
           <ViewViewMonitor
             viewViewAnimationSrc={viewViewAnimationSrc}
