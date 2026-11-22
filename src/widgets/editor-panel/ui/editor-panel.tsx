@@ -127,7 +127,7 @@ export function EditorPanel({
       <div className="mb-4 flex flex-none flex-col gap-4 lg:flex-row lg:items-stretch lg:justify-between lg:gap-6">
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           {header}
-          <div className="flex w-full items-center gap-3 lg:w-auto">
+          <div className="flex w-full items-center gap-2 lg:w-auto">
             <Button
               type="button"
               onClick={onRunDemo}
@@ -140,7 +140,7 @@ export function EditorPanel({
               target="_blank"
               rel="noreferrer"
               aria-label="Open GitHub repository"
-              className="flex h-11 w-11 flex-none items-center justify-center transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex h-11 w-11 flex-none translate-x-3 items-center justify-center transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <img src="/sns/github.svg" alt="" className="h-9 w-9" />
             </a>
