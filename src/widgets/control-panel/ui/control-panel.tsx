@@ -79,7 +79,7 @@ export function ControlPanel({
           </TabsList>
         </div>
 
-        <div className="sidebar-tabs__panel min-h-0 flex-none overflow-visible border lg:flex-1 lg:overflow-y-auto lg:border-0">
+        <div className="pixel-panel sidebar-tabs__panel min-h-0 flex-none overflow-visible border border-primary lg:flex-1 lg:overflow-y-auto">
           <TabsContent value="editor" className="mt-0 h-auto lg:h-full">
             <EditorTabContent
               algorithmExamples={algorithmExamples}

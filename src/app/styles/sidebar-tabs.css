@@ -120,16 +120,7 @@
 }
 
 .sidebar-tabs__panel {
-  border-right: var(--sidebar-tab-border) solid var(--sidebar-tab-color);
-  border-left: var(--sidebar-tab-border) solid var(--sidebar-tab-color);
-  border-bottom: var(--sidebar-tab-border) solid var(--sidebar-tab-color);
   background: rgb(var(--background));
-}
-
-@media (max-width: 1023.98px) {
-  .sidebar-tabs__panel {
-    border-top: var(--sidebar-tab-border) solid var(--sidebar-tab-color);
-  }
 }
 
 .sidebar-tabs .sidebar-tabs__trigger {
