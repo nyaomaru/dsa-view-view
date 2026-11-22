@@ -146,7 +146,7 @@ export function EditorPanel({
             </a>
             <ShareButton
               createShareUrl={onCreateShareUrl}
-              className="h-11 w-[8.5rem] flex-none sm:w-[10rem] lg:hidden"
+              className="h-11 w-[8.5rem] flex-none sm:w-[10rem] lg:hidden -translate-y-1"
             />
           </div>
         </div>
