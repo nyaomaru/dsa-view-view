@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [vv1.4.0] - 2026-11-25
+
+### Added
+
+- Add First Missing Positive visualization by @nyaomaru in [#99](https://github.com/nyaomaru/dsa-view-view/pull/99)
+- jump game by @nyaomaru in [#105](https://github.com/nyaomaru/dsa-view-view/pull/105)
+- add N-Queens chessboard visualization by @nyaomaru in [#108](https://github.com/nyaomaru/dsa-view-view/pull/108)
+- get permutation visualization by @nyaomaru in [#110](https://github.com/nyaomaru/dsa-view-view/pull/110)
+- unique paths by @nyaomaru in [#116](https://github.com/nyaomaru/dsa-view-view/pull/116)
+  - Why: Tightens detection so only the canonical Unique Paths recurrence uses the dedicated view.
+
+### Fixed
+
+- message position by @nyaomaru in [#93](https://github.com/nyaomaru/dsa-view-view/pull/93)
+- fit 9x9 matrix grids inside visualization modal by @nyaomaru in [#97](https://github.com/nyaomaru/dsa-view-view/pull/97)
+  - Why: Fix Matrix View for 9×9 boards overflowing the modal and forcing horizontal scroll.
+- patch dompurify and source-map-js security alerts by @nyaomaru in [#98](https://github.com/nyaomaru/dsa-view-view/pull/98)
+- pin Vercel deployments to Node 24 by @nyaomaru in [#103](https://github.com/nyaomaru/dsa-view-view/pull/103)
+- bump dompurify to 3.4.17 by @nyaomaru in [#120](https://github.com/nyaomaru/dsa-view-view/pull/120)
+- remove logo from mobile header by @nyaomaru in [#127](https://github.com/nyaomaru/dsa-view-view/pull/127)
+
+### Changed
+
+- adjust github link and panel frame by @nyaomaru in [#130](https://github.com/nyaomaru/dsa-view-view/pull/130)
+
+### Docs
+
+- v1.3.0 by [bot] by @github-actions in [#91](https://github.com/nyaomaru/dsa-view-view/pull/91)
+
+### Chore
+
+- bump the minor-and-patch group with 14 updates by [bot] by @dependabot in [#92](https://github.com/nyaomaru/dsa-view-view/pull/92)
+- bump vite-plus from 0.3.3 to 1.0.0 by [bot] by @dependabot in [#95](https://github.com/nyaomaru/dsa-view-view/pull/95)
+- bump the minor-and-patch group across 1 directory with 6 updates by [bot] by @dependabot in [#96](https://github.com/nyaomaru/dsa-view-view/pull/96)
+- bump nyaomaru/changelog-bot from 0.6.14 to 0.7.0 in the actions group by [bot] by @dependabot in [#100](https://github.com/nyaomaru/dsa-view-view/pull/100)
+- bump framer-motion from 13.4.3 to 14.0.0 by [bot] by @dependabot in [#102](https://github.com/nyaomaru/dsa-view-view/pull/102)
+- bump nyaomaru/changelog-bot from 0.7.0 to 0.8.0 in the actions group by [bot] by @dependabot in [#106](https://github.com/nyaomaru/dsa-view-view/pull/106)
+- bump nyaomaru/changelog-bot from 0.8.0 to 0.9.3 in the actions group by [bot] by @dependabot in [#112](https://github.com/nyaomaru/dsa-view-view/pull/112)
+- bump /resolvers from 5.9.1 to 6.0.0 by @dependabot[bot] by @hookform in [#114](https://github.com/nyaomaru/dsa-view-view/pull/114)
+- bump zod from 4.6.5 to 4.6.6 by [bot] by @dependabot in [#115](https://github.com/nyaomaru/dsa-view-view/pull/115)
+- bump vite-plus from 1.1.0 to 1.3.0 by [bot] by @dependabot in [#111](https://github.com/nyaomaru/dsa-view-view/pull/111)
+- bump nyaomaru/changelog-bot from 0.9.3 to 0.10.1 in the actions group by [bot] by @dependabot in [#118](https://github.com/nyaomaru/dsa-view-view/pull/118)
+- bump the minor-and-patch group across 1 directory with 28 updates by [bot] by @dependabot in [#119](https://github.com/nyaomaru/dsa-view-view/pull/119)
+- bump nyaomaru/changelog-bot from 0.10.1 to 0.11.1 in the actions group by [bot] by @dependabot in [#121](https://github.com/nyaomaru/dsa-view-view/pull/121)
+- bump /resolvers from 6.0.2 to 7.0.3 by @dependabot[bot] by @hookform in [#123](https://github.com/nyaomaru/dsa-view-view/pull/123)
+- bump jsdom from 30.1.3 to 31.0.0 by [bot] by @dependabot in [#124](https://github.com/nyaomaru/dsa-view-view/pull/124)
+- bump the minor-and-patch group with 17 updates by [bot] by @dependabot in [#126](https://github.com/nyaomaru/dsa-view-view/pull/126)
+- bump /jest-dom from 7.0.1 to 8.0.0 by @dependabot[bot] by @testing-library in [#129](https://github.com/nyaomaru/dsa-view-view/pull/129)
+- bump the minor-and-patch group with 10 updates by [bot] by @dependabot in [#128](https://github.com/nyaomaru/dsa-view-view/pull/128)
+
+**Full Changelog**: https://github.com/nyaomaru/dsa-view-view/compare/v1.3.0...v1.4.0
+
+[vv1.4.0]: https://github.com/nyaomaru/dsa-view-view/compare/v1.3.0...v1.4.0
+
 ## [vv1.3.0] - 2026-09-26
 
 ### Added
